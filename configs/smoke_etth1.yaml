@@ -1,0 +1,12 @@
+# G0 smoke: ETTh1 + RevIN + RLinear, standard LTSF protocol (L=336, h=96)
+dataset: etth1
+norm: revin
+backbone: rlinear
+lookback: 336
+horizon: 96
+seed: 0
+batch_size: 64
+lr: 0.005
+epochs: 10
+patience: 3
+device: cuda
