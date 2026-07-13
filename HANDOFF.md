@@ -1,40 +1,50 @@
 # HANDOFF — 현재 상태와 다음 단계
 
 - **최종 갱신**: 2026-07-13
-- **완료 Phase**: G0 ✅ → G1 ✅
-- **다음 Phase**: **G2 — 합성 실험 (GATE 1)** (RESEARCH_PLAN.md §4, 부록 A의 [G2] 프롬프트)
+- **완료 Phase**: G0 ✅ → G1 ✅ → G2 ✅ **[GATE 1: GO]**
+- **다음 Phase**: **G3 — 정규화·백본 구현부** (RESEARCH_PLAN.md §10, 부록 A의 [G3] 프롬프트)
 
-## G1 AC 자체 평가
+## G2 AC 자체 평가 — GATE 1 판정: **GO ✅**
 
-| AC | 판정 | 근거 |
+| 기준 (§4.3) | 판정 | 근거 |
 |---|---|---|
-| 닫힌형 vs MC 일치 (상대오차 <1%) | ✅ | `tests/test_theory.py` — 6개 파라미터 조합 × 4개 추정량, n=2M MC, 전부 <1% |
-| λ*(w,h,σ) 함수가 단위 테스트로 고정 | ✅ | 교차 항등식·h 단조성·드리프트 단조성·수치해 일치 테스트 4종 |
-| Fig 1 (지배 영역) 산출 | ✅ | `paper/figures/fig1_dominance.{pdf,png}` — h∈{24,96,336} 3패널, IN 영역이 h에 따라 후퇴하는 명제 3 패턴 시각 확인 |
-| 전체 pytest | ✅ | 25 passed |
+| IN vs CN 교차 발생 + 교차점 이론 ±0.1 일치 | ✅ 6/6 | λ*_emp vs λ*_OLS이론 최대 편차 0.015 (`results/gate1.md`) |
+| h 커질수록 격차 확대 | ✅ 2/2 | 시드쌍 95% CI에서 Δgap 전부 양수·유의 |
+| CN-est 저하가 1단계 오차로 설명 | ✅ | 실험/이론 저하 비율 중앙값 1.12 |
+| DGP 자체 검증 (λ ≈ R²_level) | ✅ | `tests/test_dgp.py` — λ∈{0,0.3,0.7,1.0}에서 \|R²−λ\|<0.08 |
+| 전체 pytest | ✅ | 32 passed |
 
-## G1 산출물
+## G2의 핵심 학술 발견 (논문 반영 필수)
 
-- `docs/theory_g1.md` — **양식화 모델 M1 명세·유도·가정(A1–A4)·이론↔G2 DGP↔실데이터 대응표** (실험 스크립트가 따라야 할 계약 문서)
-- `src/theory/closed_form.py` — MSE 닫힌형, λ* (닫힌형 + 수치해), 지배 영역, 명제 1 gap, `effective_window_noise`(자기상관 형태 보정)
-- `src/theory/simulate.py` — 모델 충실 MC + 명제 1 OLS MC
-- `src/theory/figstyle.py` — **논문 전체 그림의 엔티티→색 고정 매핑** (IN=blue, CN=aqua, RAW=yellow; Fig 2–5도 이것을 사용할 것)
-- 기준 λ* 값: h=24 → 0.923 / h=96 → 0.664 / h=336 → λ*<0 (σ_Δ=0 기준)
+1. **명제 2′ (이론 정련)**: 실험 λ*(0.01–0.03)는 양식화 M1의 λ*(≈0.27)보다 훨씬 작다.
+   원인 = 선형 백본의 **암묵적 수준 추적** (잔차 윈도우에서 남은 드리프트를 OLS적으로 흡수).
+   → 이론값은 각 정규화 클래스의 **제약 OLS 닫힌형**(`src/theory/linear_class.py`)으로 계산하며
+   실험과 ±0.015 수준으로 일치. M1은 해석층(상한)으로 유지. `docs/theory_g1.md` §5.1.
+2. **실무 함의 강화**: 공변량 직교 드리프트가 없으면 CN은 극소 λ부터 우세 — IN의 실질 영역은
+   드리프트 강건성 필요 구간. 실데이터(G4)에서 LPS-부호 예측의 성공 조건이 더 명확해짐.
+3. RAW ≈ IN (in-distribution): 선형 백본이 윈도우 평균을 흡수하므로 — RevIN의 이득은
+   순수한 수준 적응이 아니라 분포 이동 강건성이라는 재해석 (Discussion 소재).
 
-## 이론–실험 정합 규약 (사용자 지시, the environment contract에도 수록)
+## 산출물
 
-- G2 백본은 **RLinear 단층 선형만** (이론이 선형-가우시안이므로). 용량은 arm 간 동일, config에 명시.
-- G2 DGP → M1 매핑 시 주의 (대응표 참조):
-  1. DGP의 u는 √(1−λ)로 스케일 → M1의 hσ_u²에는 **(1−λ)·h·σ_u,dgp²** 대입
-  2. AR(1) 공변량의 지평 내 변화 → s_x²(h)를 수치 산출해 대입 (λ 의존 → `lambda_star_numeric` 사용)
-  3. 형태 z가 자기상관(AR+계절)이므로 윈도우 노이즈는 `effective_window_noise(σ_z, w, ρ1)` 사용
-- 괴리 후보 1순위 = 가정 A3 (정규화가 형태 학습에 주는 2차 효과) — G2에서 경험적으로 점검하고 `docs/theory_g1.md` 괴리 항목에 기록
+- `results/synth_grid.csv` (2,640 runs) / `results/synth_ols.csv` (닫힌형 이론) / `results/gate1.md`
+- `paper/figures/fig2_synth.{pdf,png}` — 이론 곡선 위 실험 점 (Fig 2 완성)
+- `curated/synth/` — 시리즈+1단계 캐시 (110 npz, gitignore)
+- MLflow: `synth{λ}_{norm}_rlinear_{h}_{seed}_L{L}` 규약으로 전 run 기록
 
-## G2 착수 정보
+## G3 착수 정보
 
-1. `src/synth/dgp.py`: 계획서 §4.1 DGP 구현 + **λ ≈ R²_level 자체 검증** 루틴 포함
-2. sweep: λ 11점 × h{24,96,336} × L{96,336} × 시드 10 — RLinear + {RAW, RevIN, CN-oracle, CN-est}
-3. CN-est 1단계는 LightGBM (의존성 추가 필요: `uv add lightgbm`), CN-oracle은 참 m_t 사용
-4. Fig 2: 이론 곡선(λ 함수인 MSE, 위 매핑 적용) 위에 실험 점 중첩 — `figstyle.py` 색 매핑 사용
-5. GATE 1 판정 (§4.3): 교차 발생 + 교차점 λ*와 이론 예측 ±0.1 일치 / h 격차 확대 / CN-est 저하가 1단계 오차로 설명 — go/no-go를 근거 수치와 함께 이 파일에 기록
-6. MLflow experiment `ini/norm-boundary`는 sqlite(`sqlite:///mlflow.db`)
+1. **SAN·FAN 공식 구현 이식** (커밋 해시 고정) + 원 논문 대표 수치 재현 테스트
+   - SAN: github.com/icantnamemyself/SAN (NeurIPS 2023) / FAN: NeurIPS 2024 공식 레포 확인
+2. CondNorm 실데이터 버전 (`src/norms/condnorm.py`): 1단계 LightGBM + 가역 변환 + 가역성·누수 pytest
+3. 백본 추가: PatchTST, SegRNN, LightGBM-DMS — ETTh1에서 문헌 범위 성능 확인
+4. **데이터셋 7종 로더 + LPS 계산기** (`src/theory/lps.py`, 시간순 CV)
+   - ⚠️ **사용자 확인 필요**: Jeju wind (KPX 집계 발전량 + 보관 NWP + 설비용량) — 사내 데이터 위치/포맷
+   - KPX 계통 수요 (공개), GEFCom2014 (다운로드 경로 확인 필요), ETTh1/h2·Electricity·Weather (공개)
+5. AC: 전 구성요소 pytest 통과 / `results/lps.csv` 산출
+6. G4 사전 등록 전에 novelty 재스윕 1회 (docs/novelty_sweep.md 갱신)
+
+## 환경 리마인드
+
+- uv 전용, GPU1 고정, MLflow `sqlite:///mlflow.db`, experiment `ini/norm-boundary`
+- 이론–실험 정합 규약: the environment contract + `docs/theory_g1.md` 대응표가 계약
