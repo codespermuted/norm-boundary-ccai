@@ -1,0 +1,4 @@
+dataset,backbone,h,L,val_mse
+jeju_wind,rlinear,24,192,0.75636
+jeju_wind,patchtst,24,192,0.716471
+jeju_wind,segrnn,24,720,0.707465
