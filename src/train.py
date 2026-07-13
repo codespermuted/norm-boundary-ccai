@@ -77,14 +77,33 @@ def run(cfg: dict, log_mlflow: bool = True) -> dict:
         for split in ("train", "val", "test")
     }
 
-    norm = build_norm(cfg["norm"], num_features=ds.num_features)
+    norm = build_norm(cfg["norm"], num_features=ds.num_features,
+                      lookback=cfg["lookback"], horizon=cfg["horizon"],
+                      **cfg.get("norm_kwargs", {}))
     backbone = build_backbone(
         cfg["backbone"], lookback=cfg["lookback"], horizon=cfg["horizon"],
-        num_features=ds.num_features,
+        num_features=ds.num_features, **cfg.get("backbone_kwargs", {}),
     )
     model = NormWrapper(backbone, norm).to(device)
-    opt = torch.optim.Adam(model.parameters(), lr=cfg["lr"])
     loss_fn = torch.nn.MSELoss()
+
+    # SAN protocol: pretrain statistics modules, then freeze (official exp_main)
+    if getattr(norm, "requires_pretrain", False):
+        stats_params = list(norm.stats_parameters())
+        stat_opt = torch.optim.Adam(stats_params, lr=cfg.get("station_lr", 1e-4))
+        for _ in range(cfg.get("station_epochs", 5)):
+            model.train()
+            for x, y in loaders["train"]:
+                x, y = x.to(device), y.to(device)
+                stat_opt.zero_grad()
+                norm(x, "norm")
+                norm.stats_loss(y).backward()
+                stat_opt.step()
+        for p in stats_params:
+            p.requires_grad_(False)
+
+    opt = torch.optim.Adam([p for p in model.parameters() if p.requires_grad],
+                           lr=cfg["lr"])
 
     max_steps = cfg.get("max_steps") or float("inf")
     patience = cfg.get("patience", 3)
@@ -97,6 +116,8 @@ def run(cfg: dict, log_mlflow: bool = True) -> dict:
             x, y = x.to(device), y.to(device)
             opt.zero_grad()
             loss = loss_fn(model(x), y)
+            if hasattr(norm, "aux_loss"):
+                loss = loss + norm.aux_loss(y)
             loss.backward()
             opt.step()
             global_step += 1
