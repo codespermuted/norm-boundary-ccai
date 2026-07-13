@@ -256,7 +256,11 @@ def torch_run(frame: dict, L: int, h: int, backbone: str, norm_name: str,
 
 # ------------------------------------------------------------------ lgbm run
 def lgbm_run(frame: dict, h: int, arm: str, level: np.ndarray | None,
-             max_rows: int = 250_000) -> dict:
+             max_rows: int | None = None) -> dict:
+    # row cap is a compute constraint on the large multivariate datasets;
+    # identical for every arm within a dataset (capacity-fair), disclosed
+    # in Tab 1 notes. G4_LGBM_JOBS bounds CPU threads per worker.
+    max_rows = max_rows or int(os.environ.get("G4_LGBM_MAX_ROWS", 250_000))
     t0 = time.time()
     L = LGBM_L
     values = frame["values"]
@@ -289,7 +293,8 @@ def lgbm_run(frame: dict, h: int, arm: str, level: np.ndarray | None,
         xtr, (mtr, strd) = window_znorm(xtr)
         ytr = (ytr - mtr) / strd
         xte, (mte, ste) = window_znorm(xte)
-    model = LgbmDMS(horizon=h, n_estimators=100).fit(xtr, ytr)
+    model = LgbmDMS(horizon=h, n_estimators=100,
+                    n_jobs=int(os.environ.get("G4_LGBM_JOBS", -1))).fit(xtr, ytr)
     pred = model.predict(xte)
     if arm == "winz":
         pred = pred * ste + mte

@@ -42,3 +42,14 @@ electricity,rlinear,24,336,0.102691
 electricity,rlinear,336,336,0.15751
 weather,rlinear,24,336,0.30425
 weather,rlinear,336,720,0.570627
+weather,patchtst,336,720,0.508434
+weather,segrnn,336,192,0.53977
+weather,patchtst,24,192,0.268224
+weather,segrnn,24,192,0.257989
+electricity,patchtst,336,720,0.154877
+electricity,patchtst,24,720,0.111082
+electricity,segrnn,24,720,0.083652
+electricity,segrnn,336,720,0.146696
+weather,rlinear,96,336,0.453333
+weather,patchtst,96,720,0.387185
+weather,segrnn,96,720,0.38773
