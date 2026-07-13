@@ -9,7 +9,7 @@
 **jeju_wind LPS = 0.745** (w=96 LightGBM; ridge 0.739) — 계획서 예상("높음") 적중
 
 
-**ETTh1 h=96 sanity (문헌 범위 확인)**: PatchTST+RevIN **0.383** / SegRNN+RevIN **0.364** / SAN+RLinear **0.404** / FAN+RLinear **0.413** — 전부 문헌 범위 내
+**ETTh1 h=96 sanity (문헌 범위 확인)**: PatchTST+RevIN **0.383** / SegRNN+RevIN **0.364** / SAN+RLinear **0.404** / FAN+RLinear **0.413** / LGBM-DMS+win-znorm **0.382** — 전부 문헌 범위 내
 
 **LPS (results/lps.csv, w=96 LightGBM 기준)**:
 

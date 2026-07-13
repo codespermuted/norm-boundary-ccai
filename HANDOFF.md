@@ -10,7 +10,7 @@
 |---|---|---|
 | SAN·FAN 공식 구현 이식 (커밋 고정) + 대표 수치 재현 | ✅ | SAN `7e1ca66`, FAN `838e1b0` 이식. ETTh1 h=96: SAN+RLinear 0.404 / FAN+RLinear 0.413 — 문헌 범위 내. 2단계 사전학습·보조손실 train.py 통합 |
 | CondNorm (1단계 LightGBM + 가역 변환) + 가역성·누수 테스트 | ✅ | `src/norms/condnorm.py` — inverse(transform)==y 정확 가역, train-only fit 누수 테스트 |
-| PatchTST/SegRNN/LightGBM-DMS + ETTh1 문헌 범위 | ✅ | PatchTST 0.383 / SegRNN 0.364 / LGBM-DMS (아래 참조) |
+| PatchTST/SegRNN/LightGBM-DMS + ETTh1 문헌 범위 | ✅ | PatchTST 0.383 / SegRNN 0.364 / LGBM-DMS 0.382 (h=96, 전부 범위 내) |
 | 데이터셋 7종 로더 | ✅ | ETTh1·ETTh2 (`etth.py`) / electricity·weather (`ltsf.py`, 7:1:2) / jeju_wind·gefcom_wind·load·solar·kpx_demand (`covariate.py`+`curation.py`, 세그먼트 인지) |
 | LPS 계산기 + results/lps.csv | ✅ | `src/theory/lps.py` (시간순 확장 CV, lgbm+ridge), 10개 데이터셋 산출 |
 | 전체 pytest | ✅ | **56 passed** (가역성·누수·계약·세그먼트·구조 항등식) |
