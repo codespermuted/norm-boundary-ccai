@@ -20,6 +20,7 @@ import torch.nn as nn
 
 def main_freq_part(x: torch.Tensor, k: int) -> tuple[torch.Tensor, torch.Tensor]:
     xf = torch.fft.rfft(x, dim=1)
+    k = min(k, xf.shape[1])  # short horizons have fewer rfft bins than topk
     indices = torch.topk(xf.abs(), k, dim=1).indices
     mask = torch.zeros_like(xf)
     mask.scatter_(1, indices, 1)

@@ -163,7 +163,8 @@ def torch_run(frame: dict, L: int, h: int, backbone: str, norm_name: str,
     bb = build_backbone(backbone, lookback=L, horizon=h, num_features=C)
     model = NormWrapper(bb, norm).to(device)
 
-    batch = max(16, min(256, int(2_000_000 / (L * C))))
+    batch_cap = int(os.environ.get("G4_BATCH_CAP", 256))
+    batch = max(16, min(batch_cap, int(2_000_000 / (L * C))))
     tr = starts["train"]
 
     if getattr(norm, "requires_pretrain", False):
@@ -321,7 +322,7 @@ def read_done(path, keyfields):
 
 def tune_lookback(frame, h, backbone, device, writer, done):
     key = (frame["name"], backbone, str(h))
-    if key in done:
+    if key in done and done[key]["L"]:
         return int(done[key]["L"])
     best_L, best_v = None, float("inf")
     for L in LOOKBACKS:
@@ -342,6 +343,10 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--only-exog", action="store_true")
     ap.add_argument("--max-runs", type=int, default=0)
+    ap.add_argument("--datasets", default="",
+                    help="comma list; empty = all (worker partitioning)")
+    ap.add_argument("--horizons", default="",
+                    help="comma list; empty = dataset defaults (partitioning)")
     args = ap.parse_args()
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -370,10 +375,16 @@ def main():
     names = list(DATASETS)
     if args.only_exog:
         names = names[:4]
+    if args.datasets:
+        names = [n for n in names if n in args.datasets.split(",")]
+    h_filter = ({int(x) for x in args.horizons.split(",")}
+                if args.horizons else None)
     for name in names:
         frame = build_frame(name)
         level = firststage(frame)
         for h in DATASETS[name]["horizons"]:
+            if h_filter and h not in h_filter:
+                continue
             # lookback per backbone (fixed across norm arms afterwards)
             Ls = {}
             for backbone in BACKBONES:

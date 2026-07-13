@@ -24,9 +24,13 @@ from src.data.curation import BUILDERS
 
 
 def segment_ids(index: pd.DatetimeIndex) -> np.ndarray:
-    """0-based contiguous-segment id per row (hourly grid assumed)."""
-    steps = np.diff(index.values) / np.timedelta64(1, "h")
-    return np.concatenate([[0], np.cumsum(steps != 1.0)]).astype(int)
+    """0-based contiguous-segment id per row. The regular step is the
+    dataset's own median step (hourly for KPX/ETT, 10-min for weather)."""
+    steps = np.diff(index.values) / np.timedelta64(1, "s")
+    if len(steps) == 0:
+        return np.zeros(len(index), dtype=int)
+    regular = np.median(steps)
+    return np.concatenate([[0], np.cumsum(steps != regular)]).astype(int)
 
 
 def longest_contiguous(df: pd.DataFrame) -> pd.DataFrame:
