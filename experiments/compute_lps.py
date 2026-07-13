@@ -50,6 +50,9 @@ def frames():
         except Exception as exc:
             print(f"skip {name}: {str(exc)[:80]}")
             continue
+        from src.data.covariate import longest_contiguous
+
+        df = longest_contiguous(df)  # LPS windows must not span archive holes
         cov = df.drop(columns=["y"]).values if df.shape[1] > 1 else None
         yield name, df["y"].values, cov, df.index
 

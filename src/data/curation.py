@@ -66,8 +66,12 @@ def build_jeju_wind() -> pd.DataFrame:
         nwp["lead"] = (nwp["tmef_dt"] - nwp["tmfc_dt"]).dt.total_seconds() / 3600
         wsd = nwp[nwp["var"] == "WSD"].copy()
         wsd["ws_mean"] = wsd[farms].where(wsd[farms] > -90).mean(axis=1)
-        band1 = wsd[wsd["lead"] <= 48].set_index("tmef_dt")["ws_mean"]
-        band2 = wsd[wsd["lead"] > 48].set_index("tmef_dt")["ws_mean"]
+        # issue (D-2)23h covers day D at leads 26..49h (valid for any h<=24);
+        # issue (D-3)23h covers it at leads 50..73h (valid for any h<=48)
+        band1 = (wsd[wsd["lead"] <= 49].drop_duplicates("tmef_dt")
+                 .set_index("tmef_dt")["ws_mean"])
+        band2 = (wsd[wsd["lead"] > 49].drop_duplicates("tmef_dt")
+                 .set_index("tmef_dt")["ws_mean"])
         cov = pd.DataFrame({"ws_da": band1, "ws_d2": band2})
 
         df = pd.concat([y, cov], axis=1, join="inner").dropna()
@@ -165,4 +169,5 @@ BUILDERS = {
     "gefcom_load": build_gefcom_load,
     "gefcom_solar": build_gefcom_solar,
     "kpx_demand_national": lambda: build_kpx_demand("national"),
+    "kpx_demand_jeju": lambda: build_kpx_demand("jeju"),
 }

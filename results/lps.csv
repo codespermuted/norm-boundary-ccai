@@ -15,10 +15,14 @@ weather,96,lgbm,-0.5431,548,cal
 weather,96,ridge,-0.1501,548,cal
 weather,336,lgbm,-0.03,156,cal
 weather,336,ridge,-0.4499,156,cal
-gefcom_wind,96,lgbm,0.817,173,exog+cal
-gefcom_wind,96,ridge,0.9171,173,exog+cal
-gefcom_wind,336,lgbm,0.1682,49,exog+cal
-gefcom_wind,336,ridge,0.9443,49,exog+cal
+jeju_wind,96,lgbm,0.7452,181,exog+cal
+jeju_wind,96,ridge,0.7393,181,exog+cal
+jeju_wind,336,lgbm,-0.0042,51,exog+cal
+jeju_wind,336,ridge,0.8382,51,exog+cal
+gefcom_wind,96,lgbm,0.7439,119,exog+cal
+gefcom_wind,96,ridge,0.896,119,exog+cal
+gefcom_wind,336,lgbm,0.0,34,exog+cal
+gefcom_wind,336,ridge,0.9006,34,exog+cal
 gefcom_load,96,lgbm,0.8938,631,exog+cal
 gefcom_load,96,ridge,0.1182,631,exog+cal
 gefcom_load,336,lgbm,0.8142,180,exog+cal
@@ -31,3 +35,5 @@ kpx_demand_national,96,lgbm,-0.1964,91,cal
 kpx_demand_national,96,ridge,-0.797,91,cal
 kpx_demand_national,336,lgbm,-0.0,26,cal
 kpx_demand_national,336,ridge,-0.8985,26,cal
+kpx_demand_jeju,96,lgbm,-0.0,45,cal
+kpx_demand_jeju,96,ridge,0.842,45,cal

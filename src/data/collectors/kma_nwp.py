@@ -2,8 +2,8 @@
 
 Lead-matching contract (operationally airtight, day-ahead-market style):
   For every hour of target day D we store forecasts from fixed past issues
-    band1: issued (D-2) 23:00 KST, leads +25..+48h  -> valid for any h <= 24
-    band2: issued (D-3) 23:00 KST, leads +49..+72h  -> valid for any h <= 48
+    band1: issued (D-2) 23:00 KST, leads +26..+49h  -> valid for any h <= 24
+    band2: issued (D-3) 23:00 KST, leads +50..+73h  -> valid for any h <= 48
   A forecast used for target time tau at origin t = tau - h satisfies
   issue <= t by construction. Variables: WSD (band1+2), TMP (band1).
 
