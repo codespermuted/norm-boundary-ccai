@@ -1,0 +1,9 @@
+dataset,lps,lps_ridge,n_channels,covariates
+etth1,-0.7165,-0.5104,7,cal
+etth2,-0.2054,0.0461,7,cal
+electricity,0.283,0.2661,321,cal
+weather,0.1098,0.3466,21,cal
+jeju_wind,0.7452,0.7393,1,exog+cal
+gefcom_wind,0.7439,0.896,1,exog+cal
+gefcom_load,0.8938,0.1182,1,exog+cal
+gefcom_solar,0.8754,0.8903,1,exog+cal

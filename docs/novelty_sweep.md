@@ -29,6 +29,11 @@
 3. **Related Work 추가 인용**: 위 두 논문을 §7 골격 2절(Related Work)의 정규화 계열 문단에 추가. "적응형 정규화가 이미 해결했다" 방어선에 2510.04667의 A-IN 실패 사례가 오히려 유리한 증거.
 4. **재스윕 시점**: G4 착수 전 1회 재검색 (동일 쿼리 + "level predictability", "normalization crossover" 추가).
 
+## G4 착수 전 재스윕 (2026-07-13)
+
+- 쿼리: "level predictability" / "normalization crossover" + instance normalization conditional covariate forecasting theory
+- 결과: 신규 위협 없음. 인접 문헌은 기존 파악분(2603.11869, 2510.08657, 2403.14587)과 동일 집합. **킬 크라이테리아 비발동 유지** — 사전 등록 진행.
+
 ## 근거 링크
 
 - https://arxiv.org/abs/2603.11869 — On the Role of Reversible Instance Normalization
