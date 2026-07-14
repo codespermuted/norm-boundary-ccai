@@ -352,6 +352,12 @@ def main():
                     help="comma list; empty = all (worker partitioning)")
     ap.add_argument("--horizons", default="",
                     help="comma list; empty = dataset defaults (partitioning)")
+    ap.add_argument("--skip-lgbm", action="store_true",
+                    help="torch arms only (GPU workers)")
+    ap.add_argument("--norms", default="",
+                    help="comma subset of norm arms (worker partitioning)")
+    ap.add_argument("--lgbm-only", action="store_true",
+                    help="LGBM arms only (dedicated sequential CPU lane)")
     args = ap.parse_args()
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -392,12 +398,15 @@ def main():
                 continue
             # lookback per backbone (fixed across norm arms afterwards)
             Ls = {}
-            for backbone in BACKBONES:
-                Ls[backbone] = tune_lookback(frame, h, backbone, device,
-                                             lw, lb_done)
-                lb_f.flush()
-            for norm_name in NORM_ORDER:
+            if not args.lgbm_only:
                 for backbone in BACKBONES:
+                    Ls[backbone] = tune_lookback(frame, h, backbone, device,
+                                                 lw, lb_done)
+                    lb_f.flush()
+            norm_list = ([n for n in NORM_ORDER if n in args.norms.split(",")]
+                         if args.norms else NORM_ORDER)
+            for norm_name in norm_list:
+                for backbone in (() if args.lgbm_only else BACKBONES):
                     L = Ls[backbone]
                     if L is None:
                         continue
@@ -435,7 +444,7 @@ def main():
                 # lgbm arms: raw/winz/condnorm mapped from norm order
                 lg_arm = {"raw": "raw", "revin": "winz",
                           "condnorm": "condnorm"}.get(norm_name)
-                if lg_arm:
+                if lg_arm and not args.skip_lgbm:
                     key = (name, norm_name, "lgbm_dms", str(h), "0")
                     if key not in done:
                         r = lgbm_run(frame, h, lg_arm,
