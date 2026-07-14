@@ -42,7 +42,11 @@ class LgbmDMS:
 
 
 def window_znorm(x: np.ndarray, eps: float = 1e-5):
-    """Window z-score for GBM arms: returns normalized x and (mu, sd)."""
+    """Window z-score for GBM arms: returns normalized x and (mu, sd).
+
+    sd floor MUST mirror RevIN exactly: sqrt(var + eps), not sd + eps —
+    the additive-eps variant floors 316x lower and explodes training
+    targets on near-constant windows (zero-consumption clients etc.)."""
     mu = x.mean(axis=1, keepdims=True)
-    sd = x.std(axis=1, keepdims=True) + eps
+    sd = np.sqrt(x.var(axis=1, keepdims=True) + eps)
     return (x - mu) / sd, (mu, sd)
