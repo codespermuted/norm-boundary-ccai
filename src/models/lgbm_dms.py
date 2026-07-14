@@ -26,14 +26,19 @@ class LgbmDMS:
                            n_jobs=n_jobs)
         self.models: list = []
 
-    def fit(self, x: np.ndarray, y: np.ndarray) -> "LgbmDMS":
-        """x: (N, L) pooled CI windows, y: (N, h)."""
+    def fit(self, x: np.ndarray, y: np.ndarray,
+            sample_weight: np.ndarray | None = None) -> "LgbmDMS":
+        """x: (N, L) pooled CI windows, y: (N, h).
+
+        sample_weight: for the window-znorm arm pass sd^2 per row so the
+        normalized-space objective equals the original-scale MSE — the exact
+        objective torch RevIN trains under (loss after denorm)."""
         import lightgbm as lgb
 
         self.models = []
         for step in range(self.horizon):
             m = lgb.LGBMRegressor(**self.params)
-            m.fit(x, y[:, step])
+            m.fit(x, y[:, step], sample_weight=sample_weight)
             self.models.append(m)
         return self
 

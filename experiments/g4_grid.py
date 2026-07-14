@@ -289,12 +289,15 @@ def lgbm_run(frame: dict, h: int, arm: str, level: np.ndarray | None,
         xtr, ytr = xtr[sel], ytr[sel]
     xte, yte, s_te = pooled("test")
 
+    sw = None
     if arm == "winz":
         xtr, (mtr, strd) = window_znorm(xtr)
         ytr = (ytr - mtr) / strd
+        sw = (strd ** 2).ravel()  # normalized-space loss == original-scale MSE
         xte, (mte, ste) = window_znorm(xte)
     model = LgbmDMS(horizon=h, n_estimators=100,
-                    n_jobs=int(os.environ.get("G4_LGBM_JOBS", -1))).fit(xtr, ytr)
+                    n_jobs=int(os.environ.get("G4_LGBM_JOBS", -1))
+                    ).fit(xtr, ytr, sample_weight=sw)
     pred = model.predict(xte)
     if arm == "winz":
         pred = pred * ste + mte
