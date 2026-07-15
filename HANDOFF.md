@@ -1,5 +1,12 @@
 # HANDOFF — 현재 상태와 다음 단계
 
+## G5 필수 ablation (2026-07-15 사용자 논의에서 확정)
+
+1. **공변량-입력 baseline**: 외생 그룹 4개 × 대표 백본에서 "RevIN + 공변량을 입력 채널로 추가" arm — "정보량 vs 주입 메커니즘" 리뷰 공격 봉쇄용.
+2. **CN 실패 크기의 이론 연결**: 표준 벤치마크에서 CondNorm 대패(etth1 2.4 vs revin 0.29)를 1단계 OOS 오차 전파 항으로 정량 분해 (Discussion).
+3. (선택) 1단계 val-R² ≤ 0 시 m̂→전역평균 수축 안전장치 — "확장"으로 제안, 사후수정 아님을 명시.
+4. 부록 그림 후보: paper/figures/sample_forecasts.png (질적 예측 비교 — 램프 추적/흐린 날 사례).
+
 - **최종 갱신**: 2026-07-13
 - **완료 Phase**: G0 ✅ → G1 ✅ → G2 ✅ **[GATE 1: GO]** → G3 ✅
 - **다음 Phase**: **G4 — 사전 등록 → 실데이터 grid (GATE 2)** (RESEARCH_PLAN.md §10, 부록 A [G4])

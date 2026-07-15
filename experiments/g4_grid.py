@@ -359,6 +359,10 @@ def main():
                     help="torch arms only (GPU workers)")
     ap.add_argument("--norms", default="",
                     help="comma subset of norm arms (worker partitioning)")
+    ap.add_argument("--cov-input", action="store_true",
+                    help="information-fair ablation: exogenous covariates as "
+                         "extra input channels for EVERY arm (target-channel "
+                         "loss/metrics only); rows tagged norm='<arm>+cov'")
     ap.add_argument("--lgbm-only", action="store_true",
                     help="LGBM arms only (dedicated sequential CPU lane)")
     args = ap.parse_args()
