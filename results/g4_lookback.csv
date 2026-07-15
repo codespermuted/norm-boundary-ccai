@@ -68,3 +68,4 @@ etth2,patchtst,336,192,0.354423
 etth2,segrnn,336,96,0.364877
 electricity,patchtst,96,336,0.130693
 electricity,segrnn,96,720,0.112265
+jeju_wind,timexer_ms,24,192,0.692566

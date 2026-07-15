@@ -59,7 +59,8 @@ BACKBONES = ("rlinear", "patchtst", "segrnn")            # + lgbm_dms separately
 LOOKBACKS = (96, 192, 336, 720)
 SEEDS = range(5)
 LGBM_L = 336
-LR = {"rlinear": 5e-3, "patchtst": 1e-4, "segrnn": 1e-3}
+LR = {"rlinear": 5e-3, "patchtst": 1e-4, "segrnn": 1e-3,
+      "itransformer": 1e-4, "timexer": 1e-4, "timexer_ms": 1e-4}
 FIELDS = ["dataset", "norm", "backbone", "h", "seed", "L", "mse", "mae",
           "val_mse", "epochs", "wall_s"]
 
@@ -148,6 +149,14 @@ def torch_run(frame: dict, L: int, h: int, backbone: str, norm_name: str,
         series = (values - mu_g) / sd_g
         model_norm = norm_name
 
+    ms_mode = backbone == "timexer_ms"
+    if ms_mode:
+        if frame.get("exog") is None:
+            raise ValueError("timexer_ms requires exogenous covariates")
+        cov = frame["exog"]
+        cov_z = (cov - cov[:t1].mean(0)) / cov[:t1].std(0)
+        series = np.hstack([series, cov_z])  # ch0 target, rest covariates
+
     st = torch.tensor(series, dtype=torch.float32, device=device)
     starts = {k: torch.tensor(v, dtype=torch.long, device=device)
               for k, v in split_starts(frame, L, h).items()}
@@ -159,13 +168,35 @@ def torch_run(frame: dict, L: int, h: int, backbone: str, norm_name: str,
         y = st[s_idx[:, None] + L + ar_h[None, :]]
         return x, y
 
-    norm = build_norm(model_norm, num_features=C, lookback=L, horizon=h)
-    bb = build_backbone(backbone, lookback=L, horizon=h, num_features=C)
-    model = NormWrapper(bb, norm).to(device)
+    if ms_mode:
+        from src.models.timexer import TimeXer
+
+        class _MSAdapter(torch.nn.Module):
+            """norm on target channel only; covariates feed TimeXer's
+            exogenous cross-attention path (published 'MS' mode)."""
+
+            def __init__(self, nrm, txr):
+                super().__init__()
+                self.nrm, self.txr = nrm, txr
+
+            def forward(self, xc):
+                x, cv = xc[..., :1], xc[..., 1:]
+                xn = self.nrm(x, "norm")
+                out = self.txr(xn.squeeze(-1), cv)
+                return self.nrm(out.unsqueeze(-1), "denorm")
+
+        norm = build_norm(model_norm, num_features=1, lookback=L, horizon=h)
+        model = _MSAdapter(
+            norm, TimeXer(L, h, d_cov=frame["exog"].shape[1])).to(device)
+    else:
+        norm = build_norm(model_norm, num_features=C, lookback=L, horizon=h)
+        bb = build_backbone(backbone, lookback=L, horizon=h, num_features=C)
+        model = NormWrapper(bb, norm).to(device)
 
     batch_cap = int(os.environ.get("G4_BATCH_CAP", 256))
     batch = max(16, min(batch_cap, int(2_000_000 / (L * C))))
     tr = starts["train"]
+    ysl = (lambda t: t[..., :1]) if ms_mode else (lambda t: t)
 
     if getattr(norm, "requires_pretrain", False):
         stat_opt = torch.optim.Adam(list(norm.stats_parameters()), lr=1e-4)
@@ -174,8 +205,8 @@ def torch_run(frame: dict, L: int, h: int, backbone: str, norm_name: str,
             for i in range(0, len(perm), batch):
                 x, y = gather(perm[i : i + batch])
                 stat_opt.zero_grad()
-                norm(x, "norm")
-                norm.stats_loss(y).backward()
+                norm(ysl(x), "norm")
+                norm.stats_loss(ysl(y)).backward()
                 stat_opt.step()
         for p in norm.stats_parameters():
             p.requires_grad_(False)
@@ -190,6 +221,7 @@ def torch_run(frame: dict, L: int, h: int, backbone: str, norm_name: str,
             s = starts[which]
             for i in range(0, len(s), batch):
                 x, y = gather(s[i : i + batch])
+                y = ysl(y)
                 tot += torch.sum((model(x) - y) ** 2).item()
                 cnt += y.numel()
         return tot / cnt
@@ -201,9 +233,9 @@ def torch_run(frame: dict, L: int, h: int, backbone: str, norm_name: str,
         for i in range(0, len(perm), batch):
             x, y = gather(perm[i : i + batch])
             opt.zero_grad()
-            loss = torch.nn.functional.mse_loss(model(x), y)
+            loss = torch.nn.functional.mse_loss(model(x), ysl(y))
             if hasattr(norm, "aux_loss"):
-                loss = loss + norm.aux_loss(y)
+                loss = loss + norm.aux_loss(ysl(y))
             loss.backward()
             opt.step()
         v = eval_mse("val")
@@ -359,6 +391,11 @@ def main():
                     help="torch arms only (GPU workers)")
     ap.add_argument("--norms", default="",
                     help="comma subset of norm arms (worker partitioning)")
+    ap.add_argument("--backbones", default="",
+                    help="comma subset/extension of backbones "
+                         "(e.g. itransformer,timexer_ms). NOTE: extension "
+                         "backbones are post-registration robustness — "
+                         "GATE 2 stays on the original four")
     ap.add_argument("--cov-input", action="store_true",
                     help="information-fair ablation: exogenous covariates as "
                          "extra input channels for EVERY arm (target-channel "
@@ -397,6 +434,8 @@ def main():
         names = [n for n in names if n in args.datasets.split(",")]
     h_filter = ({int(x) for x in args.horizons.split(",")}
                 if args.horizons else None)
+    run_backbones = (tuple(args.backbones.split(","))
+                     if args.backbones else BACKBONES)
     for name in names:
         frame = build_frame(name)
         level = firststage(frame)
@@ -406,14 +445,14 @@ def main():
             # lookback per backbone (fixed across norm arms afterwards)
             Ls = {}
             if not args.lgbm_only:
-                for backbone in BACKBONES:
+                for backbone in run_backbones:
                     Ls[backbone] = tune_lookback(frame, h, backbone, device,
                                                  lw, lb_done)
                     lb_f.flush()
             norm_list = ([n for n in NORM_ORDER if n in args.norms.split(",")]
                          if args.norms else NORM_ORDER)
             for norm_name in norm_list:
-                for backbone in (() if args.lgbm_only else BACKBONES):
+                for backbone in (() if args.lgbm_only else run_backbones):
                     L = Ls[backbone]
                     if L is None:
                         continue
