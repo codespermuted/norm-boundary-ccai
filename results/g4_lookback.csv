@@ -69,3 +69,15 @@ etth2,segrnn,336,96,0.364877
 electricity,patchtst,96,336,0.130693
 electricity,segrnn,96,720,0.112265
 jeju_wind,timexer_ms,24,192,0.692566
+jeju_wind,itransformer,24,192,0.758501
+jeju_wind,itransformer,48,192,0.930787
+jeju_wind,timexer_ms,48,192,0.855283
+gefcom_wind,itransformer,24,336,0.720506
+gefcom_wind,timexer_ms,24,96,0.647212
+gefcom_wind,itransformer,96,336,0.968723
+gefcom_wind,itransformer,336,336,0.993733
+gefcom_wind,timexer_ms,96,336,0.91247
+gefcom_load,itransformer,24,192,0.160051
+gefcom_wind,timexer_ms,336,336,0.951847
+gefcom_load,timexer_ms,24,192,0.152955
+gefcom_wind,itransformer_ms,24,96,0.625116

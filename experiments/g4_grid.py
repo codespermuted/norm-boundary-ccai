@@ -60,7 +60,7 @@ LOOKBACKS = (96, 192, 336, 720)
 SEEDS = range(5)
 LGBM_L = 336
 LR = {"rlinear": 5e-3, "patchtst": 1e-4, "segrnn": 1e-3,
-      "itransformer": 1e-4, "timexer": 1e-4, "timexer_ms": 1e-4}
+      "itransformer": 1e-4, "itransformer_ms": 1e-4, "timexer": 1e-4, "timexer_ms": 1e-4}
 FIELDS = ["dataset", "norm", "backbone", "h", "seed", "L", "mse", "mae",
           "val_mse", "epochs", "wall_s"]
 
@@ -149,7 +149,7 @@ def torch_run(frame: dict, L: int, h: int, backbone: str, norm_name: str,
         series = (values - mu_g) / sd_g
         model_norm = norm_name
 
-    ms_mode = backbone == "timexer_ms"
+    ms_mode = backbone in ("timexer_ms", "itransformer_ms")
     if ms_mode:
         if frame.get("exog") is None:
             raise ValueError("timexer_ms requires exogenous covariates")
@@ -169,25 +169,32 @@ def torch_run(frame: dict, L: int, h: int, backbone: str, norm_name: str,
         return x, y
 
     if ms_mode:
+        from src.models.itransformer import ITransformer
         from src.models.timexer import TimeXer
 
         class _MSAdapter(torch.nn.Module):
-            """norm on target channel only; covariates feed TimeXer's
-            exogenous cross-attention path (published 'MS' mode)."""
+            """norm on TARGET channel only; covariates enter through each
+            model's published exogenous path (TimeXer: cross-attention;
+            iTransformer: covariate variate-tokens, target token projected)."""
 
-            def __init__(self, nrm, txr):
+            def __init__(self, nrm, net, kind):
                 super().__init__()
-                self.nrm, self.txr = nrm, txr
+                self.nrm, self.net, self.kind = nrm, net, kind
 
             def forward(self, xc):
                 x, cv = xc[..., :1], xc[..., 1:]
                 xn = self.nrm(x, "norm")
-                out = self.txr(xn.squeeze(-1), cv)
-                return self.nrm(out.unsqueeze(-1), "denorm")
+                if self.kind == "timexer_ms":
+                    out = self.net(xn.squeeze(-1), cv).unsqueeze(-1)
+                else:  # itransformer_ms: tokens = [target, covariates]
+                    out = self.net(torch.cat([xn, cv], dim=-1))[..., :1]
+                return self.nrm(out, "denorm")
 
+        d_cov = frame["exog"].shape[1]
         norm = build_norm(model_norm, num_features=1, lookback=L, horizon=h)
-        model = _MSAdapter(
-            norm, TimeXer(L, h, d_cov=frame["exog"].shape[1])).to(device)
+        net = (TimeXer(L, h, d_cov=d_cov) if backbone == "timexer_ms"
+               else ITransformer(L, h, num_features=1 + d_cov))
+        model = _MSAdapter(norm, net, backbone).to(device)
     else:
         norm = build_norm(model_norm, num_features=C, lookback=L, horizon=h)
         bb = build_backbone(backbone, lookback=L, horizon=h, num_features=C)

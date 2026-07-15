@@ -262,3 +262,4 @@ gefcom_wind,condnorm,mlpmix,336,2,192,0.164226
 gefcom_wind,condnorm,mlpmix,336,3,192,0.166423
 gefcom_wind,condnorm,mlpmix,336,4,192,0.165436
 gefcom_wind,raw,lgbmcov,336,0,336,0.164763
+gefcom_wind,revin,lgbmcov,336,0,336,0.202109
