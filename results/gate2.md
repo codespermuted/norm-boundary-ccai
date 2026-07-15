@@ -1,4 +1,4 @@
-# GATE 2 판정 — 사전 등록 적중률 (predictions.md, commit 279bb80)
+# GATE 2 판정 — 사전 등록 적중률 (predictions.md, commit cab17c1)
 
 **판정: GO ✅** — 적중 7/8 (판정 대상 8개 중 8개 산출됨)
 

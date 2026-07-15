@@ -29,7 +29,7 @@ ERR_DIR = os.path.join(ROOT, "results", "g4_errors")
 TAB_PATH = os.path.join(ROOT, "paper", "tables", "tab1_draft.md")
 GATE_PATH = os.path.join(ROOT, "results", "gate2.md")
 
-PREDICTIONS = {  # paper/predictions.md (commit 279bb80)
+PREDICTIONS = {  # paper/predictions.md (commit cab17c1)
     "jeju_wind": +1, "gefcom_wind": +1, "gefcom_load": +1, "gefcom_solar": +1,
     "etth1": -1, "etth2": -1, "electricity": -1, "weather": -1,
 }
@@ -153,7 +153,7 @@ def main():
     with open(TAB_PATH, "w") as f:
         f.write("\n".join(lines))
 
-    gate_md = ["# GATE 2 판정 — 사전 등록 적중률 (predictions.md, commit 279bb80)",
+    gate_md = ["# GATE 2 판정 — 사전 등록 적중률 (predictions.md, commit cab17c1)",
                "", f"**판정: {verdict}** — 적중 {sum(hits)}/{len(hits)} "
                f"(판정 대상 {len(PREDICTIONS)}개 중 {len(hits)}개 산출됨)", "",
                "| dataset | 격차(RevIN−CN) | n쌍 | 예측 | 적중 |",
