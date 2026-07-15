@@ -2030,3 +2030,5 @@ gefcom_load,san,itransformer,24,4,192,0.16172,0.275629,0.156362,12,18.24
 gefcom_load,condnorm,timexer_ms,24,1,192,0.084133,0.181915,1.303486,12,16.32
 gefcom_load,fan,itransformer,24,0,192,0.177554,0.29463,0.173521,12,16.29
 gefcom_wind,revin,itransformer_ms,24,0,96,1.009089,0.761204,0.625116,11,3.67
+electricity,fan,patchtst,336,3,720,0.16601,0.267021,0.139057,12,6031.34
+electricity,fan,patchtst,336,3,720,0.16601,0.267021,0.139057,12,5847.09

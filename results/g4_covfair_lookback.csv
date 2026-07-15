@@ -11,3 +11,7 @@ gefcom_wind,linmix,336,336,0.235925
 gefcom_wind,mlpmix,336,192,0.275348
 gefcom_load,linmix,24,192,0.164805
 gefcom_load,mlpmix,24,96,0.054321
+gefcom_load,linmix,96,192,0.328706
+gefcom_load,mlpmix,96,192,0.085489
+gefcom_load,linmix,336,192,0.485591
+gefcom_load,mlpmix,336,96,0.135422
