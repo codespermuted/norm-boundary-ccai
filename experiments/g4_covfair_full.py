@@ -54,8 +54,25 @@ class MixBackbone(torch.nn.Module):
                 torch.nn.Dropout(0.1), torch.nn.Linear(256, horizon),
             )
 
-    def forward(self, x_win, cov_block):
-        return self.net(torch.cat([x_win, cov_block], dim=1))
+    def forward(self, x_win, cov_past, cov_future):
+        cb = torch.cat([cov_past.flatten(1), cov_future.flatten(1)], dim=1)
+        return self.net(torch.cat([x_win, cb], dim=1))
+
+
+def build_cov_backbone(kind, L, h, d_cov):
+    if kind in ("linmix", "mlpmix"):
+        return MixBackbone(L, h, d_cov, kind)
+    from src.models.cov_variants import PatchTSTCov, SegRNNCov
+
+    if kind == "patchtstcov":
+        return PatchTSTCov(L, h, d_cov)
+    if kind == "segrnncov":
+        return SegRNNCov(L, h, d_cov)
+    raise KeyError(kind)
+
+
+NN_LR = {"linmix": 5e-3, "mlpmix": 1e-3, "patchtstcov": 1e-4,
+         "segrnncov": 1e-3}
 
 
 def nn_run(frame, h, arm, backbone, seed, level, L, device="cpu"):
@@ -81,24 +98,25 @@ def nn_run(frame, h, arm, backbone, seed, level, L, device="cpu"):
 
     norm = (build_norm(arm, num_features=1, lookback=L, horizon=h)
             if arm in ("revin", "san", "fan") else None)
-    model = MixBackbone(L, h, cov.shape[1], backbone).to(device)
+    model = build_cov_backbone(backbone, L, h, cov.shape[1]).to(device)
     if norm is not None:
         norm = norm.to(device)
     ar_L = torch.arange(L, device=device)
-    ar_Lh = torch.arange(L + h, device=device)
     ar_h = torch.arange(h, device=device)
 
     def gather(s_idx):
         x = st[s_idx[:, None] + ar_L[None, :]]
-        cb = ct[s_idx[:, None] + ar_Lh[None, :]].reshape(len(s_idx), -1)
+        cp = ct[s_idx[:, None] + ar_L[None, :]]
+        cf = ct[s_idx[:, None] + L + ar_h[None, :]]
         tgt = st[s_idx[:, None] + L + ar_h[None, :]]
-        return x, cb, tgt
+        return x, (cp, cf), tgt
 
     def forward(x, cb):
+        cp, cf = cb
         if norm is None:
-            return model(x, cb)
+            return model(x, cp, cf)
         xn = norm(x.unsqueeze(-1), "norm").squeeze(-1)
-        out = model(xn, cb)
+        out = model(xn, cp, cf)
         return norm(out.unsqueeze(-1), "denorm").squeeze(-1)
 
     tr = torch.tensor(sp["train"], dtype=torch.long, device=device)
@@ -121,7 +139,7 @@ def nn_run(frame, h, arm, backbone, seed, level, L, device="cpu"):
     params = list(model.parameters())
     if norm is not None:
         params += [p for p in norm.parameters() if p.requires_grad]
-    opt = torch.optim.Adam(params, lr=LR)
+    opt = torch.optim.Adam(params, lr=NN_LR[backbone])
 
     def eval_loss(idx):
         model.eval()
@@ -245,6 +263,9 @@ def lgbm_cov_run(frame, h, arm, level):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--datasets", default=",".join(EXOG))
+    ap.add_argument("--backbones", default=",".join(NN_BACKBONES),
+                    help="subset of linmix,mlpmix,patchtstcov,segrnncov")
+    ap.add_argument("--skip-lgbm", action="store_true")
     args = ap.parse_args()
     torch.set_num_threads(10)
 
@@ -280,7 +301,7 @@ def main():
         frame = build_frame(name)
         level = firststage(frame)
         for h in DATASETS[name]["horizons"]:
-            for backbone in NN_BACKBONES:
+            for backbone in args.backbones.split(","):
                 L_star = tune_L(frame, h, backbone, level, lb_done,
                                 lb_writer, lb_file)
                 for arm in ARMS:
@@ -308,6 +329,8 @@ def main():
                             print(f"mlflow skip: {exc}", flush=True)
                         print(f"{tag} L={L_star}: {r['mse']:.4f}", flush=True)
             for arm in ("raw", "revin", "condnorm"):
+                if args.skip_lgbm:
+                    break
                 key = (name, arm, "lgbmcov", str(h), "0")
                 if key in done:
                     continue

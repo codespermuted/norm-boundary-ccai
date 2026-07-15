@@ -1,2 +1,11 @@
 dataset,backbone,h,L,val_mse
 jeju_wind,linmix,24,336,0.433321
+jeju_wind,mlpmix,24,336,0.462365
+jeju_wind,linmix,48,336,0.476248
+jeju_wind,mlpmix,48,336,0.505266
+gefcom_wind,linmix,24,192,0.190152
+gefcom_wind,mlpmix,24,192,0.201838
+gefcom_wind,linmix,96,336,0.230638
+gefcom_wind,mlpmix,96,336,0.251723
+gefcom_wind,linmix,336,336,0.235925
+gefcom_wind,mlpmix,336,192,0.275348
