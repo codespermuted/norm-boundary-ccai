@@ -121,7 +121,8 @@ LANES = [
      UV + ["experiments.g4_grid", "--datasets", "electricity",
            "--horizons", "336", "--skip-lgbm"], 1,
      {"G4_BATCH_CAP": "16"}),
-    ("B", "covfair_cpu",
+    # CPU-only lane: safe to run concurrently with phase A (label shares "A")
+    ("A", "covfair_cpu",
      lambda: n_missing_covfair(["linmix", "mlpmix", "lgbmcov"]),
      "g4_covfair_full --backbones linmix,mlpmix",
      UV + ["experiments.g4_covfair_full", "--backbones", "linmix,mlpmix"],
