@@ -17,13 +17,16 @@ def dm_test(e1: np.ndarray, e2: np.ndarray, h: int) -> dict:
     d = np.asarray(e1, float) - np.asarray(e2, float)
     n = len(d)
     dbar = d.mean()
-    lags = max(h - 1, 0)
+    # Bartlett/Newey-West is PSD only for bandwidth << n; with h-1 >= n the
+    # estimator is undefined (observed: negative sums on short test segments).
+    # Cap the bandwidth at n/4 and note the truncation in the paper.
+    lags = min(max(h - 1, 0), max(1, n // 4))
     gamma0 = np.mean((d - dbar) ** 2)
     var = gamma0
     for k in range(1, min(lags, n - 1) + 1):
         cov = np.mean((d[k:] - dbar) * (d[:-k] - dbar))
         var += 2 * (1 - k / (lags + 1)) * cov  # Bartlett weights
-    var = max(var, 1e-300) / n
+    var = max(var, 1e-12) / n
     dm = dbar / np.sqrt(var)
     harvey = np.sqrt((n + 1 - 2 * h + h * (h - 1) / n) / n)
     stat = float(dm * harvey)
