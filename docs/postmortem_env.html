@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Post-mortem: .env 소실 사고</title>
+<style>
+  :root {
+    --bg: #fcfcfb; --ink: #1a1a19; --sub: #52514e; --line: #e3e2de;
+    --accent: #2a78d6; --warn-bg: #fdf3f2; --warn-line: #e34948;
+    --ok-bg: #f0f7f2; --ok-line: #1baf7a; --code-bg: #f4f3f1;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1a1a19; --ink: #f2f1ed; --sub: #c3c2b7; --line: #3a3936;
+      --accent: #5598e7; --warn-bg: #2a1e1d; --warn-line: #e66767;
+      --ok-bg: #1c2620; --ok-line: #199e70; --code-bg: #262522;
+    }
+  }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font-family: -apple-system, "Segoe UI", "Noto Sans KR", sans-serif;
+         line-height: 1.7; }
+  main { max-width: 760px; margin: 0 auto; padding: 48px 20px 80px; }
+  h1 { font-size: 1.7rem; margin-bottom: .2em; }
+  .meta { color: var(--sub); font-size: .9rem; margin-bottom: 2em; }
+  h2 { font-size: 1.15rem; margin-top: 2.2em; padding-top: 1em;
+       border-top: 1px solid var(--line); }
+  code { background: var(--code-bg); padding: .1em .4em; border-radius: 4px;
+         font-size: .88em; }
+  .box { border-left: 4px solid; border-radius: 6px; padding: 12px 16px;
+         margin: 1em 0; }
+  .tldr { background: var(--warn-bg); border-color: var(--warn-line); }
+  .safe { background: var(--ok-bg); border-color: var(--ok-line); }
+  ol.timeline { padding-left: 1.2em; }
+  ol.timeline li { margin-bottom: .9em; }
+  .tag { display: inline-block; font-size: .75rem; font-weight: 700;
+         padding: 1px 8px; border-radius: 10px; margin-right: 6px;
+         background: var(--code-bg); color: var(--sub); }
+  table { border-collapse: collapse; width: 100%; font-size: .92rem; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+  th { color: var(--sub); font-weight: 600; }
+  .lesson { font-weight: 600; }
+</style>
+</head>
+<body>
+<main>
+<h1>Post-mortem: <code>.env</code> 소실 사고</h1>
+<div class="meta">norm-boundary 프로젝트 · 2026-07-16 · 작성: Claude (연구 자동화 세션)</div>
+
+<div class="box tldr">
+<strong>한 줄 요약</strong> — API 키 파일(<code>.env</code>)이 git 이력 정리 과정에서
+로컬에서도 삭제되었습니다. <strong>외부 유출은 없었고</strong> 실험 진행에도 지장이 없으나,
+키 값은 복구 불가하여 포털에서 다시 복사해 넣어야 합니다.
+</div>
+
+<h2>1. 무슨 일이 있었나 (경위)</h2>
+<ol class="timeline">
+  <li><span class="tag">7/13</span> G3 단계에서 <code>git add -A</code> 커밋 시
+      <code>.env</code>가 <strong>gitignore에 등재되지 않은 상태</strong>로 이력에
+      포함되었습니다. (세션 시작 시점부터 untracked로 존재했으나 무결성 점검 없이 일괄 add)</li>
+  <li><span class="tag">7/15</span> GitHub 원격 push 준비 중 이력 점검에서 이 사실을
+      발견했습니다. push 전이었으므로 유출은 없었습니다.</li>
+  <li><span class="tag">7/15</span> <code>git filter-branch</code>로 전체 이력에서
+      <code>.env</code>를 제거(purge)했습니다. 이때 직전 스냅샷 커밋에 이미 추적
+      중이던(=gitignore가 무효인) <code>.env</code>가 포함되어 있었고, 재작성된
+      HEAD로 체크아웃되면서 <strong>워킹 트리의 실제 파일까지 함께 삭제</strong>되었습니다.</li>
+  <li><span class="tag">확인 실수</span> 파일 보존 확인을 <em>실패한 1차 시도 직후에만</em>
+      수행하고, 성공한 2차 재작성 후에는 재확인하지 않은 채 "보존됨"으로 보고했습니다.</li>
+  <li><span class="tag">7/16</span> 사용자 질문("<code>.env</code> 없앴어?")을 계기로
+      소실을 발견했습니다.</li>
+</ol>
+
+<h2>2. 트러블슈팅 (복구 시도)</h2>
+<table>
+  <tr><th>시도</th><th>결과</th></tr>
+  <tr><td>git 추적/이력 검색 (<code>ls-files</code>, <code>log --all</code>)</td>
+      <td>0건 — 퍼지가 완전함 (보안 목적 달성)</td></tr>
+  <tr><td>원격(GitHub) 이력 검색</td><td>0건 — 유출 없음 확정</td></tr>
+  <tr><td>잔존 blob 탐색 (<code>git fsck --unreachable</code>)</td>
+      <td>없음 — <code>gc --prune=now</code>로 이미 소거</td></tr>
+  <tr><td>기타 사본 (상태 파일·로그·셸 이력)</td>
+      <td>키 값은 어디에도 출력·복사된 적 없음 (보안상 옳은 습관이 복구는 막음)</td></tr>
+</table>
+<p>결론: <strong>키 값은 복구 불가.</strong> 발급 포털(기상청 API허브·data.go.kr
+마이페이지)에서 재복사만 하면 되며 재발급은 필요 없습니다.</p>
+
+<div class="box safe">
+<strong>영향 범위</strong> — ① 유출: 없음 ② 실험: 무중단 (NWP 수집은 완료 상태, 진행 중인
+grid는 키 미사용) ③ 필요 조치: 향후 추가 수집 전 <code>.env</code> 재작성만.
+</div>
+
+<h2>3. 근본 원인</h2>
+<p>두 가지가 겹쳤습니다.</p>
+<ol>
+  <li><strong>시크릿 관리 규칙 부재</strong>: 프로젝트 초기 gitignore에
+      <code>.env</code>가 없었고, <code>git add -A</code> 습관이 이를 그대로 태웠습니다.</li>
+  <li><strong>파괴적 작업의 검증 절차 미흡</strong>: 이력 재작성은 워킹 트리를 건드릴
+      수 있는 작업인데, 사전 사본 없이 실행했고 사후 검증을 성공 케이스에 대해
+      수행하지 않았습니다.</li>
+</ol>
+
+<h2>4. 방지 계획 (적용 완료)</h2>
+<table>
+  <tr><th>대책</th><th>상태</th></tr>
+  <tr><td><code>.gitignore</code>에 <code>.env</code> 등재 (이력 포함 원인 제거)</td>
+      <td>✅ 적용</td></tr>
+  <tr><td>복원 템플릿 <code>docs/env.template</code> (변수명·복원 절차 안내)</td>
+      <td>✅ 커밋됨</td></tr>
+  <tr><td>레포 밖 백업 경로 <code>~/.config/norm-boundary/.env</code> +
+      수집기 폴백 로딩 (git 수술이 유일 사본을 삭제할 수 없는 구조)</td>
+      <td>✅ 코드 반영</td></tr>
+  <tr><td>이력 재작성/리셋 등 파괴적 git 작업 체크리스트:
+      ① 실행 전 시크릿·비추적 산출물 임시 사본 ② 실행 후 워킹 트리 파일 존재 재검증
+      ③ "보존됨" 보고는 검증 출력과 함께</td>
+      <td>✅ 운영 규칙화 (이 문서)</td></tr>
+</table>
+
+<h2>5. 교훈</h2>
+<p class="lesson">"성공한 실행 후의 검증"을 생략한 보고는 보고가 아니라 추정이다.
+그리고 시크릿은 만들어진 그 순간 gitignore에 올라가야 한다.</p>
+
+</main>
+</body>
+</html>
