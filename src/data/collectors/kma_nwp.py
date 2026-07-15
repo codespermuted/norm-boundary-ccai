@@ -99,13 +99,22 @@ def site_indices() -> dict[str, tuple[int, int]]:
 class KeyManager:
     def __init__(self):
         self.keys = []
-        for line in open(os.path.join(ROOT, ".env")):
+        candidates = [os.path.join(ROOT, ".env"),
+                      os.path.expanduser("~/.config/norm-boundary/.env")]
+        env_path = next((p for p in candidates if os.path.exists(p)), None)
+        if env_path is None:
+            raise RuntimeError(
+                "no .env found — restore from docs/env.template "
+                f"(searched: {candidates})")
+        for line in open(env_path):
             line = line.strip()
             if line.startswith("KMA_API_KEY") and "=" in line:
                 # keys must be whitespace-free; .env lines may wrap/pad them
-                self.keys.append("".join(line.split("=", 1)[1].split()))
+                key = "".join(line.split("=", 1)[1].split())
+                if key:
+                    self.keys.append(key)
         if not self.keys:
-            raise RuntimeError("no KMA_API_KEY* in .env")
+            raise RuntimeError(f"no KMA_API_KEY* values in {env_path}")
         self.lock = threading.Lock()
         today = date.today().isoformat()
         self.state = {str(i): {"date": today, "calls": 0, "bytes": 0}

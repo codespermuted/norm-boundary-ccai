@@ -15,3 +15,15 @@ gefcom_load,linmix,96,192,0.328706
 gefcom_load,mlpmix,96,192,0.085489
 gefcom_load,linmix,336,192,0.485591
 gefcom_load,mlpmix,336,96,0.135422
+gefcom_solar,linmix,24,192,0.141824
+gefcom_solar,mlpmix,24,192,0.090354
+gefcom_solar,linmix,96,96,0.137772
+gefcom_solar,mlpmix,96,96,0.098537
+gefcom_solar,linmix,24,192,0.141824
+gefcom_solar,mlpmix,24,192,0.087249
+gefcom_solar,linmix,96,96,0.137772
+gefcom_solar,mlpmix,96,96,0.094383
+gefcom_solar,linmix,336,96,0.176347
+gefcom_solar,mlpmix,336,192,0.126105
+gefcom_solar,linmix,336,96,0.176347
+gefcom_solar,mlpmix,336,192,0.118144
