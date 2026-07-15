@@ -1,0 +1,326 @@
+"""FULL information-fair ablation (post-hoc fairness section, NOT
+pre-registered): every arm receives past target + past-and-future covariates.
+
+  norms x backbones on the 4 exogenous datasets, 11 (dataset,h) cells, 5 seeds
+    arms      : raw+cov, revin+cov, san+cov, fan+cov, condnorm+cov
+    backbones : linear-mix (Prop-1 class), mlp-mix (2-layer, nonlinear
+                neural representative), lgbm+cov (industry-standard GBM
+                with weather features; deterministic, arms raw/winz/condnorm)
+
+SAN/FAN operate on the target channel exactly as in the main grid (stats
+pretrain / aux loss); covariates enter through the mixing backbone.
+
+Output: results/g4_covfair_full.csv + per-origin losses.
+Usage: uv run python -m experiments.g4_covfair_full [--datasets ...]
+"""
+
+import argparse
+import csv
+import os
+
+import numpy as np
+import torch
+
+from experiments.g4_grid import DATASETS, build_frame, firststage, split_starts
+from src.models.lgbm_dms import LgbmDMS, window_znorm
+from src.norms import build_norm
+
+ROOT = os.path.join(os.path.dirname(__file__), "..")
+CSV_PATH = os.path.join(ROOT, "results", "g4_covfair_full.csv")
+ERR_DIR = os.path.join(ROOT, "results", "g4_errors")
+
+EXOG = ("jeju_wind", "gefcom_wind", "gefcom_load", "gefcom_solar")
+ARMS = ("raw", "revin", "san", "fan", "condnorm")
+NN_BACKBONES = ("linmix", "mlpmix")
+L = 336          # LGBM+cov fixed L, mirroring the main grid's LGBM_L
+LOOKBACKS = (96, 192, 336, 720)   # NN arms: tuned like the main grid
+SEEDS = range(5)
+EPOCHS, PATIENCE, LR, BATCH = 15, 3, 5e-3, 256
+FIELDS = ["dataset", "arm", "backbone", "h", "seed", "L", "mse"]
+LB_CSV = os.path.join(ROOT, "results", "g4_covfair_lookback.csv")
+
+
+class MixBackbone(torch.nn.Module):
+    """Linear or MLP map: [target window ; cov block] -> horizon."""
+
+    def __init__(self, lookback, horizon, d_cov, kind):
+        super().__init__()
+        d_in = lookback + (lookback + horizon) * d_cov
+        if kind == "linmix":
+            self.net = torch.nn.Linear(d_in, horizon)
+        else:
+            self.net = torch.nn.Sequential(
+                torch.nn.Linear(d_in, 256), torch.nn.ReLU(),
+                torch.nn.Dropout(0.1), torch.nn.Linear(256, horizon),
+            )
+
+    def forward(self, x_win, cov_block):
+        return self.net(torch.cat([x_win, cov_block], dim=1))
+
+
+def nn_run(frame, h, arm, backbone, seed, level, L, device="cpu"):
+    torch.manual_seed(seed)
+    y = frame["values"][:, 0]
+    cov = frame["exog"]
+    t1 = frame["t1"]
+    mu_g, sd_g = y[:t1].mean(), y[:t1].std()
+    cov_z = (cov - cov[:t1].mean(0)) / cov[:t1].std(0)
+
+    if arm == "condnorm":
+        resid = y - level[:, 0]
+        mu_r, sd_r = resid[:t1].mean(), resid[:t1].std()
+        series = (resid - mu_r) / sd_r
+    else:
+        series = (y - mu_g) / sd_g
+
+    st = torch.tensor(series, dtype=torch.float32, device=device)
+    ct = torch.tensor(cov_z, dtype=torch.float32, device=device)
+    lv = torch.tensor(level[:, 0], dtype=torch.float32, device=device)
+    yt = torch.tensor(y, dtype=torch.float32, device=device)
+    sp = split_starts(frame, L, h)
+
+    norm = (build_norm(arm, num_features=1, lookback=L, horizon=h)
+            if arm in ("revin", "san", "fan") else None)
+    model = MixBackbone(L, h, cov.shape[1], backbone).to(device)
+    if norm is not None:
+        norm = norm.to(device)
+    ar_L = torch.arange(L, device=device)
+    ar_Lh = torch.arange(L + h, device=device)
+    ar_h = torch.arange(h, device=device)
+
+    def gather(s_idx):
+        x = st[s_idx[:, None] + ar_L[None, :]]
+        cb = ct[s_idx[:, None] + ar_Lh[None, :]].reshape(len(s_idx), -1)
+        tgt = st[s_idx[:, None] + L + ar_h[None, :]]
+        return x, cb, tgt
+
+    def forward(x, cb):
+        if norm is None:
+            return model(x, cb)
+        xn = norm(x.unsqueeze(-1), "norm").squeeze(-1)
+        out = model(xn, cb)
+        return norm(out.unsqueeze(-1), "denorm").squeeze(-1)
+
+    tr = torch.tensor(sp["train"], dtype=torch.long, device=device)
+    va = torch.tensor(sp["val"], dtype=torch.long, device=device)
+    te = torch.tensor(sp["test"], dtype=torch.long, device=device)
+
+    if norm is not None and getattr(norm, "requires_pretrain", False):
+        stat_opt = torch.optim.Adam(list(norm.stats_parameters()), lr=1e-4)
+        for _ in range(3):
+            perm = tr[torch.randperm(len(tr), device=device)]
+            for i in range(0, len(perm), BATCH):
+                x, cb, tgt = gather(perm[i : i + BATCH])
+                stat_opt.zero_grad()
+                norm(x.unsqueeze(-1), "norm")
+                norm.stats_loss(tgt.unsqueeze(-1)).backward()
+                stat_opt.step()
+        for p in norm.stats_parameters():
+            p.requires_grad_(False)
+
+    params = list(model.parameters())
+    if norm is not None:
+        params += [p for p in norm.parameters() if p.requires_grad]
+    opt = torch.optim.Adam(params, lr=LR)
+
+    def eval_loss(idx):
+        model.eval()
+        tot = n = 0
+        with torch.no_grad():
+            for i in range(0, len(idx), BATCH):
+                x, cb, tgt = gather(idx[i : i + BATCH])
+                tot += torch.sum((forward(x, cb) - tgt) ** 2).item()
+                n += tgt.numel()
+        return tot / n
+
+    best, best_state, bad = float("inf"), None, 0
+    for _ in range(EPOCHS):
+        model.train()
+        perm = tr[torch.randperm(len(tr), device=device)]
+        for i in range(0, len(perm), BATCH):
+            x, cb, tgt = gather(perm[i : i + BATCH])
+            opt.zero_grad()
+            loss = torch.nn.functional.mse_loss(forward(x, cb), tgt)
+            if norm is not None and hasattr(norm, "aux_loss"):
+                loss = loss + norm.aux_loss(tgt.unsqueeze(-1))
+            loss.backward()
+            opt.step()
+        v = eval_loss(va)
+        if v < best:
+            best, bad = v, 0
+            best_state = ({k: t.clone() for k, t in model.state_dict().items()},
+                          {k: t.clone() for k, t in norm.state_dict().items()}
+                          if norm is not None else None)
+        else:
+            bad += 1
+            if bad >= PATIENCE:
+                break
+    model.load_state_dict(best_state[0])
+    if norm is not None and best_state[1] is not None:
+        norm.load_state_dict(best_state[1])
+
+    model.eval()
+    losses = []
+    with torch.no_grad():
+        for i in range(0, len(te), BATCH):
+            sb = te[i : i + BATCH]
+            x, cb, _ = gather(sb)
+            pred = forward(x, cb)
+            tgt_pos = sb[:, None] + L + ar_h[None, :]
+            if arm == "condnorm":
+                pred_y = pred * sd_r + mu_r + lv[tgt_pos]
+            else:
+                pred_y = pred * sd_g + mu_g
+            se = ((pred_y - yt[tgt_pos]) / sd_g) ** 2
+            losses.append(se.mean(dim=1).cpu().numpy())
+    losses = np.concatenate(losses)
+    return {"mse": float(losses.mean()), "losses": losses, "val_mse": best}
+
+
+def tune_L(frame, h, backbone, level, lb_done, lb_writer, lb_file):
+    """Mirror the main grid: revin+cov seed0 val MSE over LOOKBACKS, frozen
+    across every arm afterwards."""
+    key = (frame["name"], backbone, str(h))
+    if key in lb_done and lb_done[key]["L"]:
+        return int(lb_done[key]["L"])
+    best_L, best_v = None, float("inf")
+    for L_try in LOOKBACKS:
+        sp = split_starts(frame, L_try, h)
+        if min(len(v) for v in sp.values()) < 10:
+            continue
+        r = nn_run(frame, h, "revin", backbone, 0, level, L_try)
+        if r["val_mse"] < best_v:
+            best_L, best_v = L_try, r["val_mse"]
+    lb_writer.writerow({"dataset": frame["name"], "backbone": backbone,
+                        "h": h, "L": best_L, "val_mse": round(best_v, 6)})
+    lb_file.flush()
+    return best_L
+
+
+def lgbm_cov_run(frame, h, arm, level):
+    y = frame["values"][:, 0]
+    cov = frame["exog"]
+    t1 = frame["t1"]
+    mu_g, sd_g = y[:t1].mean(), y[:t1].std()
+    cov_z = (cov - cov[:t1].mean(0)) / cov[:t1].std(0)
+    if arm == "condnorm":
+        resid = y - level[:, 0]
+        mu_r, sd_r = resid[:t1].mean(), resid[:t1].std()
+        series = (resid - mu_r) / sd_r
+    else:
+        series = (y - mu_g) / sd_g
+    sp = split_starts(frame, L, h)
+
+    def feats(idx):
+        x = np.stack([series[i : i + L] for i in idx])
+        cb = np.stack([cov_z[i : i + L + h].ravel() for i in idx])
+        tgt = np.stack([series[i + L : i + L + h] for i in idx])
+        return x, cb, tgt
+
+    xtr, ctr, ytr = feats(sp["train"])
+    xte, cte, yte = feats(sp["test"])
+    sw = None
+    if arm == "revin":
+        xtr, (mtr, strd) = window_znorm(xtr)
+        ytr = (ytr - mtr) / strd
+        sw = (strd ** 2).ravel()
+        xte, (mte, ste) = window_znorm(xte)
+    model = LgbmDMS(horizon=h, n_estimators=100,
+                    n_jobs=int(os.environ.get("G4_LGBM_JOBS", -1)))
+    model.fit(np.hstack([xtr, ctr]), ytr, sample_weight=sw)
+    pred = model.predict(np.hstack([xte, cte]))
+    if arm == "revin":
+        pred = pred * ste + mte
+    tgt_pos = sp["test"][:, None] + L + np.arange(h)[None, :]
+    if arm == "condnorm":
+        pred_y = pred * sd_r + mu_r + level[tgt_pos, 0]
+        true_y = frame["values"][tgt_pos, 0]
+        se = ((pred_y - true_y) / sd_g) ** 2
+    else:
+        se = (pred - yte) ** 2
+    losses = se.mean(axis=1)
+    return {"mse": float(losses.mean()), "losses": losses}
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--datasets", default=",".join(EXOG))
+    args = ap.parse_args()
+    torch.set_num_threads(10)
+
+    done = set()
+    new = not os.path.exists(CSV_PATH)
+    if not new:
+        with open(CSV_PATH) as f:
+            done = {(r["dataset"], r["arm"], r["backbone"], r["h"], r["seed"])
+                    for r in csv.DictReader(f)}
+    f = open(CSV_PATH, "a", newline="")
+    w = csv.DictWriter(f, fieldnames=FIELDS)
+    if new:
+        w.writeheader()
+
+    lb_done = {}
+    lb_new = not os.path.exists(LB_CSV)
+    if not lb_new:
+        with open(LB_CSV) as lf:
+            lb_done = {(r["dataset"], r["backbone"], r["h"]): r
+                       for r in csv.DictReader(lf)}
+    lb_file = open(LB_CSV, "a", newline="")
+    lb_writer = csv.DictWriter(lb_file, fieldnames=["dataset", "backbone",
+                                                    "h", "L", "val_mse"])
+    if lb_new:
+        lb_writer.writeheader()
+
+    import mlflow
+    mlflow.set_tracking_uri(os.environ.get(
+        "MLFLOW_TRACKING_URI", f"sqlite:///{os.path.join(ROOT, 'mlflow.db')}"))
+    mlflow.set_experiment("norm-boundary")
+
+    for name in args.datasets.split(","):
+        frame = build_frame(name)
+        level = firststage(frame)
+        for h in DATASETS[name]["horizons"]:
+            for backbone in NN_BACKBONES:
+                L_star = tune_L(frame, h, backbone, level, lb_done,
+                                lb_writer, lb_file)
+                for arm in ARMS:
+                    for seed in SEEDS:
+                        key = (name, arm, backbone, str(h), str(seed))
+                        if key in done:
+                            continue
+                        r = nn_run(frame, h, arm, backbone, seed, level, L_star)
+                        tag = f"{name}_{arm}+cov_{backbone}_{h}_{seed}"
+                        np.save(os.path.join(ERR_DIR, tag + ".npy"),
+                                r.pop("losses"))
+                        w.writerow({"dataset": name, "arm": arm,
+                                    "backbone": backbone, "h": h, "seed": seed,
+                                    "L": L_star, "mse": round(r["mse"], 6)})
+                        f.flush()
+                        try:
+                            with mlflow.start_run(run_name=tag):
+                                mlflow.log_params({"phase": "G4covfair",
+                                                   "dataset": name, "arm": arm,
+                                                   "backbone": backbone,
+                                                   "h": h, "seed": seed,
+                                                   "L": L_star})
+                                mlflow.log_metrics({"test_mse": r["mse"]})
+                        except Exception as exc:
+                            print(f"mlflow skip: {exc}", flush=True)
+                        print(f"{tag} L={L_star}: {r['mse']:.4f}", flush=True)
+            for arm in ("raw", "revin", "condnorm"):
+                key = (name, arm, "lgbmcov", str(h), "0")
+                if key in done:
+                    continue
+                r = lgbm_cov_run(frame, h, arm, level)
+                tag = f"{name}_{arm}+cov_lgbmcov_{h}_0"
+                np.save(os.path.join(ERR_DIR, tag + ".npy"), r.pop("losses"))
+                w.writerow({"dataset": name, "arm": arm, "backbone": "lgbmcov",
+                            "h": h, "seed": 0, "L": L,
+                            "mse": round(r["mse"], 6)})
+                f.flush()
+                print(f"{tag}: {r['mse']:.4f}", flush=True)
+    print("covfair-full complete", flush=True)
+
+
+if __name__ == "__main__":
+    main()

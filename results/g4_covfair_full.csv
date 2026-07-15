@@ -1,0 +1,12 @@
+dataset,arm,backbone,h,seed,L,mse
+jeju_wind,raw,linmix,24,0,336,0.309233
+jeju_wind,raw,linmix,24,1,336,0.336627
+jeju_wind,raw,linmix,24,2,336,0.306159
+jeju_wind,raw,linmix,24,3,336,0.324223
+jeju_wind,raw,linmix,24,4,336,0.304175
+jeju_wind,revin,linmix,24,0,336,0.325076
+jeju_wind,revin,linmix,24,1,336,0.316806
+jeju_wind,revin,linmix,24,2,336,0.314142
+jeju_wind,revin,linmix,24,3,336,0.323694
+jeju_wind,revin,linmix,24,4,336,0.298876
+jeju_wind,san,linmix,24,0,336,0.340833

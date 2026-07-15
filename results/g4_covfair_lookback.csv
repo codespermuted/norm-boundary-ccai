@@ -1,0 +1,2 @@
+dataset,backbone,h,L,val_mse
+jeju_wind,linmix,24,336,0.433321
