@@ -27,3 +27,6 @@ gefcom_solar,linmix,336,96,0.176347
 gefcom_solar,mlpmix,336,192,0.126105
 gefcom_solar,linmix,336,96,0.176347
 gefcom_solar,mlpmix,336,192,0.118144
+jeju_wind,segrnncov,24,720,0.341305
+jeju_wind,patchtstcov,24,192,0.458011
+jeju_wind,segrnncov,48,720,0.388871

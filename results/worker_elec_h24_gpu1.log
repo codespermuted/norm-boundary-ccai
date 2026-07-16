@@ -22,3 +22,10 @@
 [22] electricity_fan_patchtst_24_1 L=720: mse=0.1009 (5200.67s)
 [23] electricity_fan_patchtst_24_2 L=720: mse=0.1010 (4730.65s)
 [24] electricity_fan_patchtst_24_3 L=720: mse=0.1004 (5669.85s)
+[25] electricity_fan_patchtst_24_4 L=720: mse=0.1026 (3788.9s)
+[26] electricity_fan_segrnn_24_0 L=720: mse=0.0978 (625.24s)
+[27] electricity_fan_segrnn_24_1 L=720: mse=0.0983 (687.22s)
+[28] electricity_fan_segrnn_24_2 L=720: mse=0.0968 (749.47s)
+[29] electricity_fan_segrnn_24_3 L=720: mse=0.0987 (687.81s)
+[30] electricity_fan_segrnn_24_4 L=720: mse=0.0978 (749.68s)
+grid pass complete

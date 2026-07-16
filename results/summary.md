@@ -52,3 +52,12 @@
 
 - 원본: MLflow `sqlite:///mlflow.db`, experiment `ini/norm-boundary`
 - 목적: 파이프라인 개통 확인 (하이퍼파라미터 미튜닝 — 문헌 대조는 G3에서)
+
+## G4 실데이터 grid — GATE 2: **GO ✅ 8/8 적중** (2026-07-16 공식 판정)
+
+- 블록 A 완주 1,794/1,794 (사전 등록 4백본). 판정: `results/gate2.md`, Tab 1: `paper/tables/tab1_draft.md`
+- 사전 등록(commit cab17c1, 실행 전 시각 증빙) 부호 예측 8/8 — GATE 2 기준(≥6/8) 초과 달성
+- MCS(α=0.10): 외생 11셀 전부 {condnorm} 단독 생존 / 표준 12셀은 revin·san·fan 계열 생존, condnorm 탈락
+- SAN·FAN도 외생 그룹에서 CondNorm에 전패 → "적응형 정규화가 이미 해결" 공격 봉쇄
+- 블록 B(정보 대등): 기본 3백본 완료 — CN 우세 DM 유의 10/11, RAW+cov>RevIN+cov 전 셀
+- 블록 C(SOTA): TimeXer-MS 중간 격차 +0.655 (진행 중)

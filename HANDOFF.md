@@ -67,3 +67,10 @@
   사전 등록 규칙(절대 LPS)은 유지, ΔLPS는 정밀화 제안으로 명시.
 - (선택) SMP 스트레스 테스트: EPSIS 시간별 SMP + 연료가·수요 공변량 — "높은 LPS·강한 지속성" 사분면의
   탐색 데이터셋 (사전 등록 외, 부록). 이론 예측: 평시 IN 우세, 레짐 전환 구간 CN 우세.
+
+## G4 종료 — GATE 2 판정 (2026-07-16)
+
+**판정: GO ✅ (8/8 적중, 기준 6/8)** — 상세는 results/gate2.md, results/summary.md.
+잔여: 블록 B-deep(슈퍼바이저 진행 중) → 블록 C SOTA → 완료 후 G5 진입.
+G5 착수 시: Fig 3(LPS vs 격차 + 사전등록 적중, Spearman ρ), Fig 4(분산 귀속), Fig 5(h별 격차),
+Tab 2(MCS·귀속), Tab 3(τ 민감도 + ΔLPS 병산), covfair·SOTA 최종 표, make figures 재현성.

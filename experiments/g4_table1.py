@@ -55,6 +55,11 @@ def main():
     args = ap.parse_args()
 
     df = pd.read_csv(CSV_PATH)
+    # pre-registered analysis: ORIGINAL four backbones only; SOTA extension
+    # rows (itransformer/timexer variants) are reported separately
+    ORIGINAL = ("rlinear", "patchtst", "segrnn", "lgbm_dms")
+    df = df[df["backbone"].isin(ORIGINAL)]
+    df = df.drop_duplicates(["dataset", "norm", "backbone", "h", "seed"])
     datasets = [d for d in PREDICTIONS if d in set(df["dataset"])]
 
     # ---------------- GATE 2: pre-registered sign hits -----------------
