@@ -61,3 +61,14 @@
 - SAN·FAN도 외생 그룹에서 CondNorm에 전패 → "적응형 정규화가 이미 해결" 공격 봉쇄
 - 블록 B(정보 대등): 기본 3백본 완료 — CN 우세 DM 유의 10/11, RAW+cov>RevIN+cov 전 셀
 - 블록 C(SOTA): TimeXer-MS 중간 격차 +0.655 (진행 중)
+
+## G4 확장 블록 완주 + G5 분석 (2026-07-16)
+
+- **전 블록 완결**: A 1,794 + B 1,133 + C/D 1,275 = **4,202 runs**
+- **블록 B (정보 대등, 5백본)**: CondNorm이 전 백본 최적. DM 유의(CN): patchtstcov 11/11, linmix·mlpmix 10/11, segrnncov 2/11, lgbmcov 3/11 — 유연 백본일수록 격차 축소(용량 서사), RevIN은 전 백본에서 RAW+cov보다 열등
+- **블록 C (SOTA-MS)**: TimeXer-MS 격차 +0.412 (55쌍), iTransformer-MS 동일 패턴 — SOTA 공변량 모델 위에서도 CN 압승
+- **Fig 3**: Spearman ρ=0.762 (p=0.028), (dataset,h) ρ=0.783 (p<1e-5) — G5 AC 유의성 충족
+- **Fig 5**: 외생 4종 전부 격차 h-단조 증가 (명제 3 실데이터 실증)
+- **Tab 2**: 분산 귀속 — norm-관련 48.2% vs backbone-관련 0.6% (norm×dataset 상호작용 47% = 적용 경계 그 자체)
+- **Tab 3**: τ ∈ [0.30, 0.70]에서 8/8 유지 (사전 등록 τ=0.3 포함)
+- `make figures` / `make tables` 재현성 확인

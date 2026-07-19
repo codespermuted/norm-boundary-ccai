@@ -74,3 +74,8 @@
 잔여: 블록 B-deep(슈퍼바이저 진행 중) → 블록 C SOTA → 완료 후 G5 진입.
 G5 착수 시: Fig 3(LPS vs 격차 + 사전등록 적중, Spearman ρ), Fig 4(분산 귀속), Fig 5(h별 격차),
 Tab 2(MCS·귀속), Tab 3(τ 민감도 + ΔLPS 병산), covfair·SOTA 최종 표, make figures 재현성.
+
+## G5 진행 (2026-07-16)
+
+완료: Fig 3(ρ=0.762/p=0.028 ✅AC), Fig 4, Fig 5, Tab 2(분산귀속), Tab 3(τ민감도), Tab B(covfair), Tab C(SOTA),
+make figures/tables 재현성 ✅AC. 잔여: ΔLPS 백그라운드 완료 시 Tab 3 갱신 → G5 AC 최종 평가 → G6(초고).

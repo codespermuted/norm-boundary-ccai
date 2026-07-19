@@ -67,6 +67,43 @@ def lps(y: np.ndarray, X: np.ndarray, w: int, n_folds: int = 5,
             "n_windows": n, "per_fold": per_fold}
 
 
+def delta_lps(y: np.ndarray, X: np.ndarray, w: int, n_folds: int = 5,
+              min_train_frac: float = 0.4, model: str = "lgbm") -> dict:
+    """Incremental LPS: exogenous predictability of the NEXT window mean
+    BEYOND persistence (past window mean). Corrects the absolute-LPS blind
+    spot on strongly persistent series (e.g., SMP-like):
+
+        dLPS = R2(ybar_{i+1} ~ xbar_{i+1}, ybar_i) - R2(ybar_{i+1} ~ ybar_i)
+    """
+    y = np.asarray(y, float)
+    X = np.asarray(X, float)
+    if X.ndim == 1:
+        X = X[:, None]
+    ybar, Xbar = _window_means(y, X, w)
+    tgt = ybar[1:]
+    lag = ybar[:-1][:, None]
+    cov_next = Xbar[1:]
+    n = len(tgt)
+    first_test = int(n * min_train_frac)
+    bounds = np.linspace(first_test, n, n_folds + 1, dtype=int)
+
+    def oos_r2(feats):
+        sse = sst = 0.0
+        for lo, hi in zip(bounds[:-1], bounds[1:]):
+            if hi <= lo:
+                continue
+            pred = _fit_predict(model, feats[:lo], tgt[:lo], feats[lo:hi])
+            base = tgt[:lo].mean()
+            sse += float(np.sum((tgt[lo:hi] - pred) ** 2))
+            sst += float(np.sum((tgt[lo:hi] - base) ** 2))
+        return 1 - sse / sst if sst > 0 else float("nan")
+
+    r2_full = oos_r2(np.column_stack([cov_next, lag]))
+    r2_pers = oos_r2(lag)
+    return {"delta_lps": r2_full - r2_pers, "r2_full": r2_full,
+            "r2_persistence": r2_pers, "n_windows": n}
+
+
 def calendar_features(index) -> np.ndarray:
     """Deterministic exogenous covariates available for ANY dataset:
     daily/weekly/yearly harmonics."""
