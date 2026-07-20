@@ -219,10 +219,11 @@ def tab3(df: pd.DataFrame, lps: pd.DataFrame) -> str:
              f"8/8 유지 구간: τ ∈ [{lo.min():.2f}, {lo.max():.2f}] — "
              "사전 등록 τ=0.3 포함.", "",
              "## (b) 데이터셋별 진단량", "",
-             "| dataset | LPS | ΔLPS(증분) | 실측 gap | 규칙 판정 |",
+             "| dataset | LPS | ΔLPS(증분) (R²_pers) | 실측 gap | 규칙 판정 |",
              "|---|---|---|---|---|"]
     for d in g.index:
-        dstr = (f"{dl.loc[d, 'delta_lps']:.3f}"
+        dstr = (f"{dl.loc[d, 'delta_lps']:.3f} "
+                f"({dl.loc[d, 'r2_persistence']:.2f})"
                 if dl is not None and d in dl.index else "—")
         lines.append(f"| {d} | {m.loc[d, 'lps']:.3f} | {dstr} | "
                      f"{g[d]:+.3f} | "

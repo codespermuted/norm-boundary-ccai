@@ -72,3 +72,20 @@
 - **Tab 2**: 분산 귀속 — norm-관련 48.2% vs backbone-관련 0.6% (norm×dataset 상호작용 47% = 적용 경계 그 자체)
 - **Tab 3**: τ ∈ [0.30, 0.70]에서 8/8 유지 (사전 등록 τ=0.3 포함)
 - `make figures` / `make tables` 재현성 확인
+
+## G5 마감 — ΔLPS (2026-07-20, results/lps_delta.csv)
+
+| 데이터셋 | ΔLPS | R²_pers | 읽기 |
+|---|---|---|---|
+| jeju_wind / gefcom_wind | 0.742 / 0.773 | ≈0 | 수준 신호가 순수 외생 (지속성 무력) |
+| gefcom_load / solar | 0.335 / 0.556 | 0.56 / 0.32 | 강한 지속성 위에서도 공변량 증분 큼 |
+| etth1 / etth2 | −0.142 / −0.028 | 0.47 / 0.45 | 달력 공변량은 지속성 대비 무가치 — etth2 절대 LPS 불안정성 해소 |
+| electricity | 0.031 | 0.64 | 사전 등록 최저신뢰 셀: 최강 지속성 + 무증분 = 실측 gap ≈0 설명 |
+| weather | 0.558 | −0.12 | 지속성 부재 → ΔLPS 적용 대상 아님 (절대 LPS 규칙 유지, 논문에 명시) |
+
+## G6 완료 — IJF 초고 (2026-07-20)
+
+- `paper/main.tex` + `paper/sections/` 10개 파일 + `references.bib`(26건) — elsarticle(authoryear), tectonic 46쪽 무결 컴파일, `make paper`
+- 구성: §1 서론 / §2 관련연구 / §3 이론(M1·명제1–3·명제2′·Fig1) / §4 LPS(τ=0.3·사전등록·ΔLPS) / §5 합성(GATE1) / §6 실증(Tab1–3·Fig3–5·블록B/C/D) / §7 토론+결론 / 부록 A 증명·B 설계감사·C 재현성·D 확장표+질적그림
+- 검증: 6-체커 적대 검증으로 25건 결함 수정 (수치 전수 대조, 수학 재유도, 인용 26/26 대조, PDF 45쪽 육안)
+- TODO 잔여: 저자 메타데이터 1건(주석). IJF 체크리스트: paper/IJF_CHECKLIST.md

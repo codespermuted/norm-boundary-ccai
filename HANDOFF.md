@@ -77,7 +77,31 @@
 G5 착수 시: Fig 3(LPS vs 격차 + 사전등록 적중, Spearman ρ), Fig 4(분산 귀속), Fig 5(h별 격차),
 Tab 2(MCS·귀속), Tab 3(τ 민감도 + ΔLPS 병산), covfair·SOTA 최종 표, make figures 재현성.
 
-## G5 진행 (2026-07-16)
+## G5 종료 — AC 자체 평가 (2026-07-20)
 
-완료: Fig 3(ρ=0.762/p=0.028 ✅AC), Fig 4, Fig 5, Tab 2(분산귀속), Tab 3(τ민감도), Tab B(covfair), Tab C(SOTA),
-make figures/tables 재현성 ✅AC. 잔여: ΔLPS 백그라운드 완료 시 Tab 3 갱신 → G5 AC 최종 평가 → G6(초고).
+| AC | 판정 | 근거 |
+|---|---|---|
+| 분산 귀속 (정규화/백본/데이터셋/상호작용) | ✅ | Tab 2: norm-관련 48.2% vs backbone-관련 0.6%, norm×dataset 47.1% |
+| Fig 3–5 생성 | ✅ | Fig 3 ρ=0.762 (p=0.028), (dataset,h) ρ=0.783 (p<1e-5); Fig 5 외생 4종 h-단조 |
+| τ 결정 + 민감도 | ✅ | τ=0.3 (사전 등록), 8/8 유지 구간 [0.30, 0.70] (Tab 3a) |
+| make figures 재현 | ✅ | figures/tables/paper 타깃 전부 재실행 확인 |
+| ΔLPS 병산 (2026-07-16 SMP 논의 후속) | ✅ | results/lps_delta.csv — 외생: jeju .742/gefwind .773/load .335/solar .556, 표준: etth1 −.142/etth2 −.028/elec .031(R²pers .64)/weather .558(R²pers −.12). etth2 불안정성 해소 + electricity 경계 셀 설명. Tab 3(b)에 R²_pers와 병기 |
+
+- ΔLPS 러너: `experiments/compute_lps_delta.py`. **주의: LightGBM sklearn 래퍼는 소형 데이터에서
+  전-코어 기본값이 스레드 경합으로 fit당 ~90초까지 퇴화** — n_jobs=1 강제 몽키패치로 해결 (48분 2개 → 8분 8개).
+
+## G6 종료 — AC 자체 평가 (2026-07-20)
+
+| AC | 판정 | 근거 |
+|---|---|---|
+| 컴파일되는 초고 | ✅ | paper/main.tex, elsarticle(authoryear)+tectonic, 46쪽, 에러·미해결참조 0 (`make paper`) |
+| 그림·표 전부 삽입 | ✅ | Fig 1–5 + 부록 질적 그림, Tab 1–3 + 부록 Tab audit/blocks/covfair/sota |
+| TODO ≤ 20 | ✅ | 렌더링 TODO 0개 (main.tex 주석 1개: 저자 메타데이터) |
+| 리뷰 방어 4종 | ✅ | §1(RevIN 만능 주장 안함)·§6.8(SAN/FAN 전패)·§6.8(정보대등=피처엔지니어링 반박)·§6.8(벤치마크 재현=에너지 편중 반박) |
+| IJF 체크리스트 | ✅ | paper/IJF_CHECKLIST.md |
+| 증명 부록 | ✅ | app_proofs: M1 유도, 명제 1–3 완전 증명, 명제 2′ 제약-OLS, 파라미터 매핑 |
+
+- 품질 관리: 초안을 6개 검증 에이전트(수치/수학/구조/인용/과대주장/PDF육안)로 공격 → 25건 수정.
+  대표: 블록 B "전 백본 최적" 과장 정정, 낡은 covfair 격차(+0.135/+0.064)를 +0.127/+0.053/−0.009로
+  전면 정정(HANDOFF가 오염원이었음 — 본 문서 Discussion 논점도 수정 완료), GATE1 편차 0.015 vs 교차위치 0.029 혼동 정정.
+- 잔여(투고 전): 저자·소속 기입, cover letter, 공개 저장소 전환 결정, (선택) revin_all ablation·SMP 스트레스 테스트.

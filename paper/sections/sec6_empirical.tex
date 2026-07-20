@@ -69,7 +69,7 @@ Beyond sign accuracy, the pre-registered auxiliary prediction was that the gap \
 
 \begin{table}[t]
 \centering
-\caption{The $\lps$ decision rule. Panel (a): number of correct sign predictions (out of 8) as the threshold $\tau$ varies; the pre-registered $\tau=0.3$ lies in the widest all-correct plateau. Panel (b): per-dataset diagnostics; verdict CN if $\lps\ge\tau$, IN otherwise; realized gap is dataset-mean $\mse(\text{RevIN})-\mse(\text{CondNorm})$.}
+\caption{The $\lps$ decision rule. Panel (a): number of correct sign predictions (out of 8) as the threshold $\tau$ varies; the pre-registered $\tau=0.3$ lies in the widest all-correct plateau. Panel (b): per-dataset diagnostics; $\dlps$ is the incremental covariate $R^2$ beyond persistence (\Cref{eq:dlps}) and $R^2_{\mathrm{pers}}$ the persistence-only $R^2$; verdict CN if $\lps\ge\tau$, IN otherwise; realized gap is dataset-mean $\mse(\text{RevIN})-\mse(\text{CondNorm})$.}
 \label{tab:tau}
 \small
 \begin{tabular}{lccccc}
@@ -83,24 +83,24 @@ Sign hits / 8 & 6 & 7 & \textbf{8} & 6 & 4 \\
 
 \vspace{1ex}
 
-\begin{tabular}{lcccc}
-\multicolumn{5}{l}{(b) Per-dataset verdicts ($\tau=0.3$)} \\
+\begin{tabular}{lccccc}
+\multicolumn{6}{l}{(b) Per-dataset verdicts ($\tau=0.3$)} \\
 \toprule
-Dataset & $\lps$ & $\dlps$ & Realized gap & Verdict \\
+Dataset & $\lps$ & $\dlps$ & $R^2_{\mathrm{pers}}$ & Realized gap & Verdict \\
 \midrule
-Jeju Wind    & $0.745$  & --- & $+0.404$ & CN \\
-GEFCom-Wind  & $0.744$  & --- & $+0.841$ & CN \\
-GEFCom-Load  & $0.894$  & --- & $+0.237$ & CN \\
-GEFCom-Solar & $0.875$  & --- & $+0.126$ & CN \\
-ETTh1        & $-0.717$ & --- & $-1.824$ & IN \\
-ETTh2        & $-0.205$ & --- & $-6.314$ & IN \\
-Electricity  & $0.283$  & --- & $-0.027$ & IN \\
-Weather      & $0.110$  & --- & $-0.556$ & IN \\
+Jeju Wind    & $0.745$  & $0.742$  & $0.00$  & $+0.404$ & CN \\
+GEFCom-Wind  & $0.744$  & $0.773$  & $-0.01$ & $+0.841$ & CN \\
+GEFCom-Load  & $0.894$  & $0.335$  & $0.56$  & $+0.237$ & CN \\
+GEFCom-Solar & $0.875$  & $0.556$  & $0.32$  & $+0.126$ & CN \\
+ETTh1        & $-0.717$ & $-0.142$ & $0.47$  & $-1.824$ & IN \\
+ETTh2        & $-0.205$ & $-0.028$ & $0.45$  & $-6.314$ & IN \\
+Electricity  & $0.283$  & $0.031$  & $0.64$  & $-0.027$ & IN \\
+Weather      & $0.110$  & $0.558$  & $-0.12$ & $-0.556$ & IN \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\Cref{tab:tau} probes the robustness of the decision rule itself. The 8/8 hit rate is maintained for every $\tau\in[0.30,0.70]$---a wide plateau containing the pre-registered value---and degrades only outside it (6/8 on $[0.00,0.10]$ and $[0.75,0.85]$, 7/8 on $[0.15,0.25]$, 4/8 at $0.90$). The conclusion does not hinge on a lucky threshold. Panel~(b) lists each dataset's $\lps$, realized gap, and rule verdict; all eight verdicts match the realized sign.\todo{Fill in the $\dlps$ (incremental-over-persistence) column once its computation completes; see \Cref{sec:lps} for the definition.}
+\Cref{tab:tau} probes the robustness of the decision rule itself. The 8/8 hit rate is maintained for every $\tau\in[0.30,0.70]$---a wide plateau containing the pre-registered value---and degrades only outside it (6/8 on $[0.00,0.10]$ and $[0.75,0.85]$, 7/8 on $[0.15,0.25]$, 4/8 at $0.90$). The conclusion does not hinge on a lucky threshold. Panel~(b) lists each dataset's $\lps$, the incremental $\dlps$ of \Cref{eq:dlps} with the persistence-only $R^2_{\mathrm{pers}}$, the realized gap, and the rule verdict; all eight verdicts match the realized sign. The $\dlps$ column adds three readings. First, on the exogenous group the level signal is genuinely exogenous: for the two wind datasets persistence alone explains essentially nothing ($R^2_{\mathrm{pers}}\approx 0$), and even where persistence is strong, covariates add a large increment ($+0.34$ for load, $+0.56$ for solar). Second, the two cells the pre-registration was least sure about are cleanly diagnosed: ETTh2's calendar covariates add nothing beyond persistence ($\dlps=-0.028$), and Electricity---flagged in advance as the least confident sign prediction---combines the strongest persistence in the panel ($0.64$) with an almost-zero increment ($\dlps=0.031$), matching its near-zero realized gap. Third, $\dlps$ is a \emph{secondary} diagnostic for the high-persistence regime, not a replacement rule: Weather has no persistent level ($R^2_{\mathrm{pers}}=-0.12$), so its moderate $\dlps$ (driven by seasonal harmonics) carries no override, and the pre-registered absolute-$\lps$ verdict stands.
 
 \subsection{Variance attribution}
 
