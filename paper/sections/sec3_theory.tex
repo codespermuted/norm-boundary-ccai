@@ -1,0 +1,135 @@
+\section{Theory: When Does Instance Normalization Hurt?}\label{sec:theory}
+
+This section characterizes, in closed form, when instance normalization helps and when it hurts multi-step forecasting. We compare three level-handling strategies inside a single linear--Gaussian instance model: \rawm{} (global z-score only), \inm{} (instance normalization of the RevIN family, \citealp{kim2022revin}), and \cnm{} (conditional normalization, which estimates the target-time level from exogenous covariates), in both an oracle and an estimated variant. The analysis yields a crossover threshold $\lamstar$ in the level-predictability coordinate $\lambda$ (\Cref{eq:lamstar}), a horizon monotonicity result (\Cref{eq:prop3}), and a representational-deficiency result for affine restoration (\Cref{eq:prop1}). All formal proofs are deferred to \Cref{app:proofs}.
+
+\subsection{Generative model and level predictability}
+
+We posit that the observed series is driven by exogenous covariates through its level and scale,
+\begin{equation}\label{eq:model}
+  y_t \;=\; m(x_t) \;+\; \sigma(x_t)\, z_t ,
+\end{equation}
+where $x_t \in \mathbb{R}^d$ collects exogenous covariates (numerical weather predictions, installed capacity, temperature, calendar variables), $m(\cdot)$ is the covariate-determined \emph{level} function, $\sigma(\cdot)$ a conditional scale, and $z_t$ a quasi-stationary \emph{shape} component (periodicities plus weak autoregressive structure). The exogenous predictability of the level is measured by the population $R^2$ of the window mean given covariates,
+\begin{equation}\label{eq:lambda}
+  \lambda \;\equiv\; R^2_{\mathrm{level}}
+  \;=\; 1 - \frac{\mathbb{E}\!\left[\var\!\left(\bar y_w \mid x\right)\right]}{\var\!\left(\bar y_w\right)},
+  \qquad \bar y_w = \text{lookback-window mean of } y .
+\end{equation}
+The diagnostic of \Cref{sec:lps} is precisely a pre-training, out-of-sample estimate of \Cref{eq:lambda}.
+
+\subsection{A stylized instance-level model (M1)}
+
+A forecasting instance is a lookback window of $w$ steps together with a target $h$ steps ahead. Because the predictable part of the shape component is handled identically by all three strategies, we compare \emph{level-restoration} error only and absorb shape prediction into a common residual $\sigma_\varepsilon^2$ (Assumption~A3 below). Each instance draws the following independent Gaussian variables:
+
+\begin{center}
+\begin{tabular}{@{}llp{7.6cm}@{}}
+\toprule
+Symbol & Distribution & Role \\
+\midrule
+$g_T$ & $\mathcal{N}(0,\lambda V)$ & covariate-explained target-time level (\cnm{} observes it through $x$) \\
+$v_T$ & $\mathcal{N}(0,(1-\lambda)V)$ & unexplained target-time level \\
+$\Delta$ & $\mathcal{N}(0,\sdel)$ & covariate-\emph{orthogonal} train$\to$test shift (shared by window and target) \\
+$\delta_x$ & $\mathcal{N}(0,\sx)$ & within-horizon covariate-driven level change (ramp); $g_w = g_T - \delta_x$ \\
+$\delta_u$ & $\mathcal{N}(0,h\sigma_u^2)$ & within-horizon unexplained drift (random walk); $v_w = v_T - \delta_u$ \\
+$\bar\varepsilon$ & $\mathcal{N}(0,\sigma_z^2/w)$ & window-mean shape noise \\
+$e$ & $\mathcal{N}(0,\sest)$ & \cnm{} first-stage error, $\hat m = g_T + e$ \\
+$\zeta$ & $\mathcal{N}(0,\sigma_\varepsilon^2)$ & common shape residual \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent The derived quantities are the target-time level $L = \Delta + g_T + v_T$, the window level $M = \Delta + g_w + v_w$, the observed window mean $\bar y = M + \bar\varepsilon$, and the target $y = L + \zeta$. Here $V = \var(g_T + v_T)$ is the total level variance, so $\lambda = \var(g_T)/V$ coincides with $R^2_{\mathrm{level}}$ in \Cref{eq:lambda}. The within-horizon terms have direct physical readings: $\delta_x$ is a weather ramp or heat-wave onset that the covariates announce, while $\delta_u$ is drift the covariates cannot see.
+
+M1 rests on four explicit assumptions.
+\begin{itemize}
+  \item[\textbf{A1}] \emph{(Local level)} The level is approximately constant within the lookback window; window-to-target level change is collapsed into the displacement terms $\delta_x,\delta_u$.
+  \item[\textbf{A2}] \emph{(Orthogonal decomposition)} $\Delta \perp x$: level shifts explained by covariates live on the $\lambda$ axis, orthogonal shifts on the drift axis. This is why the two axes of \Cref{fig:dominance} are independent.
+  \item[\textbf{A3}] \emph{(Common shape residual)} Shape predictability is identical across strategies ($\sigma_\varepsilon^2$ common); second-order effects of normalization on shape learning are ignored here and checked empirically in \Cref{sec:synthetic}.
+  \item[\textbf{A4}] \emph{(\rawm{} = global mean)} \rawm{} does not track the level from the window; without loss of generality the train-set global mean is zero. Trained linear predictors relax A4 --- see Proposition~2$'$ below.
+\end{itemize}
+
+\subsection{Closed-form risk of the three estimators}
+
+Each strategy restores a level estimate $\hat y$ before adding the (common) shape forecast. The level errors and mean-squared errors are:
+
+\begin{center}
+\begin{tabular}{@{}llll@{}}
+\toprule
+Method & Restoration $\hat y$ & Level error $y - \hat y$ & $\mse$ (closed form) \\
+\midrule
+\rawm{} & $0$ & $L + \zeta$ & $V + \sdel + \sigma_\varepsilon^2$ \\
+\inm{} & $\bar y$ & $\delta_x + \delta_u - \bar\varepsilon + \zeta$ & $\sx + h\sigma_u^2 + \sigma_z^2/w + \sigma_\varepsilon^2$ \\
+\cnm{}-oracle & $g_T$ & $v_T + \Delta + \zeta$ & $(1-\lambda)V + \sdel + \sigma_\varepsilon^2$ \\
+\cnm{}-est & $\hat m = g_T + e$ & $v_T + \Delta - e + \zeta$ & $(1-\lambda)V + \sdel + \sest + \sigma_\varepsilon^2$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The structural asymmetry in this table is the heart of the paper. \emph{The \inm{} error contains neither $V$ nor $\sdel$}: by removing and restoring the window level wholesale, instance normalization is immune to level variance and to train--test distribution shift --- exactly the motivation of \citet{kim2022revin}, which our model preserves. The price is that the window statistic is extrapolated as a constant across the horizon, so \inm{} pays the full within-horizon displacement $\sx + h\sigma_u^2$ plus the window-noise floor $\sigma_z^2/w$. Conversely, \emph{the \cnm{} error contains no within-horizon covariate ramp}: future covariates pin the target-time level directly, so \cnm{} pays instead the unexplained level variance $(1-\lambda)V$ and the covariate-orthogonal shift $\sdel$. Neither strategy dominates; which one wins is a property of the data-generating process, governed by $\lambda$, $h$, and $\sdel$.
+
+\subsection{The crossover}
+
+% Propositions carry the numbering of the paper's contribution plan
+% (Prop. 2 = crossover, Prop. 3 = horizon, Prop. 1 = representational
+% deficiency); they are presented in pedagogical order, so the shared
+% amsthm counter is set explicitly before each statement.
+\setcounter{proposition}{1}
+\begin{proposition}[Crossover conditions]\label{prop:crossover}
+Under M1 (A1--A4):
+\begin{enumerate}
+  \item[(i)] Instance normalization beats the global baseline,
+  $\mse_{\inm} < \mse_{\rawm}$, if and only if
+  \begin{equation}\label{eq:inraw}
+    \underbrace{\sx + h\sigma_u^2 + \sigma_z^2/w}_{\text{horizon extrapolation + window noise}}
+    \;<\;
+    \underbrace{V + \sdel}_{\text{level variance \rawm{} cannot track}} .
+  \end{equation}
+  \item[(ii)] Estimated conditional normalization beats instance
+  normalization if and only if $\lambda > \lamstar$, where
+  \begin{equation}\label{eq:lamstar}
+    \lamstar \;=\; 1 \;-\; \frac{\sx + h\sigma_u^2 + \sigma_z^2/w - \sdel - \sest}{V} .
+  \end{equation}
+  If $\lamstar < 0$, \cnm{}-est dominates \inm{} for every $\lambda \in [0,1]$; if $\lamstar > 1$, \inm{} dominates for every $\lambda$.
+\end{enumerate}
+\end{proposition}
+
+The comparative statics of \Cref{eq:lamstar} are monotone and interpretable. First, $\partial \lamstar / \partial \sdel = 1/V > 0$: the larger the covariate-orthogonal drift, the larger the region in which instance normalization is the right tool. This is a \emph{quantified} version of the original distribution-shift motivation for RevIN --- our theory does not overturn it, it delimits it. Second, $\partial \lamstar / \partial \sest = 1/V > 0$: a noisier first stage shrinks the \cnm{} region, which is why the diagnostic of \Cref{sec:lps} is deliberately evaluated out of sample. Third, $\lamstar$ falls as $h$ grows, which we state separately because it answers the ``why multi-step?'' question. (When $\sx$ itself depends on $\lambda$, as under the synthetic data-generating process of \Cref{sec:synthetic}, the closed form is replaced by a numerical root of the same equation; see \Cref{app:proofs}.)
+
+\begin{proposition}[Horizon interaction]\label{prop:horizon}
+Under M1, for either \cnm{} variant,
+\begin{equation}\label{eq:prop3}
+  \frac{\partial}{\partial h}\left[\mse_{\inm}(h) - \mse_{\cnm}(h)\right]
+  \;=\; \sigma_u^2 + \frac{\partial\, \sx}{\partial h} \;>\; 0 .
+\end{equation}
+Hence the \inm{}--\cnm{} gap is strictly increasing in the horizon and $\lamstar(h)$ is strictly decreasing in $h$.
+\end{proposition}
+
+Instance normalization freezes the window statistics and carries them across all $h$ future steps; every additional step accumulates covariate-driven ramp variance and unexplained drift that the frozen statistic cannot follow, while conditional normalization re-estimates the level at the target time. Multi-step forecasting is therefore not incidental to our thesis --- it is the regime where the boundary bites hardest, as \Cref{fig:horizon} confirms empirically.
+
+\subsection{Representational deficiency of affine restoration}
+
+The results above treat the strategies as restoration rules. A complementary question is representational: what solutions does attaching instance normalization to a model \emph{remove} from its function class? Following the constrained-regression view of \citet{toner2024linear}, a linear forecaster composed with RevIN-style normalize--restore is an affinely constrained linear predictor; in particular it lies in the span $\{1, \bar y, g\}$ and cannot express interactions between the window mean and covariates.
+
+\setcounter{proposition}{0}
+\begin{proposition}[Representational deficiency]\label{prop:deficiency}
+Let $(\bar y, g)$ be centered and jointly Gaussian, and let the target follow
+$y = a\bar y + b g + \kappa\, \bar y\, g + \eta$ with independent noise $\eta$, so the Bayes predictor requires the interaction $\bar y \, g$. The best predictor in the interaction-free linear class $\{c_0 + c_1 \bar y + c_2 g\}$ --- which contains every RevIN-type affine restoration composed with a linear map --- incurs the irreducible excess risk
+\begin{equation}\label{eq:prop1}
+  \Delta\mse \;=\; \kappa^2\left[\var(\bar y)\,\var(g) + \covop(\bar y, g)^2\right],
+  \qquad \covop(\bar y, g_T) = \lambda V \text{ under M1}.
+\end{equation}
+\end{proposition}
+
+The proof is a projection argument: for centered jointly Gaussian variables the interaction term $\bar y\, g$ is orthogonal to the linear directions $\bar y$ and $g$ (Gaussian third moments vanish), so its projection onto the class is the constant $\mathbb{E}[\bar y\, g] = \covop(\bar y, g)$, and Isserlis' theorem evaluates the variance of the residual, yielding the stated excess risk (\Cref{app:proofs}). Proposition~1 is the minimal instance of a broader point: whenever the optimal use of covariates depends on where the series currently sits, subtracting the window statistic before the backbone destroys exactly the information that dependence needs. This mechanism resurfaces empirically in \Cref{sec:empirical}, where adding covariates fails to rescue the \inm{} arms.
+
+\subsection{From restoration rules to trained predictors (Proposition~2$'$)}
+
+M1's estimators are \emph{pure} restoration rules, but a trained linear backbone additionally regresses on its input window and thereby tracks residual level in distribution --- an implicit, partial instance normalization that strengthens the operational \rawm{} and \cnm{} arms beyond their M1 idealizations (a relaxation of A4). The restoration-rule threshold \Cref{eq:lamstar} is therefore an \emph{upper bound} on the crossover realized by trained linear models. Proposition~2$'$ (stated formally in \Cref{app:proofs}) replaces it with the exact object: for each normalization class the optimal linear predictor is a constrained least-squares problem with a closed-form solution \citep{toner2024linear}, solved on the training segment and evaluated out of sample, with no stochastic optimization involved. Under the baseline synthetic parameters the M1 threshold at $h=24$ is $\lamstar \approx 0.27$--$0.28$, whereas the constrained-least-squares theory --- and the trained RLinear models of \Cref{sec:synthetic} \citep{li2023rlinear} --- place the crossing far lower; the gap between the two thresholds is itself a measurement of how much implicit level tracking linear backbones perform, a point we return to in \Cref{sec:discussion}. All quantitative adjudication in \Cref{sec:synthetic} uses the exact constrained-least-squares theory; M1 is retained as the interpretable layer that explains \emph{why} the crossover exists.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\textwidth]{figures/fig1_dominance.pdf}
+  \caption{Dominance map of the three estimators in the $(\lambda,\, \sdel/V)$ plane for $h \in \{24, 96, 336\}$ (left to right). Each region colors the argmin of the closed-form MSEs of \rawm{}, \inm{}, and \cnm{}-est under M1; the curve is the boundary $\lamstar(\sdel)$ of \Cref{eq:lamstar}. Baseline parameters: $V=1$, $w=96$, $\sigma_z=1$, $\sigma_u^2=0.0036$, $\sest=0.02$, $\sx=0$, $\sigma_\varepsilon=0$. On the drift-free axis ($\sdel=0$) the threshold is $\lamstar=0.923$ at $h=24$ and $0.664$ at $h=96$, and $\lamstar<0$ at $h=336$, where \cnm{} dominates for every $\lambda$. Takeaway: as the horizon grows, the \inm{} region retreats upward --- instance normalization survives only under large covariate-orthogonal drift, the regime its original motivation targets.}
+  \label{fig:dominance}
+\end{figure}
+
+\Cref{fig:dominance} assembles the propositions into a single picture. At short horizons instance normalization is the right default across most of the plane, and covariate-orthogonal drift ($\sdel$) only enlarges its region --- the RevIN regime. As $h$ grows, the within-horizon displacement $\sx + h\sigma_u^2$ accumulates, the boundary $\lamstar(\sdel)$ sweeps down and left, and by $h=336$ conditional normalization dominates at every level of exogenous predictability unless drift is extreme. The remainder of the paper estimates the abscissa of this map from data before training (\Cref{sec:lps}), verifies the predicted boundary on synthetic data whose parameters we control (\Cref{sec:synthetic}), and tests its sign predictions on real series (\Cref{sec:empirical}).

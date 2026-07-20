@@ -1,0 +1,240 @@
+% references.bib — "When Instance Normalization Hurts" (IJF submission)
+% Exactly the 26 registered citation keys. Entries marked "% verify" have
+% one or more fields that could not be fully confirmed against the source.
+
+% ---------------------------------------------------------------------------
+% Normalization methods
+% ---------------------------------------------------------------------------
+
+@inproceedings{kim2022revin,
+  author    = {Kim, Taesung and Kim, Jinhee and Tae, Yunwon and Park, Cheonbok and Choi, Jang-Ho and Choo, Jaegul},
+  title     = {Reversible Instance Normalization for Accurate Time-Series Forecasting against Distribution Shift},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2022}
+}
+
+@inproceedings{fan2023dishts,
+  author    = {Fan, Wei and Wang, Pengyang and Wang, Dongkun and Wang, Dongjie and Zhou, Yuanchun and Fu, Yanjie},
+  title     = {Dish-{TS}: A General Paradigm for Alleviating Distribution Shift in Time Series Forecasting},
+  booktitle = {Proceedings of the AAAI Conference on Artificial Intelligence},
+  volume    = {37},
+  pages     = {7522--7529},
+  year      = {2023}
+}
+
+@inproceedings{liu2023san,
+  author    = {Liu, Zhiding and Cheng, Mingyue and Li, Zhi and Huang, Zhenya and Liu, Qi and Xie, Yanhu and Chen, Enhong},
+  title     = {Adaptive Normalization for Non-stationary Time Series Forecasting: A Temporal Slice Perspective},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  volume    = {36},
+  year      = {2023}
+}
+
+@inproceedings{ye2024fan,
+  author    = {Ye, Weiwei and Deng, Songgaojun and Zou, Qiaosha and Gui, Ning},
+  title     = {Frequency Adaptive Normalization for Non-stationary Time Series Forecasting},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  volume    = {37},
+  year      = {2024}
+}
+
+@inproceedings{inflow2024,
+  author    = {Fan, Wei and Zheng, Shun and Wang, Pengyang and Xie, Rui and Yi, Kun and Zhang, Qi and Bian, Jiang and Fu, Yanjie},
+  title     = {{IN}-Flow: Instance Normalization Flow for Non-stationary Time Series Forecasting},
+  booktitle = {Proceedings of the 31st ACM SIGKDD Conference on Knowledge Discovery and Data Mining},
+  year      = {2025},
+  doi       = {10.1145/3690624.3709260},
+  note      = {arXiv:2401.16777}
+}
+
+@article{inner2025instance,
+  author  = {Jibao, Zipo and Fu, Yingyi and Chen, Xinyang and Chen, Guoting},
+  title   = {Inner-Instance Normalization for Time Series Forecasting},
+  journal = {arXiv preprint arXiv:2510.08657},
+  year    = {2025}
+}
+
+@article{noise2025signal,
+  author  = {Fu, Fanzhe and Yang, Yang},
+  title   = {Noise or Signal? {D}econstructing Contradictions and {A}n Adaptive Remedy for Reversible Normalization in Time Series Forecasting},
+  journal = {arXiv preprint arXiv:2510.04667},
+  year    = {2025}
+}
+
+@article{role2026revin,
+  author  = {Berthelier, Gaspard and Nabil, Tahar and Le Naour, Etienne and Niamke, Richard and Perlaza, Samir M. and Neglia, Giovanni},
+  title   = {On the Role of Reversible Instance Normalization},
+  journal = {arXiv preprint arXiv:2603.11869},
+  year    = {2026}
+}
+
+% verify: page range not confirmed (Wind Engineering 46(5), 2022)
+@article{patil2022wind,
+  author  = {Patil, Deepali and Wadhvani, Rajesh and Shukla, Sanyam and Gupta, Muktesh},
+  title   = {Adaptive Wind Data Normalization to Improve the Performance of Forecasting Models},
+  journal = {Wind Engineering},
+  volume  = {46},
+  number  = {5},
+  year    = {2022},
+  doi     = {10.1177/0309524X221093908}
+}
+
+% ---------------------------------------------------------------------------
+% Backbones and forecasting architectures
+% ---------------------------------------------------------------------------
+
+@inproceedings{zeng2023dlinear,
+  author    = {Zeng, Ailing and Chen, Muxi and Zhang, Lei and Xu, Qiang},
+  title     = {Are Transformers Effective for Time Series Forecasting?},
+  booktitle = {Proceedings of the AAAI Conference on Artificial Intelligence},
+  volume    = {37},
+  pages     = {11121--11128},
+  year      = {2023}
+}
+
+@article{li2023rlinear,
+  author  = {Li, Zhe and Qi, Shiyi and Li, Yiduo and Xu, Zenglin},
+  title   = {Revisiting Long-Term Time Series Forecasting: An Investigation on Linear Mapping},
+  journal = {arXiv preprint arXiv:2305.10721},
+  year    = {2023}
+}
+
+@inproceedings{toner2024linear,
+  author    = {Toner, William and Darlow, Luke},
+  title     = {An Analysis of Linear Time Series Forecasting Models},
+  booktitle = {Proceedings of the 41st International Conference on Machine Learning (ICML)},
+  series    = {Proceedings of Machine Learning Research},
+  volume    = {235},
+  year      = {2024}
+}
+
+@inproceedings{nie2023patchtst,
+  author    = {Nie, Yuqi and Nguyen, Nam H. and Sinthong, Phanwadee and Kalagnanam, Jayant},
+  title     = {A Time Series is Worth 64 Words: Long-Term Forecasting with Transformers},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2023}
+}
+
+@article{lin2023segrnn,
+  author  = {Lin, Shengsheng and Lin, Weiwei and Wu, Wentai and Zhao, Feiyu and Mo, Ruichao and Zhang, Haotong},
+  title   = {{SegRNN}: Segment Recurrent Neural Network for Long-Term Time Series Forecasting},
+  journal = {arXiv preprint arXiv:2308.11200},
+  year    = {2023}
+}
+
+@inproceedings{liu2024itransformer,
+  author    = {Liu, Yong and Hu, Tengge and Zhang, Haoran and Wu, Haixu and Wang, Shiyu and Ma, Lintao and Long, Mingsheng},
+  title     = {{iTransformer}: Inverted Transformers Are Effective for Time Series Forecasting},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2024}
+}
+
+@inproceedings{wang2024timexer,
+  author    = {Wang, Yuxuan and Wu, Haixu and Dong, Jiaxiang and Qin, Guo and Zhang, Haoran and Liu, Yong and Qiu, Yunzhong and Wang, Jianmin and Long, Mingsheng},
+  title     = {{TimeXer}: Empowering Transformers for Time Series Forecasting with Exogenous Variables},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  volume    = {37},
+  year      = {2024}
+}
+
+@article{citras2025,
+  author  = {Yamaguchi, Yosuke and Suemitsu, Issei and Wei, Wenpeng},
+  title   = {{CITRAS}: Covariate-Informed Transformer for Time Series Forecasting},
+  journal = {arXiv preprint arXiv:2503.24007},
+  year    = {2025}
+}
+
+@inproceedings{ke2017lightgbm,
+  author    = {Ke, Guolin and Meng, Qi and Finley, Thomas and Wang, Taifeng and Chen, Wei and Ma, Weidong and Ye, Qiwei and Liu, Tie-Yan},
+  title     = {{LightGBM}: A Highly Efficient Gradient Boosting Decision Tree},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  volume    = {30},
+  year      = {2017}
+}
+
+% ---------------------------------------------------------------------------
+% Benchmarking and evaluation practice
+% ---------------------------------------------------------------------------
+
+@article{qiu2024tfb,
+  author  = {Qiu, Xiangfei and Hu, Jilin and Zhou, Lekui and Wu, Xingjian and Du, Junyang and Zhang, Buang and Guo, Chenjuan and Zhou, Aoying and Jensen, Christian S. and Sheng, Zhenli and Yang, Bin},
+  title   = {{TFB}: Towards Comprehensive and Fair Benchmarking of Time Series Forecasting Methods},
+  journal = {Proceedings of the VLDB Endowment},
+  volume  = {17},
+  number  = {9},
+  pages   = {2363--2377},
+  year    = {2024}
+}
+
+@article{brigato2026champions,
+  author  = {Brigato, Lorenzo and Morand, Rafael and Str{\o}mmen, Knut and Panagiotou, Maria and Schmidt, Markus and Mougiakakou, Stavroula},
+  title   = {There Are No Champions in Supervised Long-Term Time Series Forecasting},
+  journal = {Transactions on Machine Learning Research},
+  year    = {2026},
+  note    = {arXiv:2502.14045}
+}
+
+@article{position2025benchmark,
+  author  = {Moretti, Valentina and Marisca, Ivan and Alippi, Cesare and Cini, Andrea},
+  title   = {Position: Current Benchmarking Hinders Real Progress in Deep Learning for Time Series Forecasting},
+  journal = {arXiv preprint arXiv:2512.22702},
+  year    = {2025}
+}
+
+% ---------------------------------------------------------------------------
+% Energy forecasting
+% ---------------------------------------------------------------------------
+
+@article{hong2016gefcom,
+  author  = {Hong, Tao and Pinson, Pierre and Fan, Shu and Zareipour, Hamidreza and Troccoli, Alberto and Hyndman, Rob J.},
+  title   = {Probabilistic Energy Forecasting: Global Energy Forecasting Competition 2014 and Beyond},
+  journal = {International Journal of Forecasting},
+  volume  = {32},
+  number  = {3},
+  pages   = {896--913},
+  year    = {2016}
+}
+
+% ---------------------------------------------------------------------------
+% Statistical methodology
+% ---------------------------------------------------------------------------
+
+@article{diebold1995comparing,
+  author  = {Diebold, Francis X. and Mariano, Roberto S.},
+  title   = {Comparing Predictive Accuracy},
+  journal = {Journal of Business \& Economic Statistics},
+  volume  = {13},
+  number  = {3},
+  pages   = {253--263},
+  year    = {1995}
+}
+
+@article{harvey1997testing,
+  author  = {Harvey, David and Leybourne, Stephen and Newbold, Paul},
+  title   = {Testing the Equality of Prediction Mean Squared Errors},
+  journal = {International Journal of Forecasting},
+  volume  = {13},
+  number  = {2},
+  pages   = {281--291},
+  year    = {1997}
+}
+
+@article{hansen2011mcs,
+  author  = {Hansen, Peter R. and Lunde, Asger and Nason, James M.},
+  title   = {The Model Confidence Set},
+  journal = {Econometrica},
+  volume  = {79},
+  number  = {2},
+  pages   = {453--497},
+  year    = {2011}
+}
+
+@article{politis1994stationary,
+  author  = {Politis, Dimitris N. and Romano, Joseph P.},
+  title   = {The Stationary Bootstrap},
+  journal = {Journal of the American Statistical Association},
+  volume  = {89},
+  number  = {428},
+  pages   = {1303--1313},
+  year    = {1994}
+}

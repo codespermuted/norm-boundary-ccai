@@ -81,10 +81,10 @@ def fig3(df: pd.DataFrame, lps: pd.DataFrame) -> None:
     ax.set_title("Sign predictions pre-registered: 8/8 hits", fontsize=8.5)
     ax.text(0.31, 0.96, r"$\tau=0.3$", fontsize=7, color=INK_SECONDARY,
             transform=ax.get_xaxis_transform(), va="top")
-    ax.text(0.02, 0.03,
+    ax.text(0.02, 0.97,
             f"Spearman $\\rho$={rho:.2f} (p={p:.3f})\n"
             f"per-(dataset,h): $\\rho$={rho_h:.2f} (p={p_h:.0e})",
-            transform=ax.transAxes, fontsize=7, va="bottom")
+            transform=ax.transAxes, fontsize=7, va="top")
     fig.savefig(os.path.join(FIG, "fig3_lps_gap.pdf"))
     fig.savefig(os.path.join(FIG, "fig3_lps_gap.png"))
     plt.close(fig)

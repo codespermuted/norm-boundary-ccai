@@ -56,7 +56,9 @@
 
 ## Discussion 추가 논점 (2026-07-16 사용자 관찰)
 
-- covfair에서 백본 유연성↑·공변량 접근↑일수록 CN의 한계효용 감소: linmix(RAW−CN +0.135) → mlpmix(+0.064) → lgbmcov(≈0).
+- covfair에서 백본 유연성↑·공변량 접근↑일수록 CN의 한계효용 감소: linmix(RAW−CN +0.127) → mlpmix(+0.053) → lgbmcov(−0.009).
+  (2026-07-20 정정: 최종 tabB 기준 재산출. 이전 +0.135/+0.064/≈0은 gefcom_solar 재실행 전 중간값.
+  주의: patchtstcov +0.142, segrnncov −0.004 — 단조 서사는 mixer 사다리(linmix→mlpmix→lgbmcov)에 한정할 것.)
   이는 비제약 클래스에서 정규화가 재매개화라는 Toner&Darlow 논리 및 명제 2′와 정합.
   RevIN과의 격차는 함수 클래스 제약이라 용량과 무관하게 잔존 — "CN의 가치 = 제약된 딥 파이프라인의 수선 + 모듈적 주입"으로 정밀화하여 Discussion에 수록할 것.
 

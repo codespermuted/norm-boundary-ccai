@@ -65,7 +65,7 @@
 ## G4 확장 블록 완주 + G5 분석 (2026-07-16)
 
 - **전 블록 완결**: A 1,794 + B 1,133 + C/D 1,275 = **4,202 runs**
-- **블록 B (정보 대등, 5백본)**: CondNorm이 전 백본 최적. DM 유의(CN): patchtstcov 11/11, linmix·mlpmix 10/11, segrnncov 2/11, lgbmcov 3/11 — 유연 백본일수록 격차 축소(용량 서사), RevIN은 전 백본에서 RAW+cov보다 열등
+- **블록 B (정보 대등, 5백본)**: CondNorm이 linmix·mlpmix·patchtstcov 3개 백본에서 최적, lgbmcov·segrnncov는 RAW+cov가 근소 우위(각 −0.009/−0.004)이며 CN은 최적과 0.01 이내. DM 유의(CN>RevIN): patchtstcov 11/11, linmix·mlpmix 10/11, segrnncov 2/11, lgbmcov 3/11. RAW−CN 격차는 mixer 사다리에서 단조 감소: linmix +0.127 → mlpmix +0.053 → lgbmcov −0.009 (용량 서사; patchtstcov +0.142은 예외로 명시). RevIN은 전 백본에서 RAW+cov보다 열등
 - **블록 C (SOTA-MS)**: TimeXer-MS 격차 +0.412 (55쌍), iTransformer-MS 동일 패턴 — SOTA 공변량 모델 위에서도 CN 압승
 - **Fig 3**: Spearman ρ=0.762 (p=0.028), (dataset,h) ρ=0.783 (p<1e-5) — G5 AC 유의성 충족
 - **Fig 5**: 외생 4종 전부 격차 h-단조 증가 (명제 3 실데이터 실증)

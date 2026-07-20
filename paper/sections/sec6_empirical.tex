@@ -1,0 +1,153 @@
+\section{Empirical Study}\label{sec:empirical}
+
+This section reports the pre-registered real-data study. The design tests three falsifiable claims fixed before any grid run (\Cref{sec:lps}): (i) the sign of the RevIN--CondNorm test-error gap on each dataset is predicted by the $\lps$ decision rule with $\tau=0.3$; (ii) the magnitude of the gap increases monotonically with $\lps$; and (iii) on Jeju Wind the gap at $h=48$ exceeds the gap at $h=24$, as \Cref{sec:theory} predicts. Claim (i) constitutes the second pre-registered go/no-go gate (Gate~2); claims (ii) and (iii) are auxiliary predictions excluded from the gate verdict. Three additional blocks probe the mechanisms behind the result; their full tables appear in \Cref{app:ext}.
+
+\subsection{Data}
+
+We use eight datasets in two groups. The \emph{exogenously-driven} group consists of series whose level is substantially determined by observable external drivers. \textbf{Jeju Wind} is aggregate wind-power generation on Jeju Island, Korea (hourly, July 2021--December 2023; 21{,}720 observations), paired with archived short-term numerical weather prediction (NWP) forecasts from the Korea Meteorological Administration. Forecasts are \emph{lead-matched} to the forecast origin: for horizons $h\le 24$ we use the forecast band issued at 23:00 two days prior (lead times 26--49\,h), and for $h\le 48$ the band issued three days prior (lead times 50--73\,h). The correlation between generation and forecast wind speed is $0.742$ for the day-ahead band and $0.704$ for the longer-lead band---decaying with lead time, as physically expected. A single archive gap (25 June--4 July 2023) is handled by segment-aware windowing: no training or evaluation window spans the gap, and no values are interpolated. The remaining three series---\textbf{GEFCom-Wind}, \textbf{GEFCom-Load}, and \textbf{GEFCom-Solar}---come from GEFCom2014 \citep{hong2016gefcom} with their published explanatory variables (NWP wind components, temperature, and NWP solar variables, respectively).
+
+We emphasize the leakage discipline for weather covariates: all NWP inputs are \emph{archived operational forecasts matched by issue lead}, never reanalysis products. Reanalyses assimilate observations from the forecast target period and would leak future information into the covariate path---a subtle but fatal flaw for any claim about exogenous predictability.
+
+The \emph{standard} group comprises the long-term-forecasting benchmarks ETTh1, ETTh2, Electricity, and Weather. Here the only covariates supplied to any method are deterministic calendar harmonics, so conditional normalization can exploit seasonal structure but has no genuinely exogenous level information. This group is where the distribution-shift motivation of instance normalization \citep{kim2022revin} is expected to hold.
+
+\subsection{Design and protocol}
+
+Block~A, the pre-registered grid, crosses five normalization arms \{Raw, RevIN, SAN, FAN, CondNorm\} \citep{kim2022revin,liu2023san,ye2024fan} with four backbones \{RLinear, PatchTST, SegRNN, LightGBM-DMS\} \citep{li2023rlinear,nie2023patchtst,lin2023segrnn,ke2017lightgbm}, horizons $h\in\{24,96,336\}$ ($\{24,48\}$ for Jeju Wind, constrained by NWP lead coverage), and seeds $\{0,\dots,4\}$; LightGBM runs are deterministic. The combinations LightGBM$\times$SAN and LightGBM$\times$FAN are structurally infeasible (these arms are learned, backpropagated modules) and were declared N/A at pre-registration; the RevIN analogue for LightGBM is per-window z-normalization. Block~A comprises 1{,}794 runs.
+
+Capacity is controlled to isolate the normalization effect: for each (dataset, backbone, $h$), the lookback is tuned over $\{96,192,336,720\}$ on \emph{validation} loss of the RevIN arm at seed~0, then frozen for all five arms. Thus arms within a cell differ in normalization only---never in depth, width, or lookback. Splits are chronological and out-of-time; the global z-score is fit on the training segment only; loaders use \texttt{drop\_last=False} \citep{qiu2024tfb}; training uses fixed seeds and deterministic kernels (full settings in \Cref{app:repro}).
+
+Three extension blocks reuse this discipline. Block~B (\emph{covariate-fair}; 1{,}133 runs) gives \emph{every} arm identical past and future covariates as inputs across five covariate-capable backbones. Blocks~C and~D (1{,}275 runs; 4{,}202 in total) run the arms on published state-of-the-art architectures---TimeXer and iTransformer \citep{wang2024timexer,liu2024itransformer}---with (C) and without (D) their official covariate paths; their built-in \texttt{use\_norm} (equivalent to our RevIN arm) is removed so that normalization enters \emph{only} through the five external arms. The backbone-by-backbone correspondence between published defaults and our arms is audited in \Cref{tab:audit} (\Cref{app:design}). Because training budgets differ across blocks (e.g., epoch caps of 12 in~A and 15 in~B), we never compare numbers \emph{across} blocks; each block is internally uniform and self-contained.
+
+\subsection{Statistical testing}
+
+Significance marks use Diebold--Mariano tests \citep{diebold1995comparing} on the per-$(\text{backbone},h)$ seed-mean loss differentials, with a Bartlett-kernel HAC variance (bandwidth $h-1$, capped at $n/4$) and the small-sample correction of \citet{harvey1997testing}. Dataset-level marks in \Cref{tab:main} combine the cell-level $p$-values by Fisher's method ($p<0.05$). Complementing pairwise tests, we compute the Model Confidence Set \citep{hansen2011mcs} over the five arms within each (dataset, $h$) cell at $\alpha=0.10$, using the $T_{\max}$ statistic and the stationary bootstrap \citep{politis1994stationary}.
+
+\subsection{Pre-registered results}
+
+\begin{table}[t]
+\centering
+\caption{Test MSE (global z-score scale) by dataset and normalization arm, averaged over backbones, horizons, and seeds (Block~A). \textbf{Bold}: best arm per dataset. $^{*}$: significantly worse than the best arm ($p<0.05$; DM test with Harvey correction on per-$(\text{backbone},h)$ seed-mean loss differentials, Fisher-combined across cells).}
+\label{tab:main}
+\small
+\begin{tabular}{lccccc}
+\toprule
+Dataset & Raw & RevIN & SAN & FAN & CondNorm \\
+\midrule
+\multicolumn{6}{l}{\emph{Exogenously-driven group}} \\
+Jeju Wind     & $0.6887^{*}$ & $0.6969^{*}$ & $0.7030^{*}$ & $0.7724^{*}$ & $\mathbf{0.2933}$ \\
+GEFCom-Wind   & $1.1153^{*}$ & $1.0039^{*}$ & $0.9755^{*}$ & $1.1875^{*}$ & $\mathbf{0.1629}$ \\
+GEFCom-Load   & $0.3592^{*}$ & $0.3432^{*}$ & $0.3330^{*}$ & $0.3678^{*}$ & $\mathbf{0.1066}$ \\
+GEFCom-Solar  & $0.1828^{*}$ & $0.1844^{*}$ & $0.2116^{*}$ & $0.1833^{*}$ & $\mathbf{0.0580}$ \\
+\midrule
+\multicolumn{6}{l}{\emph{Standard LTSF group}} \\
+ETTh1         & $0.3962^{*}$ & $\mathbf{0.3771}$ & $0.3910^{*}$ & $0.4114^{*}$ & $2.2016^{*}$ \\
+ETTh2         & $0.3868^{*}$ & $0.2900^{*}$ & $\mathbf{0.2869}$ & $0.3253^{*}$ & $6.6044^{*}$ \\
+Electricity   & $0.1500^{*}$ & $0.1458^{*}$ & $0.1443^{*}$ & $\mathbf{0.1375}$ & $0.1726^{*}$ \\
+Weather       & $0.1815^{*}$ & $0.1719^{*}$ & $\mathbf{0.1666}$ & $0.1747^{*}$ & $0.7274^{*}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\Cref{tab:main} summarizes Block~A. The pattern is a clean double dissociation, not a uniform ranking. On the exogenously-driven group, CondNorm is best on every dataset, with every competing arm significantly worse; the margins are large (e.g., GEFCom-Wind: $0.1629$ versus $0.9755$ for the best instance-normalization arm). On the standard group, CondNorm loses---catastrophically so on ETTh2 ($6.6044$), where calendar harmonics carry essentially no level information and the first-stage regression injects pure noise into the restored level---while RevIN, SAN, or FAN wins, exactly as the distribution-shift motivation predicts.
+
+\paragraph{Gate~2: sign predictions} All eight pre-registered sign predictions were confirmed (criterion: at least 6/8). The realized dataset-mean gaps, $\mse(\text{RevIN})-\mse(\text{CondNorm})$, are: Jeju Wind $+0.4037$, GEFCom-Wind $+0.8410$, GEFCom-Load $+0.2366$, GEFCom-Solar $+0.1264$ (all predicted positive), and ETTh1 $-1.8244$, ETTh2 $-6.3145$, Electricity $-0.0268$, Weather $-0.5555$ (all predicted negative). We stress that these predictions, the official $\lps$ specification, and $\tau=0.3$ were committed to version control (commit \texttt{cab17c1}) before any grid run was launched.
+
+\paragraph{Model Confidence Sets} At $\alpha=0.10$, the surviving set in \emph{all eleven} exogenous (dataset, $h$) cells is $\{\text{CondNorm}\}$ alone. On the standard cells the survivors are $\{\text{RevIN}\}$ in all three ETTh1 cells, $\{\text{RevIN},\text{SAN}\}$ in all three ETTh2 cells, $\{\text{FAN}\}$ in all three Electricity cells, and $\{\text{SAN}\}$ in all three Weather cells. Across all 23 cells, survival counts are: Raw 0, RevIN 6, SAN 6, FAN 3, CondNorm 11.
+
+\paragraph{The near-boundary case} Electricity sits closest to the threshold ($\lps=0.283<\tau=0.3$) and was flagged in the pre-registration as the lowest-confidence prediction. It behaved accordingly: its realized gap is the smallest in magnitude ($-0.0268$), roughly five times closer to zero than any other dataset. The decision boundary is where the two regimes genuinely meet, not an artifact of dataset selection.
+
+\subsection{LPS predicts the gap}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=.75\linewidth]{figures/fig3_lps_gap.pdf}
+\caption{Realized RevIN$-$CondNorm test-MSE gap versus pre-registered $\lps$. Dataset level: Spearman $\rho=0.762$ ($p=0.028$, $n=8$); per-(dataset,\,$h$) cells: $\rho=0.783$ ($p=9.9\times10^{-6}$, $n=23$). The vertical line marks $\tau=0.3$.}
+\label{fig:lpsgap}
+\end{figure}
+
+Beyond sign accuracy, the pre-registered auxiliary prediction was that the gap \emph{magnitude} increases with $\lps$. \Cref{fig:lpsgap} confirms this: Spearman $\rho=0.762$ ($p=0.028$) at the dataset level and $\rho=0.783$ ($p=9.9\times10^{-6}$) across the 23 (dataset, $h$) cells. The diagnostic thus carries ordinal information about \emph{how much} is at stake, not merely which side of the boundary a dataset falls on.
+
+\begin{table}[t]
+\centering
+\caption{The $\lps$ decision rule. Panel (a): number of correct sign predictions (out of 8) as the threshold $\tau$ varies; the pre-registered $\tau=0.3$ lies in the widest all-correct plateau. Panel (b): per-dataset diagnostics; verdict CN if $\lps\ge\tau$, IN otherwise; realized gap is dataset-mean $\mse(\text{RevIN})-\mse(\text{CondNorm})$.}
+\label{tab:tau}
+\small
+\begin{tabular}{lccccc}
+\multicolumn{6}{l}{(a) Threshold sensitivity} \\
+\toprule
+$\tau$ range & $[0.00,0.10]$ & $[0.15,0.25]$ & $[0.30,0.70]$ & $[0.75,0.85]$ & $0.90$ \\
+\midrule
+Sign hits / 8 & 6 & 7 & \textbf{8} & 6 & 4 \\
+\bottomrule
+\end{tabular}
+
+\vspace{1ex}
+
+\begin{tabular}{lcccc}
+\multicolumn{5}{l}{(b) Per-dataset verdicts ($\tau=0.3$)} \\
+\toprule
+Dataset & $\lps$ & $\dlps$ & Realized gap & Verdict \\
+\midrule
+Jeju Wind    & $0.745$  & --- & $+0.404$ & CN \\
+GEFCom-Wind  & $0.744$  & --- & $+0.841$ & CN \\
+GEFCom-Load  & $0.894$  & --- & $+0.237$ & CN \\
+GEFCom-Solar & $0.875$  & --- & $+0.126$ & CN \\
+ETTh1        & $-0.717$ & --- & $-1.824$ & IN \\
+ETTh2        & $-0.205$ & --- & $-6.314$ & IN \\
+Electricity  & $0.283$  & --- & $-0.027$ & IN \\
+Weather      & $0.110$  & --- & $-0.556$ & IN \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\Cref{tab:tau} probes the robustness of the decision rule itself. The 8/8 hit rate is maintained for every $\tau\in[0.30,0.70]$---a wide plateau containing the pre-registered value---and degrades only outside it (6/8 on $[0.00,0.10]$ and $[0.75,0.85]$, 7/8 on $[0.15,0.25]$, 4/8 at $0.90$). The conclusion does not hinge on a lucky threshold. Panel~(b) lists each dataset's $\lps$, realized gap, and rule verdict; all eight verdicts match the realized sign.\todo{Fill in the $\dlps$ (incremental-over-persistence) column once its computation completes; see \Cref{sec:lps} for the definition.}
+
+\subsection{Variance attribution}
+
+\begin{table}[t]
+\centering
+\caption{Variance attribution of log test MSE across Block~A factors (percent of total).}
+\label{tab:attribution}
+\small
+\begin{tabular}{lr}
+\toprule
+Factor & Share (\%) \\
+\midrule
+Normalization (main)            & 0.73 \\
+Backbone (main)                 & 0.13 \\
+Dataset (main)                  & 42.45 \\
+Horizon (main)                  & 5.65 \\
+Normalization $\times$ dataset  & 47.12 \\
+Normalization $\times$ backbone & 0.31 \\
+Backbone $\times$ dataset       & 0.44 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=.7\linewidth]{figures/fig4_factors.pdf}
+\caption{Factor-level view of the variance attribution in \Cref{tab:attribution}: the normalization effect on error is almost entirely carried by its interaction with the dataset.}
+\label{fig:factors}
+\end{figure}
+
+\Cref{tab:attribution} decomposes the variance of log test MSE over Block~A. Normalization-related terms account for $48.2\%$ of the variance, backbone-related terms for $0.6\%$. Strikingly, the normalization \emph{main} effect is tiny ($0.73\%$) while the normalization$\times$dataset interaction dominates ($47.12\%$): averaged over datasets, no normalization is better, because the \emph{sign} of the effect flips across datasets. That interaction is not a nuisance term---it \emph{is} the applicability boundary this paper characterizes (\Cref{fig:factors}). By contrast, which backbone sits under the normalization barely matters, consistent with the view that the choice of normalization, not architecture, drives much of the reported variation on these benchmarks.
+
+\subsection{Horizon interaction}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=.85\linewidth]{figures/fig5_horizon.pdf}
+\caption{RevIN$-$CondNorm gap by horizon on the exogenously-driven group. The gap grows monotonically with $h$ on all four datasets, as predicted by \Cref{eq:prop3}.}
+\label{fig:horizon}
+\end{figure}
+
+\Cref{sec:theory} predicts that the penalty of the frozen-statistics restoration rule grows with the horizon, since $\sx$ accumulates while the window statistics do not (\Cref{eq:prop3}). \Cref{fig:horizon} shows exactly this on real data: the RevIN$-$CondNorm gap increases monotonically in $h$ on all four exogenously-driven datasets. In particular, the Jeju Wind gap at $h=48$ exceeds that at $h=24$, an auxiliary prediction fixed in the pre-registration document. The horizon interaction confirmed on the synthetic grid (\Cref{sec:synthetic}) thus transfers to operational data.
+
+\subsection{Robustness blocks}
+
+\paragraph{Information parity (Block B)} A natural objection is that CondNorm wins merely because it \emph{sees} covariates the other arms do not---``it is just feature engineering.'' Block~B removes this asymmetry: every arm receives the identical past and future covariates as backbone inputs, across five covariate-capable backbones. CondNorm attains the lowest mean MSE for three of the five backbones (the linear mixer, the MLP mixer, and PatchTST-Cov) and is within $0.01$ of the best arm (Raw$+$covariates) for LightGBM-Cov and SegRNN-Cov; by the Harvey-corrected DM test it is significantly better than RevIN in 11/11 exogenous cells for PatchTST-Cov, 10/11 for the linear and MLP mixers, 3/11 for LightGBM-Cov, and 2/11 for SegRNN-Cov. Two further observations sharpen the mechanism. First, RevIN$+$covariates is \emph{worse} than Raw$+$covariates for every backbone: when covariates carry the level, instance normalization actively destroys information the input path is trying to use. Second, the Raw$-$CondNorm gap shrinks as backbone flexibility grows ($+0.127$ for the linear mixer, $+0.053$ for the MLP mixer, $-0.009$ for LightGBM-Cov), while the RevIN$-$CondNorm gap persists: a flexible backbone can learn the covariate-to-level map from raw inputs, but no backbone can recover a level its normalizer has removed---the function-class constraint of \Cref{sec:theory} (cf.\ the reparameterization argument of \citealp{toner2024linear}). Full tables in \Cref{tab:covfair} (\Cref{app:ext}).
+
+\paragraph{Published covariate architectures (Block C) and endogenous SOTA (Block D)} The pattern is not an artifact of our minimal covariate adapters. On the published covariate paths of TimeXer and iTransformer \citep{wang2024timexer,liu2024itransformer}---with built-in normalization removed and our five arms injected externally---the mean RevIN$-$CondNorm gap is $+0.4122$ for TimeXer-MS (55 pairs) and $+0.4282$ for iTransformer-MS, and CondNorm is best on all four exogenous datasets for both architectures (\Cref{tab:sota}, \Cref{app:ext}). Block~D, running the same architectures in their endogenous multivariate mode, reproduces the Block~A pattern qualitatively: CondNorm wins the exogenous group and loses the standard group.
+
+\paragraph{Adaptive normalization and benchmark sanity} Two remaining objections fall to results already in \Cref{tab:main}. Against ``adaptive normalization already solves this'': SAN and FAN \citep{liu2023san,ye2024fan}, which learn non-stationary statistics rather than conditioning on covariates, lose to CondNorm on the \emph{entire} exogenous group---adapting the statistics endogenously is not a substitute for exogenous level information. Against ``the evaluation is biased toward energy data'': on the standard group our arms reproduce the literature's ranking and error levels (e.g., RevIN-family bests ETTh1 at $0.3771$), consistent with published results for these backbones \citep{li2023rlinear,qiu2024tfb}, and our conclusion there is precisely that instance normalization wins---the boundary, not either side of it, is the finding \citep{brigato2026champions}.

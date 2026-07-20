@@ -1,0 +1,81 @@
+% When Instance Normalization Hurts — IJF draft (G6)
+% Build: cd paper && tectonic main.tex   (or: make paper from repo root)
+\documentclass[preprint,12pt,authoryear]{elsarticle}
+
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage[colorlinks=true,allcolors=blue]{hyperref}
+\usepackage{cleveref}
+
+% ---------------- theorem environments ----------------
+\emergencystretch=3em
+
+\newtheorem{proposition}{Proposition}
+\newtheorem{assumption}{Assumption}
+\theoremstyle{remark}
+\newtheorem{remark}{Remark}
+
+% ---------------- notation macros (contract with sections/) ----------------
+\newcommand{\lps}{\mathrm{LPS}}
+\newcommand{\dlps}{\Delta\mathrm{LPS}}
+\newcommand{\mse}{\mathrm{MSE}}
+\newcommand{\var}{\mathrm{Var}}
+\newcommand{\covop}{\mathrm{Cov}}
+\newcommand{\lamstar}{\lambda^{*}}
+\newcommand{\sx}{s_x^2(h)}
+\newcommand{\sdel}{\sigma_\Delta^2}
+\newcommand{\sest}{\sigma_{\mathrm{est}}^2}
+\newcommand{\rawm}{\textsc{Raw}}
+\newcommand{\inm}{\textsc{In}}
+\newcommand{\cnm}{\textsc{Cn}}
+\newcommand{\todo}[1]{\textcolor{red}{[TODO: #1]}}
+
+\journal{the International Journal of Forecasting}
+
+\begin{document}
+
+\begin{frontmatter}
+
+\title{When Instance Normalization Hurts:\\
+Exogenously-Driven Level Predictability and Conditional Normalization
+for Multi-Step Forecasting}
+
+% TODO: author list and affiliations (submission metadata)
+\author[inst1]{Anonymized for review}
+\affiliation[inst1]{organization={TBD}}
+
+\begin{abstract}
+\input{sections/abstract}
+\end{abstract}
+
+\begin{keyword}
+Time series forecasting \sep Instance normalization \sep Exogenous covariates
+\sep Energy forecasting \sep Pre-registration \sep Forecasting-method selection
+\end{keyword}
+
+\end{frontmatter}
+
+% Highlights (submitted separately per IJF/Elsevier guidelines):
+% see sections/highlights.tex
+
+\input{sections/sec1_intro}
+\input{sections/sec2_related}
+\input{sections/sec3_theory}
+\input{sections/sec4_lps}
+\input{sections/sec5_synth}
+\input{sections/sec6_empirical}
+\input{sections/sec7_discussion}
+
+\appendix
+% elsarticle sets \thesection to "Appendix A"; cleveref prepends "Appendix"
+% again for appendix-type refs, so strip the word from the counter here.
+\renewcommand{\thesection}{\Alph{section}}
+\input{sections/app_proofs}
+\input{sections/app_extras}
+
+\bibliographystyle{elsarticle-harv}
+\bibliography{references}
+
+\end{document}

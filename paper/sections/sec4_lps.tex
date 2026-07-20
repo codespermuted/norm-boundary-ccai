@@ -1,0 +1,36 @@
+\section{The Level Predictability Score}\label{sec:lps}
+
+The theory of \Cref{sec:theory} locates the \inm/\cnm{} crossover in terms of population quantities that are unobservable before training. This section operationalizes them as a diagnostic that can be computed from raw data and covariates alone, \emph{before} any forecasting model is fit.
+
+\subsection{Definition}
+
+Partition the training series into non-overlapping windows of length $w$ (stride $w$, so that cross-validation blocks are serially decoupled), and let $\bar{y}_i$ and $\bar{x}_i$ denote the target mean and the covariate mean of window $i$. The Level Predictability Score is the pooled out-of-sample $R^2$ of regressing window-level target means on window-level covariate means under expanding chronological cross-validation:
+\begin{equation}\label{eq:lpsdef}
+\lps \;=\; 1 \;-\; \frac{\sum_{k=1}^{K}\sum_{i\in\mathcal{T}_k}\bigl(\bar{y}_i - \hat{g}_k(\bar{x}_i)\bigr)^2}{\sum_{k=1}^{K}\sum_{i\in\mathcal{T}_k}\bigl(\bar{y}_i - \bar{y}^{\,\mathrm{tr}}_{k}\bigr)^2},
+\end{equation}
+where $\hat{g}_k$ is a first-stage regressor fit on all windows preceding test block $\mathcal{T}_k$, and the baseline $\bar{y}^{\,\mathrm{tr}}_{k}$ is the \emph{fold-train} mean of $\bar{y}$---never the out-of-sample mean, which would leak test-period level information into the denominator. We use $K=5$ folds with a minimum training fraction of $0.4$. The official instantiation fixes $w=96$ and takes $\hat{g}_k$ to be LightGBM \citep{ke2017lightgbm}, the same first-stage family used by CondNorm, so that $\lps$ measures exactly the information the conditional normalizer will have access to. For multivariate datasets, we average per-channel $\lps$ values, matching the channel-averaged test MSE of the experimental grid. The covariate set is identical to what CondNorm receives: lead-matched archived numerical weather forecasts and calendar harmonics for the exogenous group, calendar harmonics only for the standard benchmarks. A ridge first stage is reported as a sensitivity check but plays no role in the decision rule.
+
+\subsection{Decision rule and threshold}
+
+The diagnostic induces a one-line prescription:
+\begin{equation*}
+\lps \geq \tau \;\Rightarrow\; \text{conditional normalization};
+\quad \text{otherwise instance normalization},
+\end{equation*}
+with $\tau = 0.3$ fixed by pre-registration. The threshold is anchored in the theory of \Cref{sec:theory}: under the parameter mapping of the synthetic study (\Cref{sec:synthetic}), the stylized restoration-rule model M1 places the crossover \Cref{eq:lamstar} at $\lamstar \approx 0.27$--$0.28$ at $h=24$. Because M1 is an \emph{upper bound} on the true crossover---linear backbones implicitly track residual levels, and the empirical crossings in the synthetic grid occur at $0.01$--$0.03$ (\Cref{sec:synthetic})---adopting $\tau=0.3$ is deliberately conservative toward instance normalization \citep{kim2022revin}: it recommends CondNorm only when the level signal is far stronger than the minimum the theory requires, leaving a margin for distribution drift and first-stage estimation error in $\hat{g}$. Sensitivity of the decision rule to $\tau$ is quantified in \Cref{tab:tau}.
+
+\subsection{Pre-registration as a falsifiability device}
+
+Because both the diagnostic and the experimental grid are under our control, we bind our hands in advance. Before any grid run was executed, the official $\lps$ value of every dataset and the implied sign of the RevIN$-$CondNorm test-MSE gap were committed to the repository (git commit \texttt{cab17c1}), together with the success criterion (at least $6/8$ sign hits) and the fixed grid design. The pre-registration also flagged, in advance, electricity ($\lps = 0.283$, just below $\tau$) as the cell with the least confident sign prediction. All hits and misses are reported as-is in \Cref{sec:empirical}; the diagnostic is falsifiable, and \Cref{fig:lpsgap} shows the resulting predictions against the realized gaps.
+
+\subsection{Incremental refinement: $\dlps$}
+
+Absolute $\lps$ has a known blind spot: on strongly persistent series (e.g., electricity market prices), covariates that are merely \emph{redundant} with the recent history can inflate $\lps$ even though they add nothing beyond what instance normalization already exploits. We therefore also report an incremental variant,
+\begin{equation}\label{eq:dlps}
+\dlps \;=\; R^2_{\mathrm{oos}}\bigl(\bar{y}_{i+1} \sim \bar{x}_{i+1},\, \bar{y}_i\bigr) \;-\; R^2_{\mathrm{oos}}\bigl(\bar{y}_{i+1} \sim \bar{y}_i\bigr),
+\end{equation}
+the exogenous predictability of the \emph{next} window mean beyond persistence, computed under the same expanding chronological protocol. The pre-registered decision rule remains absolute $\lps$; $\dlps$ is reported alongside it in \Cref{tab:tau} as a diagnostic refinement for practitioners facing highly persistent targets.
+
+\subsection{Why a pre-training diagnostic}
+
+Choosing a normalization by grid search is expensive: our own comparison required 4{,}202 training runs across normalizations, backbones, horizons, and seeds. The $\lps$ computation, by contrast, involves only a handful of window-level first-stage fits---seconds to minutes on a CPU---and requires no forecasting model at all. Beyond cost, a pre-training diagnostic changes the epistemic status of the comparison: rather than selecting a normalization post hoc from test results, the practitioner commits to a choice from data properties alone, directly answering recent calls for diagnostics-driven analysis of when normalization helps or hurts \citep{noise2025signal}.

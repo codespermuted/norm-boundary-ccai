@@ -1,6 +1,9 @@
 # norm-boundary reproducibility targets (plan §10 G5 AC: `make figures`)
 
-.PHONY: figures tables all test
+.PHONY: figures tables all test paper
+
+paper:
+	cd paper && tectonic main.tex
 
 all: figures tables
 
