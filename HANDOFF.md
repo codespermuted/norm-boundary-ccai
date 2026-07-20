@@ -90,6 +90,13 @@ Tab 2(MCS·귀속), Tab 3(τ 민감도 + ΔLPS 병산), covfair·SOTA 최종 표
 - ΔLPS 러너: `experiments/compute_lps_delta.py`. **주의: LightGBM sklearn 래퍼는 소형 데이터에서
   전-코어 기본값이 스레드 경합으로 fit당 ~90초까지 퇴화** — n_jobs=1 강제 몽키패치로 해결 (48분 2개 → 8분 8개).
 
+## 실행 내성 규약 (2026-07-20, OOM 사용자 지시)
+
+- 장시간 작업(pytest·재실험·재계산)은 `scripts/supervised_run.sh <로그> <재시도수> -- <명령>`으로 실행:
+  비정상 종료(OOM=137 포함) 시 백오프 재시도, 스레드 상한(OMP/BLAS 8)·expandable_segments 기본 주입.
+  `make test-supervised`가 pytest용 프리셋. 로그는 results/*_supervised.log.
+- 이 머신은 타 프로젝트(SMP)와 28코어·RAM을 공유 — 동시성 높은 작업은 스레드 상한 필수.
+
 ## G6 종료 — AC 자체 평가 (2026-07-20)
 
 | AC | 판정 | 근거 |

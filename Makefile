@@ -18,3 +18,7 @@ tables:
 
 test:
 	uv run pytest -q
+
+# OOM/충돌 내성 실행 (죽으면 백오프 후 자동 재시도, 최대 3회)
+test-supervised:
+	scripts/supervised_run.sh results/pytest_supervised.log 3 -- uv run pytest -q
