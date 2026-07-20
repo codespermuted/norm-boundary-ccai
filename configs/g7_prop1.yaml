@@ -1,0 +1,29 @@
+# G7 item 5 — Proposition 1' nonlinear demo (MLP arms vs provisional bound).
+# DGP follows docs/theory_g1.md §3 Prop 1 via the M1 mapping:
+#   g ~ N(0, lam*V), v ~ N(0, (1-lam)*V), window_j = g + v + e_j, e_j ~ N(0, sigma_z^2)
+#   ybar = mean(window)             -> Cov(ybar, g) = lam*V by construction
+#   y = a*ybar + b*g + kappa*ybar*g + eps,  eps ~ N(0, noise_sd^2)
+dgp:
+  V: 1.0
+  w: 16            # demo window length; window-noise var = sigma_z^2 / w
+  sigma_z: 1.0
+  kappa: 0.5
+  a: 1.0           # a = 1 makes the provisional bound tight for the RevIN arm
+                   # (its irreducible excess is ((a-1)^2 + kappa^2*lam*V)*Var(ybar|g))
+  b: 0.5
+  noise_sd: 0.1
+  n_train: 20000
+  n_test: 200000
+lambdas: [0.4, 0.8]
+seeds: 10
+model:
+  hidden: [128, 128]   # 2 hidden layers, ReLU
+  epochs: 60
+  lr: 1.0e-3
+  batch_size: 512
+# PROVISIONAL bound — the theoretical constant is not final, so the formula's
+# scale MUST stay config-swappable:
+#   bound = bound_scale * kappa^2 * Var(ybar|g) * Var(g)
+#   Var(ybar|g) = (1-lam)*V + sigma_z^2/w   (from DGP constants, never estimated)
+#   Var(g)      = lam*V
+bound_scale: 1.0

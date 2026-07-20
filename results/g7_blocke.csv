@@ -1,0 +1,9 @@
+dataset,arm,h,seed,mse,mae,nmae
+etth1,seasonal_naive,24,0,0.668869,0.510642,
+etth1,climatology,24,0,0.884796,0.711844,
+etth1,first_stage_only,24,0,1.404443,0.868008,
+etth1,dynreg,24,0,0.355292,0.389286,
+jeju_wind,seasonal_naive,24,0,1.627956,0.922424,0.22539
+jeju_wind,climatology,24,0,1.033205,0.846851,0.206924
+weather,seasonal_naive,24,0,0.315584,0.287614,
+weather,climatology,24,0,0.68588,0.601994,

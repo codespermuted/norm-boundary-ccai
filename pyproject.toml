@@ -36,3 +36,6 @@ explicit = true
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["tests"]
+markers = [
+    "canary: leakage canaries (G7 audit) — synthetic end-to-end leak detectors",
+]

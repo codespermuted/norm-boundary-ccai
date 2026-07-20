@@ -1,0 +1,6 @@
+dataset,arm,backbone,h,seed,pinball,crps,cov80,cov_lo,cov_hi
+jeju_wind,raw,rlinear_q,24,0,0.205013,0.410025,0.817793,0.091376,0.909169
+jeju_wind,raw,rlinear_q,24,1,0.204501,0.409002,0.81854,0.089661,0.9082
+jeju_wind,raw,rlinear_q,24,2,0.204747,0.409493,0.829297,0.078752,0.908049
+jeju_wind,raw,rlinear_q,24,3,0.204931,0.409862,0.812041,0.099419,0.91146
+jeju_wind,raw,rlinear_q,24,4,0.203688,0.407376,0.802131,0.105665,0.907796
