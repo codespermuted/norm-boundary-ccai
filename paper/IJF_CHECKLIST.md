@@ -29,10 +29,10 @@
 - [x] 방어 3 "피처 엔지니어링일 뿐" → §3 명제 1 + §6 블록 B 정보 대등 (RAW+cov > RevIN+cov)
 - [x] 방어 4 "에너지 편중 평가" → §6: GEFCom + 표준 LTSF 문헌 수치 재현 병행
 
-## 남은 TODO (본문 마커 ≤20 규정: 현재 2개)
+## 남은 TODO (본문 마커 ≤20 규정: 렌더링 0개)
 
-1. `main.tex` frontmatter — 저자·소속 (투고 메타데이터)
-2. `sec6_empirical.tex` — Tab 3 ΔLPS 열 수치 (계산 완료 시 채움; G5 잔여 작업과 연동)
+1. `main.tex` frontmatter — 저자·소속 (투고 메타데이터, 주석으로만 표시)
+2. (조판 소사항) arXiv 전용 참고문헌 뒤 여분 마침표 — elsarticle-harv .bst의 빈 volume/pages 필드 artifact. 투고 시 .bst 후처리 또는 무시 (의미 영향 없음)
 
 ## 빌드
 

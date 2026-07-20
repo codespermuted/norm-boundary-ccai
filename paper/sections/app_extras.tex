@@ -29,13 +29,13 @@ which of our external normalization arms reproduces the model as published;
 \label{tab:audit}
 \scriptsize
 \setlength{\tabcolsep}{4pt}
-\begin{tabular}{@{}lp{2.8cm}llp{3.1cm}@{}}
+\begin{tabular}{@{}p{2.5cm}p{2.5cm}p{2.4cm}p{1.9cm}p{2.9cm}@{}}
 \toprule
 Backbone & Published built-in normalization & Our treatment & Published $\approx$ arm & Covariate path \\
 \midrule
 RLinear \citep{li2023rlinear} & RevIN (the ``R'') & external arm & \texttt{revin} & none (A) / \texttt{linmix} features (B) \\
-PatchTST \citep{nie2023patchtst} & RevIN, on by default & removed; external arm & \texttt{revin} & none (A) / PatchTSTCov (B) \\
-SegRNN \citep{lin2023segrnn} & instance norm (last-value subtraction) & removed; external arm & $\approx$\,\texttt{revin} (item~1) & none (A) / SegRNNCov (B) \\
+PatchTST \citep{nie2023patchtst} & RevIN, on by default & removed; external arm & \texttt{revin} & none (A) / PatchTST-Cov (B) \\
+SegRNN \citep{lin2023segrnn} & instance norm (last-value subtraction) & removed; external arm & $\approx$\,\texttt{revin} (item~1) & none (A) / SegRNN-Cov (B) \\
 LightGBM-DMS \citep{ke2017lightgbm} & varies by practice & window z-norm arm (RevIN-equiv.) & --- & features (B) \\
 iTransformer \citep{liu2024itransformer} & \texttt{use\_norm=True} (non-affine RevIN / NST) & \texttt{use\_norm=False}; external arm & \texttt{revin} & MS: covariate variate tokens (official usage) \\
 TimeXer \citep{wang2024timexer} & \texttt{use\_norm=True} & \texttt{use\_norm=False}; external arm & \texttt{revin} & MS: exogenous cross-attention (design purpose) \\
@@ -132,7 +132,11 @@ provides the ordering evidence. The frozen artifacts are: the official LPS
 specification ($w=96$, LightGBM first stage, expanding chronological
 cross-validation, per-channel mean), the threshold $\tau = 0.3$, and the
 predicted sign of the gap (RevIN minus CondNorm test MSE) for all eight
-datasets.
+datasets. One archival note: a later history rewrite (removing a credentials
+file from tracking) preserved all commit dates; the first grid runs carry the
+pre-rewrite hash of the same pre-registration commit in their MLflow tags,
+with the hash correspondence documented in the repository, so the ordering
+evidence remains independently verifiable.
 
 \paragraph{Data provenance}
 \emph{jeju\_wind}: Jeju Island wind generation (2021-07 to 2023-12; 21{,}720
@@ -175,7 +179,7 @@ covariate backbones (LGBM+cov and SegRNNCov), where the number of
 DM-significant cells drops accordingly (3/11 and 2/11 versus 10--11/11 for the
 less flexible backbones). Averaged over (dataset, horizon) cells, the
 \rawm{}$-$\cnm{} gap shrinks with backbone flexibility --- linmix $+0.127$,
-mlpmix $+0.053$, LGBM+cov $-0.009$ --- consistent with a flexible backbone
+mlpmix $+0.052$, LGBM+cov $-0.009$ --- consistent with a flexible backbone
 learning the restoration map internally when given the covariates. Crucially,
 the RevIN gap does \emph{not} shrink: RevIN+cov is worse than \rawm{}+cov for
 every backbone, the function-class constraint predicted by
@@ -198,7 +202,7 @@ Backbone & \rawm{} & RevIN & SAN & FAN & CondNorm & DM sig.\ /11 \\
 \midrule
 LGBM+cov     & \textbf{0.127}  & 0.146  & ---    & ---    & 0.1361 & 3 \\
 linmix       & 0.2762 & 0.2967 & 0.3191 & 0.4332 & \textbf{0.1496} & 10 \\
-mlpmix       & 0.1978 & 0.2214 & 0.2419 & 0.4081 & \textbf{0.1446} & 10 \\
+mlpmix       & 0.1963 & 0.2201 & 0.2402 & 0.4057 & \textbf{0.1443} & 10 \\
 PatchTSTCov  & 0.2851 & 0.2889 & 0.3378 & 0.3729 & \textbf{0.1434} & 11 \\
 SegRNNCov    & \textbf{0.1312} & 0.1425 & 0.1822 & 0.2912 & 0.1352 & 2 \\
 \bottomrule
@@ -273,21 +277,18 @@ lookback-window statistics and systematically lags or misses the ramp, whereas
 CondNorm restores the level from the lead-matched NWP forecast and tracks it.
 On overcast solar days, RevIN restores the level of the (sunny) input window,
 while CondNorm's covariate-conditional restoration adjusts the level downward
-to the forecast irradiance regime.
+to the forecast irradiance regime. The standard-benchmark rows (etth1, etth2,
+weather) show CondNorm's failure mode outside the applicability boundary: its
+covariate-conditional restoration places the forecast at a visibly wrong
+level.
 
 \begin{figure}[t]
 \centering
-\includegraphics[keepaspectratio,width=\textwidth,height=0.85\textheight]{figures/sample_forecasts.png}
+\includegraphics[keepaspectratio,width=\textwidth,height=0.8\textheight]{figures/sample_forecasts.png}
 \caption{Qualitative test-set examples (identical backbone and information
 set): one row per dataset, three sample windows per row; grey is the lookback,
 black the ground truth, and colored lines the \rawm{}, RevIN, and CondNorm
-forecasts. On the wind rows (jeju\_wind, gefcom\_wind), RevIN's restoration is
-anchored to lookback-window statistics and lags or misses ramps, while
-CondNorm follows the NWP-implied level; on the gefcom\_solar row, the
-overcast-day window shows RevIN restoring the level of the preceding sunny
-window while CondNorm adjusts it down to the forecast irradiance regime. The
-standard-benchmark rows (etth1, etth2, weather) show CondNorm's failure mode
-outside the applicability boundary: its covariate-conditional restoration
-places the forecast at a visibly wrong level.}
+forecasts. See the accompanying text for the reading of the wind, solar, and
+standard-benchmark rows.}
 \label{fig:samples}
 \end{figure}
