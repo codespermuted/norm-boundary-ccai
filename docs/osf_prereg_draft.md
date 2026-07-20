@@ -144,9 +144,11 @@ permutation-CI rule.
 **Secondary outcomes (pre-registered, H4).** Mean pinball loss over quantile levels
 {0.1, ..., 0.9}, quantile-approximated CRPS (average pinball across the nine levels,
 times 2), and empirical coverage of the central 80% interval (q0.1-q0.9), for the
-**Block F backbone pair**: quantile-head variants of one linear and one deep
-backbone. `[확정 필요: Block F 트랙이 확정한 백본 2종으로 치환 — 초안 가정: RLinear-Q,
-PatchTST-Q, 9-quantile pinball 학습, 그 외 프로토콜은 Block A와 동일]`
+**Block F backbone pair** (확정, docs/blockf_design.md): RLinear-Q (9-quantile
+pinball head, Block-A capacity/lookback) and LightGBM-Q (objective='quantile',
+levels {0.1, 0.5, 0.9}; CRPS approximation therefore coarser and compared
+within-backbone only). One linear + one GBM quantile-native backbone spans the
+capacity axis while keeping the normalization contrast isolated.
 
 **Exploratory (declared, not confirmatory).** Per-(backbone, h) cell hit rates;
 SAN/FAN placements; MCS survivor sets; Delta-LPS tau-sensitivity.
