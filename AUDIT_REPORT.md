@@ -32,9 +32,9 @@ git·MLflow 태그(재작성 전 해시 279bb80)·npy mtime 3계열 일치. filt
   외생 평균 pinball: CN 0.106 vs RevIN 0.197 (rlinear, −46%) / CN 0.085 vs winz 0.155 (lgbm).
   표준 그룹은 Block A 패턴 그대로 역전 (CN 0.521 vs RevIN 0.121)
 - **상대 격차는 감쇠** (Block A MSE 73% → pinball 46%; 제곱→1차 동차 손실 효과) — 부호·전 셀 일관성 유지
-- **뉘앙스 (정직 보고)**: CN cov80 0.60 vs RevIN 0.82 (명목 0.8) — 과소커버는 **하방 꼬리 집중**
-  (P(y≤q10)=0.19 vs 명목 0.10; 상방 0.79≈명목): 1단계 불확실성 미전파 = σ_est 항의 확률 버전.
-  향후 과제 명시 (`docs/blockf_summary.md` 최종 문단)
+- **뉘앙스 (정직 보고)**: CN cov80 0.60 vs RevIN 0.82 (명목 0.8) — 과소커버는 **양쪽 꼬리 대칭**
+  (하방 초과 0.093, 상방 초과 0.106): 1단계 분산 미전파로 구간이 양쪽에서 과소 산포 = σ_est 항의
+  확률 버전. 향후 과제 명시 (07-22 정정: 초안의 "하방 집중"은 cov_hi 명목 0.90↔0.80 혼동 오류)
 - 산출: `paper/tables/tabF_probabilistic.md`, `docs/blockf_design.md`(백본 2종 제한 사유·CRPS 근사·
   quantile 축소), `docs/blockf_summary.md`(수치 확정판)
 

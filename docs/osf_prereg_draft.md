@@ -117,9 +117,22 @@ rule of `src/theory/lps_inference.py` to the primary decision procedure**:
 2. **Significance:** LPS must be significant against the circular-shift null — the
    covariate series is circularly shifted relative to the target (preserving both
    marginals and autocorrelation), the LPS recomputed per shift; require
-   p_perm < 0.05. `[확정 필요: n_perm, 시프트 최소 간격 — lps_inference.py 구현값으로 고정]`
-3. **Confidence interval:** the CI reported by the same module must exclude
-   tau = 0.3. `[확정 필요: CI 방법·수준(90% 권장) — lps_inference.py 구현값으로 고정]`
+   p_perm < 0.05, with B = 999 shift draws (exact enumeration whenever fewer than
+   999 distinct stride-w circular shifts exist, as implemented in
+   `src/theory/lps_inference.py::permutation_test`); shifts operate on the
+   window-mean sequence (stride w, minimum displacement one full window), and the
+   season-aligned variant (shifts restricted to whole weeks) is reported as a
+   sensitivity companion, not the decision statistic (its admissible-shift count is
+   small — 16–90 on wave-1 datasets — so its p-value granularity is coarse).
+3. **Confidence interval:** the 90% moving-block bootstrap interval reported by
+   the same module (`mbb_ci`, B = 499 replicates, circular blocks of length
+   ceil(n_windows^(1/3)), percentile method) must exclude tau = 0.3.
+   Known bias, declared up front: for series whose LPS is negative or near zero,
+   block resampling dilutes across-fold drift and biases the CI upward (wave-1
+   post-hoc evidence: results/lps_inference.md Caveats). The abstention rule in
+   step 4 therefore treats "CI straddles tau" as no-prediction rather than a
+   RevIN verdict, and the permutation test of step 2 — which has no such bias —
+   is the binding significance gate.
 4. **Verdict:** CI entirely above tau AND significant -> predict CondNorm (+);
    CI entirely below tau, or not significant -> predict RevIN (−);
    CI straddles tau -> **"boundary — no confirmatory prediction"**, declared before

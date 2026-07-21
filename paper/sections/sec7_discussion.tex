@@ -18,9 +18,29 @@ The boundary cuts both ways, and the failure mode is not mild. On ETTh1, CondNor
 
 The absolute $\lps$ has a known blind spot: strongly persistent, covariate-driven series---system marginal prices are the canonical example---can score a high $\lps$ even when the covariates add little beyond what the recent history already implies, because covariates and lagged levels are themselves collinear. The incremental diagnostic $\dlps$ (\Cref{sec:lps}) is the refinement: it measures the covariate contribution \emph{over} a persistence baseline. Our theoretical expectation for this quadrant is regime-dependent: in calm regimes instance normalization should remain adequate (persistence carries the level), while conditional normalization should earn its keep at regime shifts, where the covariates lead and the window statistics lag. We leave this as a targeted stress test rather than asserting it from the present data; the pre-registered rule remains the absolute-$\lps$ threshold, with $\dlps$ reported as a proposed refinement.
 
+\paragraph{Epistemic status of the claims}
+It is worth being explicit about which of our statements are theorems,
+which are bounds, and which are extrapolations. \emph{Exact}: the
+closed-form risks and the crossover identity of
+Propositions~1--3 (verified against Monte Carlo to relative error below
+$10^{-2}$ and pinned by unit tests), and Proposition~2$'$, which gives the
+optimal predictor within each normalization's \emph{linear} function class
+as a constrained least-squares solution with no stochastic optimization
+involved. \emph{Bound}: the stylized model M1 brackets the crossover from
+above; its threshold is an upper bound whose gap to the exact crossing
+measures implicit level tracking (\Cref{sec:synthetic}). \emph{Empirical
+extrapolation}: no theorem here covers nonlinear backbones. The evidence
+that the same geometry governs PatchTST, SegRNN, and the SOTA covariate
+architectures is the pre-registered grid and robustness blocks of
+\Cref{sec:empirical}, together with a synthetic demonstration that
+replacing the linear backbone by a small MLP preserves the crossover
+pattern (Fig.~\ref{fig:mlpdemo}, \Cref{app:g7}). Readers should weight the
+three tiers accordingly: the boundary's existence and location are proved
+for linear classes and measured---not derived---for nonlinear ones.
+
 \subsection{Limitations}
 
-Four limitations bound our claims. First, the theory rests on Assumptions A1--A4 (\Cref{sec:theory}); the synthetic grid shows the constrained-OLS predictions are accurate for linear backbones, but the M1 restoration-rule threshold is an upper bound once backbones implicitly track residual levels. Second, residual design asymmetries remain despite the audit protocol (\Cref{app:design}): the published SegRNN subtracts the last window value rather than the mean, so our revin arm is an approximation of its built-in scheme; PatchTSTCov and SegRNNCov are our own minimal covariate extensions, as no standard recipe exists; the GEFCom2014 load temperature covariate is ex-post practice (identical across arms); and per-block epoch caps differ (Block~A: 12, Block~B: 15), which we control by prohibiting cross-block numeric comparison. Third, all results concern deterministic point forecasts under squared error; we make no probabilistic claims. Fourth, our multivariate-SOTA adapters normalize only the target channel, which we argue is conservative toward RevIN because it leaves covariate level information intact; a \texttt{revin\_all} arm quantifying the cost of the published default (window-normalizing covariate channels as well) is planned.
+Four limitations bound our claims. First, the theory rests on Assumptions A1--A4 (\Cref{sec:theory}); the synthetic grid shows the constrained-OLS predictions are accurate for linear backbones, but the M1 restoration-rule threshold is an upper bound once backbones implicitly track residual levels. Second, residual design asymmetries remain despite the audit protocol (\Cref{app:design}): the published SegRNN subtracts the last window value rather than the mean, so our revin arm is an approximation of its built-in scheme; PatchTSTCov and SegRNNCov are our own minimal covariate extensions, as no standard recipe exists; the GEFCom2014 load temperature covariate is ex-post practice (identical across arms); and per-block epoch caps differ (Block~A: 12, Block~B: 15), which we control by prohibiting cross-block numeric comparison. Third, the pre-registered results concern deterministic point forecasts under squared error; a post-hoc quantile extension (\Cref{app:g7}) finds the same boundary in pinball loss on both a linear and a gradient-boosted quantile backbone, but also shows that conditional normalization under-covers its nominal intervals when first-stage uncertainty is not propagated---a limitation of the method as instantiated here, flagged for future work. Fourth, our multivariate-SOTA adapters normalize only the target channel, which we argue is conservative toward RevIN because it leaves covariate level information intact; a post-hoc \texttt{revin\_all} arm quantifying the published default (window-normalizing covariate channels as well) supports the choice --- it stays within $\pm 0.05$ MSE of target-only normalization on seven of eight datasets and fails catastrophically on the eighth, where an intermittent precipitation covariate makes window statistics degenerate (\Cref{app:g7}).
 
 \subsection{Implications for power-system operations}
 
