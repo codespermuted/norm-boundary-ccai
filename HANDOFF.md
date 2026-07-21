@@ -113,6 +113,16 @@ Tab 2(MCS·귀속), Tab 3(τ 민감도 + ΔLPS 병산), covfair·SOTA 최종 표
   전면 정정(HANDOFF가 오염원이었음 — 본 문서 Discussion 논점도 수정 완료), GATE1 편차 0.015 vs 교차위치 0.029 혼동 정정.
 - 잔여(투고 전): 저자·소속 기입, cover letter, 공개 저장소 전환 결정, (선택) revin_all ablation·SMP 스트레스 테스트.
 
+## G7 종료 — 감사·강화 패스 v2 (2026-07-22 완주)
+
+**판정: 9/9 항목 통과** — 상세 `AUDIT_REPORT.md`. 사전 등록 산출물 무수정.
+핵심: 확률 지표 경계 22/22 셀(rlinear_q·lgbm_q), revin_all 반례(간헐 공변량 윈도우 정규화 폭발,
+gefcom_solar 전 시드), first_stage_only ≈ full CN(외생), LPS 순열 외생 4/4 유의·λ̂* 8/8 정합,
+Fisher 31/32 HMP/Simes 강건, MLP 데모 하한 무모순(잠정 하한 configs/g7_prop1.yaml에서 교체 가능),
+CN 확률 하방 과소커버(σ_est 미전파 — 다음 wave 후보). 신규 1,196 runs (Block E 552 + F 644).
+잔여 결정(사람): 원고 수정 4종 병합 여부(docs/manuscript_revisions_g7.md), OSF 등록
+(docs/osf_prereg_draft.md — 저자: Hong·Lee 주도 후보), 저자 로마자 철자·소속 확정.
+
 ## 무결성 감사 (2026-07-20, 투고 전 최종)
 
 6축 감사(PDF 전수·본 grid 재계산·격자 무결성·사전등록 증빙·통계 재현·이론 매칭) 결과:

@@ -18,3 +18,8 @@ paper/*.out
 paper/*.bbl
 paper/*.blg
 .env
+results/*_run.log
+results/g7_blockf_lgbm*.log
+results/g7_blocke_*.log
+results/g7_blockf_rl.log
+results/pytest_supervised.log

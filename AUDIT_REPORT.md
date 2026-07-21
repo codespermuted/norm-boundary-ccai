@@ -1,6 +1,6 @@
 # G7 감사·강화 패스 v2 — AUDIT REPORT
 
-- 작성: 2026-07-21 00:40 (1차) — Block F lgbm_q 꼬리 완주 후 최종 갱신 예정
+- **최종판**: 2026-07-22 01:20 — 전 항목 종결 (9/9). 1차: 2026-07-21 00:40
 - 대원칙 준수: **Block A–D 산출물 무수정·무재실행** (사전 등록 보존). 신규는 전부 `results/g7_*` / Block E·F 네임스페이스.
 
 ## 항목별 판정
@@ -26,13 +26,17 @@ git·MLflow 태그(재작성 전 해시 279bb80)·npy mtime 3계열 일치. filt
   간헐 공변량의 윈도우 정규화 폭발. design_audit §3의 target-only 선택을 정당화하는 **재현 가능한 반례**
 - seasonal_naive·climatology 하한 앵커 확보. jeju nMAE 병기 (naive .225 → CN .101)
 
-### 4) Block F — 🟡 rlinear_q 완주 575/575 · lgbm_q 진행 중 (35/69, 잔여 34셀 h336 위주)
-- **헤드라인 (rlinear_q, 확정)**: pinball 격차 RevIN−CondNorm이 **외생 4/4 양(+0.034~+0.178),
-  표준 4/4 음(−0.010~−0.990)** — 경계가 확률 지표에서 8/8 유지
-- **뉘앙스 (정직 보고)**: CondNorm cov80 과소커버 (외생 0.50–0.66 vs 명목 0.8; RevIN 0.73–0.89) —
-  1단계 불확실성이 분위수 폭에 미전파. 향후 과제로 명시 (숨기지 않음)
-- 백본 2종 제한 사유·CRPS 근사·quantile 축소({.1,.5,.9}) 문서화: `docs/blockf_design.md`
-- lgbm_q 잔여: gefcom_load·electricity·weather h336 등 — arm/데이터셋 분할 4레인 가동, 완주 후 tabF 최종
+### 4) Block F — ✅ 완주 (rlinear_q 575/575 + lgbm_q 69/69 = 644 rows)
+- **헤드라인**: 경계가 확률 지표에서 유지 — 외생 그룹 CN<RevIN pinball **11/11 셀 (rlinear_q)**,
+  **11/11 셀 (lgbm_q)** — 두 백본 계열 교차 확인, 신경망 프로토콜 아티팩트 아님.
+  외생 평균 pinball: CN 0.106 vs RevIN 0.197 (rlinear, −46%) / CN 0.085 vs winz 0.155 (lgbm).
+  표준 그룹은 Block A 패턴 그대로 역전 (CN 0.521 vs RevIN 0.121)
+- **상대 격차는 감쇠** (Block A MSE 73% → pinball 46%; 제곱→1차 동차 손실 효과) — 부호·전 셀 일관성 유지
+- **뉘앙스 (정직 보고)**: CN cov80 0.60 vs RevIN 0.82 (명목 0.8) — 과소커버는 **하방 꼬리 집중**
+  (P(y≤q10)=0.19 vs 명목 0.10; 상방 0.79≈명목): 1단계 불확실성 미전파 = σ_est 항의 확률 버전.
+  향후 과제 명시 (`docs/blockf_summary.md` 최종 문단)
+- 산출: `paper/tables/tabF_probabilistic.md`, `docs/blockf_design.md`(백본 2종 제한 사유·CRPS 근사·
+  quantile 축소), `docs/blockf_summary.md`(수치 확정판)
 
 ### 5) Prop 1′ 비선형 데모 — ✅ 통과 (모순 없음)
 `experiments/g7_prop1_demo.py` + `configs/g7_prop1.yaml`(하한 상수 `bound_scale` 교체 가능).
@@ -42,7 +46,7 @@ raw/CN은 하한의 ~1/20. 그림 `paper/figures/figG_prop1_mlp.{pdf,png}`. 모�
 (발동 시 CONTRADICTION.md + exit 1). 주의: 이 하한은 비선형 클래스용 조건부-분산 형태로, 선형 클래스
 gap(κ²[VarVar+Cov²])과 의도적으로 다름 — 이론 확정 시 상수만 교체.
 
-### 6) LPS 추론 모듈 — 🟡 7/8 (electricity 321채널 계산 중)
+### 6) LPS 추론 모듈 — ✅ 완주 8/8
 `src/theory/lps_inference.py` (+ pytest 8, 공식 LPS와 통계량 동일성 고정):
 
 | dataset | LPS | p_perm | p_aligned | 90% CI | λ̂* |
@@ -54,11 +58,15 @@ gap(κ²[VarVar+Cov²])과 의도적으로 다름 — 이론 확정 시 상수�
 | etth1 | −.717 | .39 | .38 | [−.02, .40]† | 2.26 |
 | etth2 | −.205 | .19 | .19 | [−.29, .42]† | 2.90 |
 | weather | .110 | .36 | .41 | [−.22, .66]† | 1.02 |
+| electricity | .283 | .058 | .075 | [.38, .57]† | 1.35 |
 
-외생 4종: 순열 유의 + CI 하한 > τ=0.3. 표준 3종: 비유의. **λ̂* 순서가 실측 승패와 7/7 정합**
-(음수=CN 전역 지배 ↔ 풍력 압승; >1=IN 지배 ↔ etth·weather).
-†주의: 음수-LPS 시리즈의 MBB CI는 블록 재표집이 fold 간 드리프트를 희석해 상향 편의 —
-표준 그룹에선 순열 p가 더 유의미한 통계량 (모듈 문서에 명시). post-hoc 라벨: τ 규칙 불변.
+외생 4종: 순열 유의(p≤.008) + CI 하한 > τ=0.3. 표준 4종: 비유의(electricity만 경계 .058).
+**λ̂* 순서가 실측 승패와 8/8 정합** (음수=CN 전역 지배 ↔ 풍력 압승; >1=IN 지배 ↔ etth·weather·elec).
+**electricity = 전 진단의 경계 셀** (LPS .283·p .058·λ̂* 1.35·ΔLPS .031·실측 gap −.027) —
+사전 등록의 최저 신뢰 표기와 완벽 정합.
+†주의: 음수/경계-LPS 시리즈의 MBB CI는 블록 재표집이 fold 간 드리프트를 희석해 상향 편의 —
+표준 그룹에선 순열 p가 더 유의미한 통계량 (모듈 문서·results/lps_inference.md Caveats에 명시).
+post-hoc 라벨: τ 규칙 불변.
 
 ### 7) 통계 강화 — ✅ 완료
 `docs/stats_hardening.md` + `experiments/g7_fisher_check.py` → `results/g7_fisher_robustness.csv`:
@@ -75,8 +83,15 @@ gap(κ²[VarVar+Cov²])과 의도적으로 다름 — 이론 확정 시 상수�
 M5·SMP quadrant + 신규: permutation-CI 규칙 primary 승격, capacity-ladder 단조성(mixer 한정,
 PatchTST-어댑터 사전 제외), 확률 지표 secondary(Block F 백본쌍 확정 반영). 미확정 항목 [확정 필요] 표기.
 
-## 종합
+## 종합 — 최종 판정
 
-사전 등록 보존 하에 9개 항목 중 7개 완전 통과, 2개(Block F lgbm 꼬리·LPS electricity) 계산 진행 중 —
-**현재까지 어떤 항목에서도 본 논문의 주장을 약화시키는 증거가 나오지 않았고**, 오히려 revin_all 반례·
-first-stage 지배·확률 지표 8/8·λ̂* 정합이 주장을 강화. 최종 갱신은 잔여 레인 완주 후.
+**9/9 항목 전부 종결·통과.** 사전 등록 산출물(Block A–D·predictions.md·τ 규칙) 무수정 보존 하에:
+- 어떤 항목에서도 본 논문의 주장을 **약화시키는 증거가 나오지 않았다**
+- 주장을 **강화**하는 신규 증거: 확률 지표 경계 22/22 셀(두 백본), revin_all 재현 반례,
+  first-stage 지배, LPS 순열 외생 4/4 유의, λ̂* 실측 8/8 정합, Fisher 별표 31/32 강건,
+  비선형 MLP 하한 무모순, 이항 정확검정 2⁻⁸
+- 정직 공개 항목: CN 확률 예측 하방 과소커버(σ_est 미전파), MBB CI 상향 편의, Fisher 종속성
+  한계(HMP 각주 권고), GitHub push 증거의 적용 범위 한계 — 전부 문서화 완료
+
+신규 실험 규모: Block E 552 + Block F 644 + LPS 추론(순열 ~2×10⁵ fit) = 사전 등록 외 보강 1,196 runs.
+G7 총 실행 기간 2026-07-20 21:30 ~ 07-22 01:10, OOM 0회, 레인 자동 재시도 0회.
