@@ -1,6 +1,14 @@
-% When Instance Normalization Hurts — IJF draft (G6)
+% When Instance Normalization Hurts
 % Build: cd paper && tectonic main.tex   (or: make paper from repo root)
 \documentclass[preprint,12pt,authoryear]{elsarticle}
+
+% Journal-agnostic preprint: suppress the elsarticle "Preprint submitted to
+% ..." first-page footer (restore \journal{...} at journal submission).
+\makeatletter
+\def\ps@pprintTitle{%
+  \let\@oddhead\@empty \let\@evenhead\@empty
+  \let\@oddfoot\@empty \let\@evenfoot\@empty}
+\makeatother
 
 \usepackage{amsmath,amssymb,amsthm}
 \usepackage{booktabs}
@@ -32,8 +40,6 @@
 \newcommand{\cnm}{\textsc{Cn}}
 \newcommand{\todo}[1]{\textcolor{red}{[TODO: #1]}}
 
-\journal{the International Journal of Forecasting}
-
 \begin{document}
 
 \begin{frontmatter}
@@ -42,9 +48,6 @@
 Exogenously-Driven Level Predictability and Conditional Normalization
 for Multi-Step Forecasting}
 
-% Names confirmed 2026-07-22: Yu = first & corresponding, then Hong, Lee.
-% Affiliation: Independent Researchers (official English name), Pangyo, Seongnam.
-% Remaining at submission: CRediT statement only.
 \author[inst1]{Jaehong Yu\corref{cor1}}
 \ead{jaehongyu0105@gmail.com}
 \author[inst1]{Jaesung Hong}
@@ -66,8 +69,7 @@ Time series forecasting \sep Instance normalization \sep Exogenous covariates
 
 \end{frontmatter}
 
-% Highlights (submitted separately per IJF/Elsevier guidelines):
-% see sections/highlights.tex
+% Highlights live in sections/highlights.tex (journal submissions only).
 
 \input{sections/sec1_intro}
 \input{sections/sec2_related}
