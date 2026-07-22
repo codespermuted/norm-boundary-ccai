@@ -12,6 +12,7 @@ uv.lock
 *.egg-info/
 .ipynb_checkpoints/
 paper/main.pdf
+paper/workshop_ccai.pdf
 paper/*.aux
 paper/*.log
 paper/*.out
