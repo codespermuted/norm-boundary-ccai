@@ -132,9 +132,60 @@ crossing---so the rule is deliberately conservative toward instance
 normalization.
 
 \section{Results}\label{sec:results}
-\emph{[Task 3: mini Table~1 (four energy rows + one standard-group summary
-line), the pre-registered 8/8, Block~B information-fair result, MCS; Figure~3
-(LPS vs.\ realized gap) as the primary figure.]}
+\begin{table}[t]
+\centering\small
+\setlength{\tabcolsep}{5pt}
+\caption{Test MSE (global $z$-score scale) on the exogenous group, Block~A
+(pre-registered), averaged over backbones, horizons, and seeds; \textbf{bold} =
+best arm. Every non-\cnm{} arm is significantly worse (Diebold--Mariano with
+Harvey correction). Values are reproduced verbatim from the full study.}
+\label{tab:mini}
+\begin{tabular}{lccccc}
+\toprule
+Dataset & \rawm & RevIN & SAN & FAN & \cnm \\
+\midrule
+Jeju Wind    & 0.6887 & 0.6969 & 0.7030 & 0.7724 & \textbf{0.2933} \\
+GEFCom-Wind  & 1.1153 & 1.0039 & 0.9755 & 1.1875 & \textbf{0.1629} \\
+GEFCom-Load  & 0.3592 & 0.3432 & 0.3330 & 0.3678 & \textbf{0.1066} \\
+GEFCom-Solar & 0.1828 & 0.1844 & 0.2116 & 0.1833 & \textbf{0.0580} \\
+\midrule
+\multicolumn{6}{l}{\emph{Standard group} (ETTh1/2, Electricity, Weather): a RevIN-family arm wins each; \cnm{} loses, up to $6.6044$ (ETTh2).}\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Three results locate the boundary. \textbf{(a)~Pre-registration.} The official
+$\lps$ value and the predicted sign of the RevIN$-$CondNorm test-MSE gap for
+each dataset were committed to version control before any grid run; all eight
+sign predictions were confirmed (Fig.~\ref{fig:lpsgap}). \textbf{(b)~Not just
+more features.} Under an information-fair comparison that feeds every arm the
+identical past and future covariates, RevIN$+$covariates is \emph{worse} than
+\rawm$+$covariates on every backbone: a flexible model can learn the
+covariate-to-level map from raw inputs, but none can recover a level its
+normalizer has already removed---a function-class constraint, not an
+information advantage. \textbf{(c)~Model Confidence Set.} In all eleven
+exogenous (dataset, horizon) cells the Model Confidence Set retains conditional
+normalization alone, whereas instance-normalization variants survive on the
+standard benchmarks, where their distribution-shift rationale holds.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.55\linewidth]{figures/fig3_lps_gap.pdf}
+\caption{Realized RevIN$-$CondNorm test-MSE gap versus the pre-registered
+$\lps$; the vertical line marks $\tau=0.3$. All eight signs fall on the
+predicted side of the threshold (Spearman $\rho=0.762$ at the dataset level,
+$0.783$ per (dataset, horizon) cell).}
+\label{fig:lpsgap}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.62\linewidth]{figures/fig5_horizon.pdf}
+\caption{Empirical horizon effect (Prop.~3): the RevIN$-$CondNorm gap grows
+monotonically with the horizon $h$ on all four exogenous datasets---longer
+operational lead times widen the case against instance normalization.}
+\label{fig:horizon}
+\end{figure}
 
 \section{Implications for energy operations and limitations}
 \emph{[Task 4: LPS as a near-zero-cost pre-training screen for ramp/regime
