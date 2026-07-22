@@ -47,17 +47,47 @@ A Pre-Training Diagnostic for Choosing a Normalization Strategy\\
 \end{abstract}
 
 \section{Problem and contributions}
-\emph{[Task 1: energy-framed motivation (wind = capacity $\times$ weather,
-solar = clear-sky $\times$ cloud, load = temperature; NWP makes the level
-observable in advance) and the three-part contribution framing.]}
-\citep{kim2022revin}
+Renewable generation and electricity demand are forecasting problems in which
+the target's \emph{level} is set by observable, physically grounded drivers.
+Wind power is installed capacity times a weather-regime factor; photovoltaic
+output follows a clear-sky geometry modulated by cloud cover; electricity load
+responds to temperature through a degree-day relationship. In each case the
+level to be predicted is largely \emph{exogenous} and observable in advance
+through archived numerical weather prediction (NWP) forecasts available at the
+forecast origin \citep{hong2016gefcom}.
 
-\section{A closed-form boundary and a pre-training score}
+Modern multi-step forecasters lead with instance normalization (RevIN and its
+successors; \citealp{kim2022revin}), which removes each input window's mean and
+variance before the backbone and restores them at the output. This is an
+effective defense against train--test distribution shift, but the statistics it
+restores are estimated \emph{endogenously}, from the target's own recent past.
+On exogenously driven series it therefore discards level information the
+covariates carry: the subtracted window mean is a stale summary precisely when a
+weather ramp or heat wave is about to move the level, and the staleness
+compounds with the forecast horizon. For climate applications this is the
+common case, not a corner case---ramps and regime transitions are exactly the
+events that drive reserve scheduling, curtailment, and renewable integration.
+
+We ask when this default helps and when it hurts, and reduce the answer to a
+quantity computable \emph{before} any model is trained. Our contributions are
+(i)~a closed-form characterization of the boundary at which instance
+normalization stops helping, in a linear--Gaussian model
+(\S\ref{sec:boundary}); (ii)~a pre-training diagnostic---the Level
+Predictability Score (LPS)---with an explicit decision rule
+(\S\ref{sec:boundary}); and (iii)~an exogenous-versus-endogenous contrast of
+\emph{normalization statistics}, evaluated in a pre-registered study whose
+per-dataset sign predictions were committed to version control before any
+experiment was run (\S\ref{sec:results}). We do not claim conditional
+normalization as a new mechanism; the contribution is the boundary, the
+diagnostic, and the pre-registered evidence that places each dataset on one
+side of it.
+
+\section{A closed-form boundary and a pre-training score}\label{sec:boundary}
 \emph{[Task 2: Proposition~2 (crossover, one $\lamstar$ equation) and
 Proposition~3 (horizon monotonicity) in 1--2 sentences each; the LPS
 definition as one equation and the decision rule $\lps \ge \tau$, $\tau=0.3$.]}
 
-\section{Results}
+\section{Results}\label{sec:results}
 \emph{[Task 3: mini Table~1 (four energy rows + one standard-group summary
 line), the pre-registered 8/8, Block~B information-fair result, MCS; Figure~3
 (LPS vs.\ realized gap) as the primary figure.]}
