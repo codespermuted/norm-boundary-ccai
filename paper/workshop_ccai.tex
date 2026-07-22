@@ -83,9 +83,53 @@ diagnostic, and the pre-registered evidence that places each dataset on one
 side of it.
 
 \section{A closed-form boundary and a pre-training score}\label{sec:boundary}
-\emph{[Task 2: Proposition~2 (crossover, one $\lamstar$ equation) and
-Proposition~3 (horizon monotonicity) in 1--2 sentences each; the LPS
-definition as one equation and the decision rule $\lps \ge \tau$, $\tau=0.3$.]}
+Consider three level-handling strategies in a linear--Gaussian instance model:
+global $z$-scoring (\rawm), instance normalization (\inm), and covariate-based
+conditional normalization (\cnm), which estimates the target-time level from
+exogenous covariates. Write $\lambda\in[0,1]$ for the exogenous predictability
+of the window level, $h$ for the horizon, $V$ for total level variance, $\sx$
+for within-horizon covariate-driven level change, $h\sigma_u^2$ for unexplained
+drift, $\sdel$ for covariate-orthogonal train-to-test shift, and $\sest$ for the
+first-stage error of \cnm. Then \inm{} pays the full within-horizon displacement
+(it freezes the window statistic across the horizon) but is immune to level
+variance and shift, whereas \cnm{} pays the unexplained level variance
+$(1-\lambda)V$ but no within-horizon ramp.
+
+\paragraph{Crossover (Prop.~2).} Estimated conditional normalization beats
+instance normalization exactly when $\lambda > \lamstar$, with
+\begin{equation}\label{eq:lamstar}
+\lamstar \;=\; 1 \;-\; \frac{\sx + h\sigma_u^2 + \sigma_z^2/w - \sdel - \sest}{V}.
+\end{equation}
+$\lamstar$ increases in the covariate-orthogonal drift $\sdel$---delimiting,
+not overturning, the distribution-shift rationale for RevIN.
+
+\paragraph{Horizon (Prop.~3).} The gap is strictly increasing in the horizon,
+$\partial_h\!\left[\mse_{\inm}-\mse_{\cnm}\right] = \sigma_u^2 + \partial_h \sx > 0$,
+so $\lamstar(h)$ falls as $h$ grows: multi-step forecasting is the regime where
+instance normalization is most exposed. \emph{(Proofs, the stylized M1
+construction, and the constrained-least-squares refinement are deferred to the
+full version.)}
+
+\paragraph{The pre-training diagnostic.} The coordinate $\lambda$ is
+unobservable before training, so we estimate it out of sample. Partitioning the
+training series into non-overlapping length-$w$ windows with means
+$(\bar y_i,\bar x_i)$ and regressing the former on the latter under expanding
+chronological cross-validation gives the Level Predictability Score
+\begin{equation}\label{eq:lps}
+\lps \;=\; 1 \;-\;
+\frac{\sum_{k}\sum_{i\in\mathcal{T}_k}\bigl(\bar y_i-\hat g_k(\bar x_i)\bigr)^2}
+     {\sum_{k}\sum_{i\in\mathcal{T}_k}\bigl(\bar y_i-\bar y^{\,\mathrm{tr}}_k\bigr)^2},
+\end{equation}
+with $\hat g_k$ (official instantiation: LightGBM, $w{=}96$) fit only on windows
+preceding test block $\mathcal{T}_k$. The decision rule is one line:
+\[
+\lps \ge \tau \;\Rightarrow\; \text{conditional normalization}; \qquad
+\text{otherwise instance normalization}; \qquad \tau = 0.3 .
+\]
+The threshold is anchored to theory---the stylized model places the crossover at
+$\lamstar\approx 0.27$--$0.28$ at $h{=}24$, an upper bound on the true
+crossing---so the rule is deliberately conservative toward instance
+normalization.
 
 \section{Results}\label{sec:results}
 \emph{[Task 3: mini Table~1 (four energy rows + one standard-group summary
