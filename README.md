@@ -4,7 +4,7 @@ Code, theory, and pre-registered experiments for:
 
 > **When Instance Normalization Hurts: Exogenously-Driven Level Predictability
 > and Conditional Normalization for Multi-Step Forecasting**
-> Jaehong Yu, Jaesung Hong, Sungwon Lee (Independent Researchers)
+> Author names withheld for double-blind review
 > arXiv preprint, 2026. *(arXiv ID to be added on announcement)*
 
 **TL;DR.** Instance normalization (RevIN and its successors) assumes that
