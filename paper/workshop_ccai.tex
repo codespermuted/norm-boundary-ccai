@@ -187,21 +187,21 @@ standard benchmarks, where their distribution-shift rationale holds.
 
 \begin{figure}[t]
 \centering
+\includegraphics[width=0.62\linewidth]{figures/fig5_horizon.pdf}
+\caption{Empirical horizon effect (Prop.~3): the RevIN$-$CondNorm gap grows
+monotonically with the horizon $h$ on all four exogenous datasets---longer
+operational lead times widen the case against instance normalization.}
+\label{fig:horizon}
+\end{figure}
+
+\begin{figure}[t]
+\centering
 \includegraphics[width=0.55\linewidth]{figures/fig3_lps_gap.pdf}
 \caption{Realized RevIN$-$CondNorm test-MSE gap versus the pre-registered
 $\lps$; the vertical line marks $\tau=0.3$. All eight signs fall on the
 predicted side of the threshold (Spearman $\rho=0.762$ at the dataset level,
 $0.783$ per (dataset, horizon) cell).}
 \label{fig:lpsgap}
-\end{figure}
-
-\begin{figure}[t]
-\centering
-\includegraphics[width=0.62\linewidth]{figures/fig5_horizon.pdf}
-\caption{Empirical horizon effect (Prop.~3): the RevIN$-$CondNorm gap grows
-monotonically with the horizon $h$ on all four exogenous datasets---longer
-operational lead times widen the case against instance normalization.}
-\label{fig:horizon}
 \end{figure}
 
 \section{Implications for energy operations and limitations}
