@@ -1,5 +1,22 @@
 # HANDOFF — 현재 상태와 다음 단계
 
+## 레포 공개 + arXiv 준비 완료 (2026-07-22)
+
+- **레포 공개 전환 완료** (`<ORG>/norm-boundary`, MIT LICENSE, README 신설).
+  공개 전 점검: 전 히스토리 시크릿 스캔(파일명·내용 패턴) 통과, `.env` 히스토리
+  부재 재확인, env.template·postmortem 값 노출 없음, 데이터 원본 미포함(재배포
+  라이선스 문제 없음). 사전등록 커밋 `cab17c1`이 공개 API에서 타임스탬프
+  (2026-07-13T04:20:23Z)로 검증됨. `evidence/mlflow_snapshot_20260722.db.gz`
+  동결 스냅샷 추가로 MLflow 증거도 공개 검증 가능.
+- **논문 arXiv-ready**: 저널 문구 제거(\journal 삭제 + footer 억제, 재제출 시
+  한 줄 복원), 저자 확정(Jaehong Yu*, Jaesung Hong, Sungwon Lee — Independent Researchers, Seongnam), 레포 URL 삽입(§1 C3 각주 + 재현성 부록). 53쪽, 오류 0.
+- **업로드 패키지**: scratchpad의 `norm-boundary-arxiv-v1.tar.gz`(단독 컴파일
+  검증 완료, main.bbl·elsarticle.cls 포함) + `arxiv_metadata.md`(폼 입력값)
+  + `arxiv_upload_manual.md`(단계별 매뉴얼) — 사용자에게 전달됨.
+- **다음 사람 입력**: ① arXiv 계정/endorsement 후 업로드 (매뉴얼 참조),
+  ② 공개 후 README에 arXiv ID 반영, ③ IJF 제출 시 익명판 생성(double-blind)
+  + \journal 복원 + Highlights 별도 업로드, ④ OSF wave-2 [확정 필요] 3건.
+
 ## G5 필수 ablation (2026-07-15 사용자 논의에서 확정)
 
 1. **공변량-입력 baseline**: 외생 그룹 4개 × 대표 백본에서 "RevIN + 공변량을 입력 채널로 추가" arm — "정보량 vs 주입 메커니즘" 리뷰 공격 봉쇄용.
