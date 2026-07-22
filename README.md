@@ -84,21 +84,17 @@ and the hash correspondence across a later history rewrite — is documented in
 additions (baselines, probabilistic metrics, inference module) are kept in
 separate namespaces and labeled as such in the paper.
 
-## Transparency and AI-assisted development
+## AI-assisted development
 
-This project was developed with substantial assistance from a large language
-model (Claude, Anthropic), used for code implementation, experiment
-orchestration, and drafting under the authors' direction. The authors reviewed
-all outputs and take full responsibility for the work. The commit history
-records this collaboration (`Co-Authored-By` trailers) and is preserved intact
-rather than rewritten.
+Claude (Anthropic) was used throughout this project — for code, experiment
+orchestration, and drafting — under the authors' direction. The authors
+reviewed the outputs and are responsible for the work. The commit history keeps
+the `Co-Authored-By` trailers and is left intact.
 
-By design, none of the results ask to be taken on trust. Every theoretical
-claim is checked against Monte Carlo simulation and unit tests; every
-experiment was pre-registered before execution (commit `cab17c1`, above); and
-every figure and table in the paper regenerates deterministically from this
-repository via `make figures tables`. The intended basis for judging the work
-is that reproducibility — not who, or what, produced any individual line.
+The results do not depend on trusting that process. The theory is checked
+against Monte Carlo simulation and unit tests, the experiments were
+pre-registered before running (commit `cab17c1`), and every figure and table
+regenerates from this repository with `make figures tables`.
 
 ## License
 
