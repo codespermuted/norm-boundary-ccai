@@ -43,7 +43,23 @@ A Pre-Training Diagnostic for Choosing a Normalization Strategy\\
 \vspace{-1.5em}
 
 \begin{abstract}
-\emph{[Abstract --- assembled from Tasks 1--4 once sections are written.]}
+Instance normalization (RevIN and its successors) is the default level-handling
+component of modern multi-step forecasters, yet it estimates the level it
+restores \emph{endogenously}, from the target's own past. On exogenously driven
+energy series---wind, solar, and load, whose levels are set by weather
+observable in advance through numerical weather forecasts---this discards
+recoverable signal. We show in closed form that instance normalization helps
+only below a critical exogenous level-predictability $\lamstar$ and hurts above
+it, and we reduce the crossover to a pre-training diagnostic: the Level
+Predictability Score (LPS), the out-of-sample $R^2$ of window-mean levels
+regressed on covariates, with the rule ``use conditional normalization iff
+$\lps \ge 0.3$.'' In a pre-registered study whose per-dataset sign predictions
+were committed to version control before any experiment was run, the rule scores
+$8/8$; under an information-fair comparison, instance normalization loses to
+plain global scaling on every backbone; and the Model Confidence Set retains
+conditional normalization alone on every exogenous cell. LPS is thus a
+near-zero-cost pre-training screen for the normalization layer of
+energy-forecasting pipelines.
 \end{abstract}
 
 \section{Problem and contributions}
