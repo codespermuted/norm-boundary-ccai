@@ -104,6 +104,14 @@ For transparency, we list the asymmetries that remain:
 
 \section{Reproducibility Statement}\label{app:repro}
 
+\paragraph{Repository}
+All code, frozen configurations, curation pipelines, logged results, and the
+pre-registration evidence trail are public at
+\url{https://github.com/<ORG>/norm-boundary}; this is the repository
+referred to throughout the paper. The evidence directory includes a frozen
+snapshot of the MLflow tracking database, so the pre-registration ordering
+documented below can be verified independently of our claims.
+
 \paragraph{Environment}
 All experiments run in a \texttt{uv}-managed environment (Python 3.12,
 PyTorch 2.11 with cu128 wheels) on two NVIDIA RTX 5070~Ti GPUs (Blackwell,
