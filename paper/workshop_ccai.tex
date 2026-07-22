@@ -1,22 +1,26 @@
 % =====================================================================
-% Tackling Climate Change with ML (CCAI) @ NeurIPS 2026 — extended abstract
-% ANONYMIZED for double-blind review (submission-anon branch).
-% -----
-% PROVISIONAL LAYOUT: `article` is a placeholder until the official CCAI
-% template is provided; at that point swap \documentclass + preamble only.
-% Content below is written template-agnostically (sections, one table, one
-% figure, references.bib) so the swap is mechanical.
-% Body target: <= 4 pages EXCLUDING references/appendix.
-% No new experiments; all numbers reused verbatim from the full study.
+% Tackling Climate Change with ML (CCAI) @ NeurIPS 2026 — Papers track.
+% Official workshop style (tackling_climate_workshop_style.sty, NeurIPS-based,
+% used VERBATIM/unmodified). Submission mode: load the style with NO options
+% -> it auto-anonymizes to "Anonymous Author(s)" and adds review line numbers.
+% Do NOT add [final] or [preprint] at submission time.
+% Body target: <= 4 pages EXCLUDING references. No new experiments; all
+% numbers reused verbatim from the full study.
 % =====================================================================
-\documentclass[10pt]{article}
+\documentclass{article}
 
-\usepackage[margin=1in]{geometry}
-\usepackage{amsmath,amssymb}
-\usepackage{booktabs}
+\PassOptionsToPackage{numbers,compress}{natbib}
+\usepackage{tackling_climate_workshop_style}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb,amsfonts}
 \usepackage{graphicx}
-\usepackage[numbers,sort&compress]{natbib}
-\usepackage[colorlinks=true,allcolors=blue]{hyperref}
+\usepackage{booktabs}
+\usepackage{nicefrac}
+\usepackage{microtype}
+\usepackage{hyperref}
+\usepackage{url}
 
 % ---- notation (consistent with the full paper) ----
 \newcommand{\lps}{\mathrm{LPS}}
@@ -30,17 +34,13 @@
 \newcommand{\inm}{\textsc{In}}
 \newcommand{\cnm}{\textsc{Cn}}
 
-% PROVISIONAL title (energy angle finalized in Task 1)
-\title{\vspace{-3em}When Instance Normalization Hurts Energy Forecasting:\\
-A Pre-Training Diagnostic for Choosing a Normalization Strategy\\
-\large\textnormal{(Extended Abstract --- CCAI @ NeurIPS 2026)}}
-\author{Anonymous Author(s)\\[2pt]
-\normalsize Under double-blind review}
-\date{}
+\title{When Instance Normalization Hurts Energy Forecasting:\\
+A Pre-Training Diagnostic for Choosing a Normalization Strategy}
+
+\author{Anonymous Author(s)}
 
 \begin{document}
 \maketitle
-\vspace{-1.5em}
 
 \begin{abstract}
 Instance normalization (RevIN and its successors) is the default level-handling
@@ -227,6 +227,6 @@ leaves intermediate-predictability datasets as the key confirmatory task; the
 pre-registered $8/8$ record and its commit-before-run ordering are unchanged.
 
 \small
-\bibliographystyle{plainnat}
+\bibliographystyle{unsrtnat}
 \bibliography{references}
 \end{document}
