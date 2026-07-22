@@ -18,7 +18,7 @@
 - [x] 사전 등록 문서와 커밋 증빙 (paper/predictions.md, commit cab17c1 — 본문 §4·부록 재현성 성명에 기재)
 - [x] 재현성 성명 부록 (환경, 시드, 결정론 설정, MLflow 추적, `make figures`/`make tables`)
 - [x] 데이터 출처: GEFCom2014(공개), 표준 LTSF(공개), 제주 풍력(data.go.kr) + KMA API 허브 아카이브 예보 — 수집 코드 저장소 포함
-- [ ] 코드·데이터 공개 저장소 링크 (현재 private repo — 게재 확정 시 공개 전환 여부 결정)
+- [x] 코드·데이터 공개 저장소 링크 — 2026-07-22 공개 완료 (git 이력 포함, 사전등록 증빙 목적 상시 공개; 논문 §1 각주·재현성 부록에 URL 기재)
 - [x] 통계 검정 명세: DM(Harvey 보정, HAC 대역폭 상한), MCS(α=0.10, stationary bootstrap), Fisher 결합
 - [x] 이해상충·사사 문구 위치 확보 (투고 시 기입)
 

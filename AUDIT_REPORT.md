@@ -72,7 +72,7 @@ post-hoc 라벨: τ 규칙 불변.
 `docs/stats_hardening.md` + `experiments/g7_fisher_check.py` → `results/g7_fisher_robustness.csv`:
 - 8/8 이항 정확검정 P(X=8)=2⁻⁸≈0.0039 (관대 기준 P(X≥6)=0.145 대비 엄격 기준 통과) — §6 삽입 문장 제공
 - Fisher 종속성: 32개 별표 중 **31개가 HMP·Simes 양쪽 생존**, 유일 반전 = etth2 RevIN(Fisher .026 →
-  HMP .077) — 논문의 MCS {revin,san} 결과와 정합해 서사 무손상. 권고: 현 Fisher 유지+각주, wave 2는 HMP 사전 등록
+  HMP .077) — 해당 반전은 논문의 MCS {revin,san} 결과와 정합하며 각주로 공개. 권고: 현 Fisher 유지+공개 각주, wave 2는 HMP 사전 등록
 
 ### 8) 원고 수정 초안 — ✅ 4종 작성 (`docs/manuscript_revisions_g7.md`, main.tex 미수정)
 (a) three-thresholds 박스(0.923 baseline / 0.27–0.28 synthetic-M1 = τ 앵커 / 0.009–0.029 OLS·경험)

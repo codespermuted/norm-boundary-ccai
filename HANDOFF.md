@@ -112,7 +112,7 @@ Tab 2(MCS·귀속), Tab 3(τ 민감도 + ΔLPS 병산), covfair·SOTA 최종 표
 - 장시간 작업(pytest·재실험·재계산)은 `scripts/supervised_run.sh <로그> <재시도수> -- <명령>`으로 실행:
   비정상 종료(OOM=137 포함) 시 백오프 재시도, 스레드 상한(OMP/BLAS 8)·expandable_segments 기본 주입.
   `make test-supervised`가 pytest용 프리셋. 로그는 results/*_supervised.log.
-- 이 머신은 타 프로젝트(SMP)와 28코어·RAM을 공유 — 동시성 높은 작업은 스레드 상한 필수.
+- 머신 자원(CPU·RAM)은 다른 작업과 공유 — 동시성 높은 작업은 스레드 상한 필수.
 
 ## G6 종료 — AC 자체 평가 (2026-07-20)
 
