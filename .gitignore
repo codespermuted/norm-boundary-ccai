@@ -11,8 +11,9 @@ __pycache__/
 uv.lock
 *.egg-info/
 .ipynb_checkpoints/
-paper/main.pdf
-paper/workshop_ccai.pdf
+# compiled manuscripts (main / workshop_ccai / workshop_abstract / any future).
+# paper/figures/*.pdf are tracked source assets and are NOT matched (* never spans /).
+paper/*.pdf
 paper/*.aux
 paper/*.log
 paper/*.out
