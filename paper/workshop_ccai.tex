@@ -55,8 +55,8 @@ Predictability Score (LPS), the out-of-sample $R^2$ of window-mean levels
 regressed on covariates, with the rule ``use conditional normalization iff
 $\lps \ge 0.3$.'' In a pre-registered study whose per-dataset sign predictions
 were committed to version control before any experiment was run, the rule scores
-$8/8$; under an information-fair comparison, instance normalization loses to
-plain global scaling on every backbone; and the Model Confidence Set retains
+$8/8$; under an information-fair comparison, instance normalization loses in mean MSE
+to plain global scaling on every backbone; and the Model Confidence Set retains
 conditional normalization alone on every exogenous cell. LPS is thus a
 near-zero-cost pre-training screen for the normalization layer of
 energy-forecasting pipelines.
@@ -176,8 +176,8 @@ $\lps$ value and the predicted sign of the RevIN$-$CondNorm test-MSE gap for
 each dataset were committed to version control before any grid run; all eight
 sign predictions were confirmed (Fig.~\ref{fig:lpsgap}). \textbf{(b)~Not just
 more features.} Under an information-fair comparison that feeds every arm the
-identical past and future covariates, RevIN$+$covariates is \emph{worse} than
-\rawm$+$covariates on every backbone: a flexible model can learn the
+identical past and future covariates, RevIN$+$covariates is \emph{worse in mean
+MSE} than \rawm$+$covariates on every backbone: a flexible model can learn the
 covariate-to-level map from raw inputs, but none can recover a level its
 normalizer has already removed---a function-class constraint, not an
 information advantage. \textbf{(c)~Model Confidence Set.} In all eleven
