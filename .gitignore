@@ -23,3 +23,18 @@ results/g7_blockf_lgbm*.log
 results/g7_blocke_*.log
 results/g7_blockf_rl.log
 results/pytest_supervised.log
+
+# internal working notes — retained in git history and in local working copies,
+# but not shown on the public repo HEAD (kept out for browsability, 2026-07-22).
+# Public-facing evidence stays tracked: README, LICENSE, evidence/,
+# paper/predictions.md, results/gate1.md, results/gate2.md, docs/env.template.
+/RESEARCH_PLAN.md
+/HANDOFF.md
+/AUDIT_REPORT.md
+/the environment contract
+paper/IJF_CHECKLIST.md
+paper/tables/*.md
+docs/*.md
+docs/postmortem_env.html
+results/summary.md
+results/lps_inference.md
