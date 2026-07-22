@@ -188,9 +188,26 @@ operational lead times widen the case against instance normalization.}
 \end{figure}
 
 \section{Implications for energy operations and limitations}
-\emph{[Task 4: LPS as a near-zero-cost pre-training screen for ramp/regime
-regimes; limitations (near-boundary effectively $n{=}1$; plateau partly
-reflects dataset separation; intermediate-LPS data deferred to full version).]}
+For power-system operations the boundary is not academic: wind, solar, and load
+are exactly the series whose levels move at ramps and regime transitions---the
+events that drive reserve scheduling, curtailment, and balancing---where a
+lookback-window mean is a stale summary and an archived weather forecast is
+informative. Because $\lps$ needs only the covariates and a first-stage
+regression already present in most operational pipelines, it is a
+near-zero-cost pre-training screen: compute it once per series and let it decide
+whether the normalization layer should adapt to the window (instance
+normalization) or condition on the forecast drivers (conditional
+normalization)---before committing GPU-hours to a model that a one-line
+diagnostic would have flagged.
+
+\paragraph{Limitations.} Two caveats bound the claim. The rule is genuinely
+stress-tested near its threshold in effectively a single case---Electricity is
+the only dataset that lands close to $\tau$---and the wide $\tau\in[0.30,0.70]$
+robustness plateau partly reflects the bimodal separation between the energy and
+standard groups rather than fine calibration of the threshold. The full version
+reinforces the boundary with intermediate-predictability datasets and reports
+the diagnostic's permutation-test and confidence-interval companions; the
+pre-registered $8/8$ record and its commit-before-run ordering are unchanged.
 
 \small
 \bibliographystyle{plainnat}
