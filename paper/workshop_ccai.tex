@@ -217,6 +217,24 @@ normalization) or condition on the forecast drivers (conditional
 normalization)---before committing GPU-hours to a model that a one-line
 diagnostic would have flagged.
 
+\paragraph{Pathway to climate impact.} Forecast quality on wind, solar, and
+load feeds directly into grid decisions with an emissions footprint. The events
+where the diagnostic matters most---ramps and regime transitions, where a
+window mean is stale---are exactly the events that force operators to hold
+fossil-fuelled spinning reserves, to curtail renewable output, and to dispatch
+peaking plants for balancing. Sharper level forecasts at those moments tighten
+reserve margins, reduce curtailment, and improve renewable integration---the
+operational channel through which better forecasting lowers greenhouse-gas
+emissions. The work also fits the workshop's ground-up theme: it begins from an
+application-specific structure (a level that is exogenously determined and
+observable in advance through weather forecasts) rather than a generic
+architecture; the diagnostic is near-zero-cost---a first-stage regression
+computable in seconds on a CPU, needing no forecasting model and no GPU
+budget---so it drops into existing operational pipelines rather than demanding
+new infrastructure; and both the code and a regional wind dataset we curated
+(hourly generation with lead-matched archived weather forecasts) are released as
+community resources.
+
 \paragraph{Limitations.} Two caveats bound the claim. The rule is genuinely
 stress-tested near its threshold in effectively a single case---Electricity is
 the only dataset that lands close to $\tau$---and the wide $\tau\in[0.30,0.70]$
