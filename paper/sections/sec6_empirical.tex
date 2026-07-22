@@ -85,7 +85,13 @@ Weather       & $0.1815^{*}$ & $0.1719^{*}$ & $\mathbf{0.1666}$ & $0.1747^{*}$ &
 \label{fig:lpsgap}
 \end{figure}
 
-Beyond sign accuracy, the pre-registered auxiliary prediction was that the gap \emph{magnitude} increases with $\lps$. \Cref{fig:lpsgap} confirms this: Spearman $\rho=0.762$ ($p=0.028$) at the dataset level and $\rho=0.783$ ($p=9.9\times10^{-6}$) across the 23 (dataset, $h$) cells. The diagnostic thus carries ordinal information about \emph{how much} is at stake, not merely which side of the boundary a dataset falls on.
+Beyond sign accuracy, the pre-registered auxiliary prediction was that the gap \emph{magnitude} increases with $\lps$. \Cref{fig:lpsgap} confirms this: Spearman $\rho=0.762$ ($p=0.028$) at the dataset level and $\rho=0.783$ ($p=9.9\times10^{-6}$) across the 23 (dataset, $h$) cells.\footnote{Both
+correlations inherit the clustered structure of the data: the dataset-level
+test has only $n=8$ points drawn from two regimes, and the 23 cells are nested
+within the same eight datasets, so the effective sample size is smaller than
+the nominal $n$ and the $p$-values are correspondingly optimistic. We read them
+as descriptive rank agreement rather than as independent significance tests.}
+The diagnostic thus carries ordinal information about \emph{how much} is at stake, not merely which side of the boundary a dataset falls on.
 
 \begin{table}[t]
 \centering
