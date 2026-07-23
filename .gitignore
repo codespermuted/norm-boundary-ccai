@@ -40,3 +40,6 @@ docs/*.md
 docs/postmortem_env.html
 results/summary.md
 results/lps_inference.md
+
+# local throwaway analysis (within-repo, replaces /tmp scratchpad)
+/scratch/
