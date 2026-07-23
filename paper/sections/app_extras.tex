@@ -134,7 +134,11 @@ experiment, with run names\linebreak
 \texttt{\{dataset\}\_\{norm\}\_\{backbone\}\_\{h\}\_\{seed\}}. The training
 entry point logs the complete configuration as parameters and the git commit
 hash as a tag on every run, so any number in this paper can be traced to the
-exact code state that produced it.
+exact code state that produced it. The logged metrics are per-run scalars, not
+per-epoch trajectories; the CondNorm arm's logged \texttt{val\_mse} is recorded
+on a residual-standardized rather than global-z scale --- a benign logging
+artifact that leaves every reported \texttt{test\_mse} unchanged, analysed with
+its impact in \texttt{evidence/condnorm\_val\_scale\_diagnosis.md}.
 
 \paragraph{Pre-registration}
 The prediction protocol of \Cref{sec:lps} was frozen in git commit

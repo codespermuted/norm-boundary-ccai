@@ -148,7 +148,10 @@ val-scale logging in a pre-registered, `make figures`-reproducible study).
 ## 7. Electricity verification — partial, STOPPED
 
 The only reported number the artifact could move is electricity's
-RevIN−CondNorm sign (§5). We ran the flagged global-z-validation path
+RevIN−CondNorm sign. Blocks B, C, and D (univariate targets, including the SOTA gaps
++0.4122 / +0.4282) and Block A's exogenous group are provably unaffected per §5,
+so electricity is the sole cell needing an empirical check. We ran the flagged
+global-z-validation path
 (`G4_VAL_GLOBALZ=1`, default OFF; `experiments/verify_electricity_val.py`) on
 electricity CondNorm. This is a **partial, stopped** verification — not a
 completed one — reported as such.
@@ -177,11 +180,11 @@ argument rests on the measured rlinear bound plus the arithmetic below.
 **Quantitative bound — why the 28 unrun configs cannot flip the sign.** The
 sign flips only if electricity's CondNorm test MSE, **averaged over the four
 Block-A backbones**, falls from 0.1726 below RevIN's 0.1458 — a **15.5%**
-improvement of the four-backbone mean. rlinear's mean moved 0.05% (worst config
-1.61%) and lgbm_dms cannot move at all, so patchtst and segrnn would each have
-to move their mean by **~31%** for the four-backbone average to shift 15.5% —
-about **20× the largest per-config shift rlinear showed** (and ~600× its mean
-shift), from epoch reselection alone. Block A caps training at 12 epochs, so the
+improvement of the four-backbone mean. rlinear's worst single config moved
+1.61% (its mean only 0.05%) and lgbm_dms cannot move at all, so patchtst and
+segrnn would each have to move their mean by **~31%** for the four-backbone
+average to shift 15.5% — about **20× the largest shift rlinear exhibited in any
+single config**, from epoch reselection alone. Block A caps training at 12 epochs, so the
 candidate checkpoints are close and a 31% test-MSE swing from selecting a
 neighbouring epoch is not plausible; the one completed patchtst config moved 0%.
 
