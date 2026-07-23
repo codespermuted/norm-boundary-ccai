@@ -98,6 +98,42 @@ These follow near-mechanically from Table 1; the pre-registration's value is the
   valve has a real cost, reported as-is. (Tier 3 is the only check that the
   empirical α̂ actually avoids the self-harm that `clip(LPS)` would cause.)
 
+### A.6a Matched-cell interpretation — amendment (2026-07-23, before standard-group results)
+
+Added after A–B were frozen but **before the shrinkage run produced any
+standard-group row** (`results/g8_shrinkage.csv` held only gefcom_wind at the
+time; verifiable in git history). A single smoke cell exposed an ambiguity in
+A.6 that had to be resolved before results, not after.
+
+**Rule.** In A.6, "the best instance-norm arm" is the minimum **within the same
+(dataset, backbone, horizon) cell** as the shrunk-CN value being compared, over
+the instance-normalization arms present in that cell (RevIN, SAN, FAN) — **not**
+the Table 1 pooled mean over backbones × horizons × seeds.
+
+**Why this is forced, not chosen.** §6.2 compares arms only within a cell where
+normalization is the sole difference; cross-cell / cross-block comparison is
+forbidden by the paper's own rules. shrunk-CN is itself produced per (backbone,
+horizon) cell, so a pooled IN baseline mixes horizons. On datasets whose MSE
+grows with horizon this makes the pool an easy target: ETTh2 / RLinear RevIN is
+0.170 (h24) → 0.289 (h96) → 0.385 (h336), pooled ≈ 0.287, so an h=24 shrunk-CN of
+0.232 "beats" the pool by −19% while **losing to the matched h24 IN (0.170) by
++36%.** The A.5 point-prediction table used pooled values for orientation only;
+the operative A.6 test is matched.
+
+**Per-dataset aggregation** (A.6 counts "≥N of 4 datasets"): per standard
+dataset, average shrunk-CN over its in-scope (backbone × horizon) cells, and
+average the per-cell best-IN over the **same** cells; compare the two means.
+Per-cell best-IN is the oracle min over IN arms — the strongest IN baseline — so
+Tier 2 (predicted NOT to trigger) faces the hardest test, the conservative choice
+against a false "the boundary is wrong" call.
+
+**Disclosure.** The ETTh2 smoke value (0.2318) was already visible when this
+amendment was written; it does not change ETTh2's classification (+36% over
+matched IN — a Tier-1 concession, not a Tier-2 trigger, at that cell). The
+amendment's binding force is on ETTh1 / Weather / Electricity, whose shrunk-CN
+values were still unrun, where the matched rule constrains genuinely unseen
+results.
+
 ### A.7 Surviving narrative (whatever Tier 1 does)
 
 Shrinkage removes the catastrophe but leaves a systematic ~5–9% penalty, and
