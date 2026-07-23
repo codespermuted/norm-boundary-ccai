@@ -43,9 +43,12 @@ A Pre-Training Diagnostic for Choosing a Normalization Strategy}
 \maketitle
 
 \begin{abstract}
-Instance normalization (RevIN and its successors) is the default level-handling
-component of modern multi-step forecasters, yet it estimates the level it
-restores \emph{endogenously}, from the target's own past. On exogenously driven
+Forecast errors on wind, solar, and load are absorbed by fossil-fuelled
+reserves and curtailment, so the normalization choice inside a forecaster
+carries an emissions footprint. Instance normalization (RevIN and its
+successors) is the default level-handling component of modern multi-step
+forecasters, yet it estimates the level it restores \emph{endogenously}, from
+the target's own past. On exogenously driven
 energy series---wind, solar, and load, whose levels are set by weather
 observable in advance through numerical weather forecasts---this discards
 recoverable signal. We show in closed form that instance normalization helps
