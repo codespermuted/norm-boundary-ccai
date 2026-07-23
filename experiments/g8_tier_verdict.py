@@ -9,9 +9,17 @@ pooled mean. Per-dataset scalar = mean over the in-scope cells (both sides over
 the SAME cells). IN family present in g4_grid.csv = {revin, san, fan}; on
 lgbm_dms only revin is present, so best-IN there = revin.
 
-Reads results/g4_grid.csv (frozen Block A) + results/g8_shrinkage.csv (this
-run). Safe to run on partial g8 output: missing cells are skipped and coverage
-is printed. Usage:  uv run python -m experiments.g8_tier_verdict
+This version reports, per standard dataset:
+  * matched best-IN   (A.6a evaluation baseline; the operative Tier test)
+  * matched Raw       (Tier 1's real claim is "shrunk-CN >= Raw"; and if
+                       shrunk-CN < matched Raw, alpha-hat is doing more than
+                       shrinkage -> estimation-asymmetry, needs train-holdout)
+  * pooled best-IN    (pre-reg A.5 PREDICTION scale; the point predictions
+                       0.387/0.287/... were derived here, NOT the matched scale)
+so the prediction/evaluation scale split (A.5 pooled vs A.6 matched) is explicit.
+
+Reads results/g4_grid.csv (frozen Block A) + results/g8_shrinkage.csv (this run).
+Safe on partial g8 output. Usage:  uv run python -m experiments.g8_tier_verdict
 """
 import csv
 import os
@@ -28,6 +36,11 @@ BACKBONES = ("rlinear", "lgbm_dms")
 SCOPE = {"gefcom_wind": (24, 96, 336), "jeju_wind": (24, 48),
          "etth1": (24, 96, 336), "etth2": (24, 96, 336),
          "weather": (24, 96, 336), "electricity": (24, 96, 336)}
+# pre-reg A.5 "best instance-norm" POOLED reference (Table 1 scale, 4 backbones x
+# 3 horizons x 5 seeds). The A.5 point predictions were made against THESE; the
+# A.6/A.6a Tier test uses matched cells instead. Shown only to expose the split.
+POOLED_BEST_IN = {"etth1": 0.3771, "etth2": 0.2869,
+                  "weather": 0.1666, "electricity": 0.1375}
 
 
 def _mean(xs):
@@ -65,35 +78,56 @@ def main():
     g8 = load(G8, ("dataset", "alpha_kind", "backbone", "h"))
     amean = load_alpha()
     kind = "alphahat"   # A.1 primary coefficient
-    print(f"=== A.6/A.6a matched Tier verdict (primary alpha_kind={kind}) ===\n")
+    print(f"=== A.6/A.6a matched Tier verdict (primary alpha_kind={kind}) ===")
+    print("gaps are relative to the MATCHED baseline unless labelled pooled.\n")
 
-    within10, beats = [], []
+    w10_matched, w10_pooled, beats, mech_flags = [], [], [], []
     for ds in STANDARD:
         cells = [(bk, h) for bk in BACKBONES for h in SCOPE[ds]]
-        pairs = [(bk, h, g8[(ds, kind, bk, h)], best_in(g4, ds, bk, h))
-                 for bk, h in cells
-                 if (ds, kind, bk, h) in g8 and best_in(g4, ds, bk, h) is not None]
-        if not pairs:
+        rows = [(bk, h, g8[(ds, kind, bk, h)], best_in(g4, ds, bk, h),
+                 g4.get((ds, "raw", bk, h)))
+                for bk, h in cells
+                if (ds, kind, bk, h) in g8 and best_in(g4, ds, bk, h) is not None
+                and (ds, "raw", bk, h) in g4]
+        if not rows:
             print(f"{ds:12s} (no shrunk-CN rows yet)")
             continue
-        sc, bi = _mean([p[2] for p in pairs]), _mean([p[3] for p in pairs])
-        gap = (sc - bi) / bi * 100
-        w10, beat = abs(gap) <= 10, sc <= bi
-        within10.append(w10)
-        beats.append(beat)
+        sc = _mean([r[2] for r in rows])
+        bi = _mean([r[3] for r in rows])
+        rw = _mean([r[4] for r in rows])
+        pooled = POOLED_BEST_IN[ds]
+        g_bi = (sc - bi) / bi * 100          # matched: vs best-IN (operative)
+        g_rw = (sc - rw) / rw * 100          # matched: vs Raw (Tier-1 mechanism)
+        g_pl = (sc - pooled) / pooled * 100   # pooled : vs A.5 reference (predict)
+        wm = abs(g_bi) <= 10
+        wp = abs(g_pl) <= 10
+        beat = sc <= bi
+        mech = sc <= 0.97 * rw                # beats matched Raw by >3% -> flag
+        w10_matched.append(wm); w10_pooled.append(wp); beats.append(beat)
+        mech_flags.append(mech)
         a = amean.get((ds, kind), float("nan"))
-        print(f"{ds:12s} shrunk-CN={sc:.4f}  best-IN(matched)={bi:.4f}  "
-              f"gap={gap:+.1f}%  within10={w10}  beatsIN={beat}  "
-              f"(a~{a:.2f}, {len(pairs)}/{len(cells)} cells)")
-        for bk, h, s, b in pairs:
-            print(f"    {bk:9s} h{h:<4} shrunk-CN={s:.4f} best-IN={b:.4f} "
-                  f"gap={(s - b) / b * 100:+.1f}%")
-    n = len(within10)
+        print(f"{ds:12s} shrunk-CN={sc:.4f}  a~{a:.3f}  ({len(rows)}/{len(cells)} cells)")
+        print(f"    matched best-IN={bi:.4f} (gap {g_bi:+.1f}%, within10={wm}, beatsIN={beat})")
+        print(f"    matched Raw    ={rw:.4f} (gap {g_rw:+.1f}%"
+              + (", shrunk-CN BEATS Raw >3% -> more than shrinkage" if mech else "")
+              + ")")
+        print(f"    pooled best-IN ={pooled:.4f} (gap {g_pl:+.1f}%, within10_pooled={wp})  [A.5 predict scale]")
+        for bk, h, s, b, r in rows:
+            print(f"      {bk:9s} h{h:<4} sc={s:.4f} IN={b:.4f} Raw={r:.4f}")
+
+    n = len(w10_matched)
     if n:
-        print(f"\nTier 1 (concession, within 10% on >=3/4): {sum(within10)}/{n}"
-              f" -> {'TRIGGERS' if sum(within10) >= 3 else 'does not trigger'}")
-        print(f"Tier 2 (falsification, shrunk-CN<=best-IN on >=2/4): {sum(beats)}"
-              f"/{n} -> {'TRIGGERS (boundary wrong on standard side)' if sum(beats) >= 2 else 'does not trigger'}")
+        print(f"\n--- standard-group verdict ({n}/4 datasets present) ---")
+        print(f"Tier 1 MATCHED  (within 10% of matched best-IN on >=3/4): "
+              f"{sum(w10_matched)}/{n} -> {'TRIGGERS' if sum(w10_matched) >= 3 else 'does NOT trigger (catastrophe framing survives)'}")
+        print(f"Tier 1 pooled   (within 10% of pooled A.5 best-IN on >=3/4): "
+              f"{sum(w10_pooled)}/{n}  [prediction-scale reference only]")
+        print(f"Tier 2 MATCHED  (shrunk-CN <= matched best-IN on >=2/4): "
+              f"{sum(beats)}/{n} -> {'TRIGGERS (boundary wrong on standard side)' if sum(beats) >= 2 else 'does NOT trigger'}")
+        if any(mech_flags):
+            print("Mechanism: >=1 dataset has shrunk-CN beating matched Raw by >3% "
+                  "-> alpha-hat exceeds pure shrinkage; run train-holdout alpha-hat "
+                  "(A.6a estimation-asymmetry check).")
         if n < 4:
             print(f"  [partial: {n}/4 standard datasets have rows]")
 

@@ -127,12 +127,35 @@ Per-cell best-IN is the oracle min over IN arms — the strongest IN baseline �
 Tier 2 (predicted NOT to trigger) faces the hardest test, the conservative choice
 against a false "the boundary is wrong" call.
 
-**Disclosure.** The ETTh2 smoke value (0.2318) was already visible when this
-amendment was written; it does not change ETTh2's classification (+36% over
-matched IN — a Tier-1 concession, not a Tier-2 trigger, at that cell). The
-amendment's binding force is on ETTh1 / Weather / Electricity, whose shrunk-CN
-values were still unrun, where the matched rule constrains genuinely unseen
-results.
+**Disclosure (order of observation).** The interpretation rule here was fixed
+after observing a **single** smoke point (ETTh2, rlinear/h24, seed 0 = 0.2318)
+but **before** computing any matched baseline. The rule follows mechanically from
+the within-cell comparison principle of §6.2 and the cross-block prohibition — it
+leaves no discretion, and it was proposed during author review. Two facts a
+referee could otherwise reconstruct from the public MLflow logs and commit order
+are disclosed here rather than left to inference: (i) the rule operates in the
+direction **favorable to the thesis** — matched comparison is *less* favorable to
+shrunk-CN (ETTh2 h24: 0.1701 matched vs 0.2869 pooled), so it makes Tier 2
+(predicted not to trigger) *harder* to trigger; (ii) the authors were aware of
+(i) at the moment of fixing. The ETTh2 cell itself is unaffected by the rule
+choice: at +36% over matched IN it is outside Tier 1's 10% band, so it triggers
+neither Tier 2 nor the Tier-1 concession at that cell — the catastrophe framing
+survives there. The rule's binding force is on ETTh1 / Weather / Electricity,
+whose shrunk-CN values were still unrun.
+
+**Prediction vs evaluation scale.** The A.5 point predictions (ETTh2 → 0.387,
+etc.) were derived from the **pooled** Table 1 best-IN values; A.6/A.6a now
+evaluate on **matched** cells. The two scales differ, so Tier 1's 10% test is
+recomputed on the matched scale, and the verdict script
+(`experiments/g8_tier_verdict.py`) prints matched and pooled gaps side by side.
+On the matched scale several standard cells may fall *outside* 10% (ETTh2 already
+does, +36%), in which case Tier 1 does **not** trigger and the catastrophe
+framing survives fully — a *stronger* outcome than A.5 predicted. Flagged here so
+it reads as a disclosed prediction-scale mismatch, not as choosing a favorable
+interpretation after the fact. The script additionally reports **matched Raw**:
+Tier 1's operative claim is "shrunk-CN ≈ Raw", and shrunk-CN beating matched Raw
+by >3% would indicate α̂ recalibration is doing more than pure shrinkage (an
+estimation-asymmetry signal, triggering the train-holdout α̂ check).
 
 ### A.7 Surviving narrative (whatever Tier 1 does)
 
