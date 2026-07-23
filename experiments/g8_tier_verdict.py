@@ -73,12 +73,9 @@ def best_in(g4, ds, bk, h):
     return min(vals) if vals else None
 
 
-def main():
-    g4 = load(G4, ("dataset", "norm", "backbone", "h"))
-    g8 = load(G8, ("dataset", "alpha_kind", "backbone", "h"))
-    amean = load_alpha()
-    kind = "alphahat"   # A.1 primary coefficient
-    print(f"=== A.6/A.6a matched Tier verdict (primary alpha_kind={kind}) ===")
+def run_verdict(kind, g4, g8, amean):
+    role = "PRIMARY (A.6 operative)" if kind == "alphahat" else "SECONDARY (reported per pre-reg A.2)"
+    print(f"\n########## alpha_kind = {kind}  [{role}] ##########")
     print("gaps are relative to the MATCHED baseline unless labelled pooled.\n")
 
     w10_matched, w10_pooled, beats, mech_flags = [], [], [], []
@@ -119,7 +116,7 @@ def main():
     if n:
         print(f"\n--- standard-group verdict ({n}/4 datasets present) ---")
         print(f"Tier 1 MATCHED  (within 10% of matched best-IN on >=3/4): "
-              f"{sum(w10_matched)}/{n} -> {'TRIGGERS' if sum(w10_matched) >= 3 else 'does NOT trigger (catastrophe framing survives)'}")
+              f"{sum(w10_matched)}/{n} -> {'TRIGGERS' if sum(w10_matched) >= 3 else 'does NOT trigger'}")
         print(f"Tier 1 pooled   (within 10% of pooled A.5 best-IN on >=3/4): "
               f"{sum(w10_pooled)}/{n}  [prediction-scale reference only]")
         print(f"Tier 2 MATCHED  (shrunk-CN <= matched best-IN on >=2/4): "
@@ -147,6 +144,21 @@ def main():
             a = amean.get((ds, kind), float("nan"))
             print(f"  {ds}: a~{a:.2f}, worst deg {worst:+.1f}% -> "
                   f"{'COST (Tier 3 triggers)' if worst > 5 else 'no material cost'}")
+
+
+def main():
+    g4 = load(G4, ("dataset", "norm", "backbone", "h"))
+    g8 = load(G8, ("dataset", "alpha_kind", "backbone", "h"))
+    amean = load_alpha()
+    print("=== A.6/A.6a matched Tier verdict — BOTH coefficients ===")
+    print("Tier thresholds are defined on the PRIMARY (alphahat) per A.6; the")
+    print("SECONDARY (lpsclip) is reported because the pre-reg mandates both and")
+    print("referees will compute it. CAVEAT: a Tier-1 non-trigger by a coefficient")
+    print("that failed as a safety valve (alpha-hat overfits when the first stage")
+    print("fits noise) does NOT by itself establish the catastrophe framing -- a")
+    print("working valve is a prerequisite for this block to adjudicate anything.")
+    for kind in ("alphahat", "lpsclip"):
+        run_verdict(kind, g4, g8, amean)
 
 
 if __name__ == "__main__":
