@@ -221,6 +221,16 @@ def torch_run(frame: dict, L: int, h: int, backbone: str, norm_name: str,
     opt = torch.optim.Adam([p for p in model.parameters() if p.requires_grad],
                            lr=LR[backbone])
 
+    # Verification hook, default OFF (as-run behaviour is byte-identical when
+    # G4_VAL_GLOBALZ is unset). When set, CondNorm validation is channel-
+    # reweighted by (sd_r/sd_g)^2 so early stopping selects on the same global-z
+    # scale as the test metric. Used ONLY to check whether the standard
+    # (multivariate) group's checkpoint choice moves; the paper's numbers come
+    # from the default path (val_w is None). See evidence/condnorm_val_scale_diagnosis.md.
+    val_gz = os.environ.get("G4_VAL_GLOBALZ") == "1"
+    val_w = (torch.tensor((sd_r / sd_g) ** 2, dtype=torch.float32, device=device)
+             if (val_gz and norm_name == "condnorm" and not ms_mode) else None)
+
     def eval_mse(which: str) -> float:
         model.eval()
         tot = cnt = 0
@@ -229,7 +239,10 @@ def torch_run(frame: dict, L: int, h: int, backbone: str, norm_name: str,
             for i in range(0, len(s), batch):
                 x, y = gather(s[i : i + batch])
                 y = ysl(y)
-                tot += torch.sum((model(x) - y) ** 2).item()
+                d = (model(x) - y) ** 2
+                if val_w is not None:
+                    d = d * val_w
+                tot += torch.sum(d).item()
                 cnt += y.numel()
         return tot / cnt
 
