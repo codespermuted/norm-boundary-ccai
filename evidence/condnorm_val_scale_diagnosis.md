@@ -3,8 +3,9 @@
 **Date:** 2026-07-23  **Discovered at commit:** `e5e17c8`  **Frozen tag:** `pre-val-diagnosis`
 
 A logged-metric anomaly in the G4 results, its root cause, an impact analysis,
-and the audited scope. Committed **before** any code change or re-run, per the
-project's pre-registration governance.
+and the audited scope. The diagnosis (§1–§5) was committed **before** any code
+change or re-run, per the project's pre-registration governance; §7 adds a
+subsequent, default-off, **partial** verification with the as-run path preserved.
 
 ## 1. Observation
 
@@ -140,10 +141,55 @@ val-scale logging in a pre-registered, `make figures`-reproducible study).
    a silent post-hoc fix.
 2. **If a corrected metric is wanted,** put it behind a flag whose default is
    the as-run path, and state that the paper's numbers come from the default.
-3. **Verification (necessary, targeted): re-run electricity CondNorm** (all
-   horizons, all seeds, torch backbones) with early stopping on the global-z
-   (channel-reweighted) validation, into a separate results file, and confirm
-   `test_mse` — hence the electricity sign — is unchanged. etth2 need not be
-   re-run (6.60 vs 0.29 is unflippable); weather optional. **A full grid re-run
-   is not warranted:** everything except Block A's standard group is provably
-   unaffected, and the frozen originals stand at tag `pre-val-diagnosis`.
+3. **Electricity is the one cell to check empirically (see §7).** Everything
+   else is provably unaffected; the frozen originals stand at tag
+   `pre-val-diagnosis`, and a full grid re-run is not warranted.
+
+## 7. Electricity verification — partial, STOPPED
+
+The only reported number the artifact could move is electricity's
+RevIN−CondNorm sign (§5). We ran the flagged global-z-validation path
+(`G4_VAL_GLOBALZ=1`, default OFF; `experiments/verify_electricity_val.py`) on
+electricity CondNorm. This is a **partial, stopped** verification — not a
+completed one — reported as such.
+
+**Execution scope (stopped 2026-07-23):**
+
+- **rlinear: 15/15 complete.** Correcting the validation to global-z moves the
+  test MSE by at most **1.61%** in the worst single config, and moves the
+  horizon/seed **mean by 0.05%** (0.16522 → 0.16513). The same-process
+  on-vs-off comparison (which also controls for the ~1% run-to-run
+  nondeterminism) agrees to within 1.61%.
+- **patchtst: 1/15** (h24, seed 0): global-z-val test MSE equals the as-run
+  value **exactly** (0.14129) — 0.00% effect.
+- **segrnn: 0/15** — not run.
+- **lgbm_dms: structurally excluded, not a missing cell.** Its arm
+  (`lgbm_run`) fits once with no epoch loop and no validation-based checkpoint
+  selection (returns `val_mse = nan`, `epochs = 0`), so there is no
+  early-stopping choice for the validation scale to affect. This *strengthens*
+  the argument.
+
+Per-epoch validation curves were **not logged** (only the final
+`test_mse`/`test_mae` and a single scalar `best_val_mse`), so a 0-retraining
+"is the val minimum flat?" check on the archived runs is not available; the
+argument rests on the measured rlinear bound plus the arithmetic below.
+
+**Quantitative bound — why the 28 unrun configs cannot flip the sign.** The
+sign flips only if electricity's CondNorm test MSE, **averaged over the four
+Block-A backbones**, falls from 0.1726 below RevIN's 0.1458 — a **15.5%**
+improvement of the four-backbone mean. rlinear's mean moved 0.05% (worst config
+1.61%) and lgbm_dms cannot move at all, so patchtst and segrnn would each have
+to move their mean by **~31%** for the four-backbone average to shift 15.5% —
+about **20× the largest per-config shift rlinear showed** (and ~600× its mean
+shift), from epoch reselection alone. Block A caps training at 12 epochs, so the
+candidate checkpoints are close and a 31% test-MSE swing from selecting a
+neighbouring epoch is not plausible; the one completed patchtst config moved 0%.
+
+**Falsification condition (stated in advance).** This conclusion is wrong iff
+re-running electricity patchtst **and** segrnn CondNorm under global-z
+validation moves each backbone's mean test MSE by ≳31%. Measured so far:
+rlinear 1.61% (worst) / 0.05% (mean), patchtst 0.00% (1 config). Anyone can
+complete the check — `uv run python -m experiments.verify_electricity_val`
+(reuses the frozen lookbacks; writes `results/g4_val_globalz_electricity.csv`;
+the partial results are committed) — and the sign changes only if that
+threshold is crossed.
