@@ -13,14 +13,60 @@ at the Phase-2 shrinkage/ARIMAX + IJF-reframe cycle.
 
 ---
 
+## Key files (what each main artifact is)
+
+**Runners / code**
+- `experiments/g4_grid.py` — Block A main-grid runner. `build_frame(name)` loads a
+  dataset → dict{values (T,C), index, exog, t1=train-end, t2=val-end, name};
+  `firststage(frame)` = per-channel CondNorm level ĝ (LightGBM on train, cached to
+  `results/g4_firststage/`); `torch_run` (RLinear/PatchTST/SegRNN/iTransformer × a
+  norm); `lgbm_run` (LightGBM-DMS). Produces FROZEN `results/g4_grid.csv`.
+- `experiments/g8_shrinkage.py` — shrinkage safety-valve runner (post-hoc,
+  pre-registered). Coefficients: `alpha_hat` (val-split), `alpha_hat_trainholdout`
+  (train-internal holdout), clip(LPS). `shrunk()` builds ℓ̃ = μ + α(ĝ−μ); method A
+  re-trains via `torch_run`/`lgbm_run`. Appends to `results/g8_shrinkage.csv`.
+- `experiments/g8_tier_verdict.py` — executable A.6/A.6a Tier verdict: matched
+  (dataset,backbone,horizon) cells, BOTH coefficients, matched Raw + pooled/matched
+  scales. Deterministic, committed pre-result.
+- `src/norms/condnorm.py` — CondNorm transform (invertible) + `first_stage_level`
+  (LightGBM ĝ, leakage-contract fit on `[:train_end]`). `src/train.py` = single
+  training entry point; `src/norms/` = norm registry (see the environment contract).
+
+**Data / results**
+- `results/g4_grid.csv` — FROZEN Block A results (tag `pre-val-diagnosis`); never edited.
+- `results/g8_shrinkage.csv` — shrinkage results (alphahat / lpsclip / trainholdout).
+- `results/experiment_log.md` — THIS running journal.
+- `results/summary.md`, `results/gate1.md`, `results/gate2.md`,
+  `results/lps_inference.md` — polished summaries, gate verdicts, LPS inference.
+
+**Governance / evidence**
+- `evidence/prereg_shrinkage_arimax.md` — FROZEN pre-registration (shrinkage §A +
+  ARIMAX §B); interpretation rules, Tiers, matched-cell amendment A.6a.
+- `evidence/condnorm_val_scale_diagnosis.md` — val/test scale artifact diagnosis
+  (benign, proven zero-impact for univariate).
+
+**Paper / planning**
+- `paper/main.tex` + `paper/sections/*.tex` (+ `references.bib`) — IJF full paper.
+- `paper/workshop_ccai.tex` — CCAI 4-page workshop version (climate-framed).
+- `docs/ijf_reframe_thesis.md` — reframe spec (§1/§2 rewrite, Table 1, §7 framing);
+  `docs/expert_briefing.md` — external-advisor briefing.
+- `RESEARCH_PLAN.md` (master plan G0–G6), `HANDOFF.md` (state + next steps),
+  `the environment contract` (invariants).
+
+---
+
 ## Current focus / open threads (update each turn)
 
-- **train-holdout α̂ — REQUIRED, next.** The val-split α̂ failed as a safety valve
-  (see G8 below). A lower-variance / leakage-free estimator (train-internal
-  holdout; alternatives: CV-fold, significance gate, shrink-α̂). If it works, the
-  valve is implementable and Tier 1 properly triggers; if it *also* fails, we can
-  say empirically "shrinkage is hard." Both outcomes beat the current inconclusive
-  state.
+- **train-holdout α̂ — TRIED, does NOT fix it (preview 2026-07-24).** α̂ does not
+  collapse toward 0 on the standard group (etth1 0.53, etth2 0.78, weather 0.53 —
+  *higher* than val-split), because it is a single-window Cov/Var estimator with
+  the same noise variance, and moving into train worsens autocorrelation
+  contamination. Diagnosis is VARIANCE; train-holdout is contamination-targeted,
+  not variance-targeted. **Decision needed:** one variance-targeted estimator
+  (CV-fold α̂ or significance-gated α̂ — both essentially reconstruct the LPS
+  OOS-predictability signal) as a single principled attempt, OR declare the block
+  inconclusive now (Option C). Pre-commit to reporting whichever way the one
+  attempt goes (no estimator-shopping).
 - **§7 shrinkage narrative — DO NOT finalize until train-holdout lands.** Current
   honest status = Option C (the block did not adjudicate the shrinkage objection).
 - **ARIMAX (classical baseline)** — pending `uv add statsmodels`; Fourier + ARIMA
@@ -106,3 +152,29 @@ under-shrinks exogenous (gefcom +33%, jeju +14%) — the pre-registered reason i
 secondary, now shown empirically.
 
 **Next.** train-holdout α̂ (required). §7 narrative after that.
+
+## 2026-07-24 (later) — train-holdout α̂ preview (no re-train)
+
+`experiments/g8_shrinkage.py::alpha_hat_trainholdout` + `scratch/th_alpha_preview.py`.
+Cheap α-only check before spending compute on a full re-run:
+
+| dataset | LPS | α̂ val-split (failed) | α̂ train-holdout |
+|---|---|---|---|
+| gefcom_wind | 0.74 | 1.000 | 0.924 |
+| jeju_wind | 0.74 | 0.913 | 0.899 |
+| etth1 | −0.72 | 0.484 | 0.527 |
+| etth2 | −0.20 | 0.521 | 0.784 |
+| weather | 0.11 | 0.450 | 0.534 |
+| electricity | 0.28 | 0.885 | 0.878 |
+
+**train-holdout does NOT fix the valve.** α̂ stays high (even higher) on the
+standard group where it must be ≈0 → shrunk-CN would again be worse than Raw (full
+re-run not spent; the α values are dispositive). Why: single-window Cov/Var =
+same noise variance as val-split, and the holdout is *more* adjacent to the reduced
+fit region → autocorrelation contamination is worse. The diagnosis is estimator
+VARIANCE; train-holdout is contamination-targeted, not variance-targeted.
+
+**Decision (open):** one variance-targeted estimator (CV-fold α̂ or
+significance-gated α̂ — both reconstruct the LPS OOS-predictability signal) as a
+single principled attempt, OR declare the shrinkage block inconclusive (Option C).
+Awaiting author direction; pre-commit to reporting the one attempt as-is.

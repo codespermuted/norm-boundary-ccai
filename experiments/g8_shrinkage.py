@@ -23,8 +23,9 @@ import csv
 import numpy as np
 import torch
 
-from experiments.g4_grid import (CSV_PATH, LGBM_L, build_frame, firststage,
-                                  lgbm_run, torch_run)
+from experiments.g4_grid import (CSV_PATH, LGBM_L, build_frame, calendar_features,
+                                  firststage, lgbm_run, torch_run)
+from src.norms.condnorm import first_stage_level
 
 ROOT = os.path.join(os.path.dirname(__file__), "..")
 OUT = os.path.join(ROOT, "results", "g8_shrinkage.csv")
@@ -49,11 +50,33 @@ def alpha_hat(frame, level):
     return np.clip(a, 0.0, 1.0)
 
 
+def alpha_hat_trainholdout(frame):
+    """Per-channel recalibration on a TRAIN-INTERNAL holdout. Fit the first stage
+    on a reduced train [0:t_h], estimate alpha on the held-out train tail
+    [t_h:t1] -- OOS for the reduced fit and NOT adjacent to test. Isolates the
+    val-window contamination that inflates the val-split alpha when the first
+    stage fits noise (LPS<0)."""
+    t1, t2, v = frame["t1"], frame["t2"], frame["values"]
+    t_h = t1 - (t2 - t1)                        # hold out a val-sized train tail
+    cal = calendar_features(frame["index"])
+    feats = cal if frame["exog"] is None else np.column_stack([frame["exog"], cal])
+    a = np.empty(v.shape[1])
+    for c in range(v.shape[1]):
+        g = first_stage_level(feats, v[:, c], train_end=t_h)
+        yh, gh = v[t_h:t1, c], g[t_h:t1]
+        yc, gc = yh - yh.mean(), gh - gh.mean()
+        var = (gc * gc).mean()
+        a[c] = (yc * gc).mean() / var if var > 0 else 0.0
+    return np.clip(a, 0.0, 1.0)
+
+
 def shrunk(frame, level, kind):
     t1, v = frame["t1"], frame["values"]
     mu = v[:t1].mean(0)
     if kind == "alphahat":
         a = alpha_hat(frame, level)                    # (C,)
+    elif kind == "trainholdout":
+        a = alpha_hat_trainholdout(frame)              # (C,)
     else:  # lpsclip: scalar official LPS, broadcast to all channels
         a = np.full(v.shape[1], float(np.clip(LPS[frame["name"]], 0.0, 1.0)))
     return mu + a * (level - mu), float(a.mean())
@@ -89,7 +112,7 @@ def main():
     for name, horizons in SCOPE.items():
         frame = build_frame(name)
         level = firststage(frame)
-        for kind in ("alphahat", "lpsclip"):
+        for kind in ("alphahat", "lpsclip", "trainholdout"):
             slevel, amean = shrunk(frame, level, kind)
             for h in horizons:
                 # rlinear (5 seeds)
