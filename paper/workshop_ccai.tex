@@ -259,14 +259,17 @@ transitions that drive reserve scheduling and curtailment. Because \lps{} needs 
 covariates and a first-stage regression already in most pipelines, it is a
 near-zero-cost screen---seconds on a CPU, no forecasting model---run before
 GPU-hours are spent. On Jeju Wind, conditioning the level on covariates cuts
-capacity-normalized MAE from $0.110$ (RevIN) to $0.101$ (\cnm), $8.4\%$ in the units
-an operator sizes reserves in. Reserve is sized against forecast error at these
-events, so a lower error reduces it proportionally. For illustration, on a
-hypothetical $300$\,MW fleet at $25\%$ capacity factor the $0.009$ drop in
-capacity-normalized error is about $2.7$\,MW of avoided reserve; carried on gas
-($\sim0.4$\,tCO$_2$/MWh) over $\sim4{,}000$ ramp-exposed hours a year, this is of
-order $4{,}000$\,tCO$_2$/yr---modest per installation but scalable across fleets. We
-report the accuracy itself and leave the grid-specific reserve model to operators.
+capacity-normalized MAE from $0.110$ (RevIN) to $0.101$ (\cnm)---$8.4\%$ in the units
+an operator sizes reserves in. The chain from forecast accuracy to reserves to
+emissions is established: improved forecasting cuts operating-reserve requirements
+and system emissions \citep{sun2022mlreserve}, and displaced fossil generation
+carries of order $0.5$\,tCO$_2$/MWh \citep{kaffine2013emissions}. As an
+\emph{illustrative} scale check---a $300$\,MW fleet with reserve taken proportional
+to error---the $8.4\%$ reduction is of order a few thousand tCO$_2$/yr, modest per
+installation but scalable across fleets. This is not a dispatch analysis: it ignores
+grid topology, unit commitment, and market structure, which the cited studies model
+and we do not. We report the forecast accuracy and defer the grid-specific figure to
+those tools.
 
 \paragraph{What to use above the threshold.} Stop setting the level from the
 lookback window; the covariate-conditioned replacements are close on the exogenous
