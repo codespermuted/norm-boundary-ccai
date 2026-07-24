@@ -1,10 +1,17 @@
 # Experiment Log — running lab journal
 
+> **For the complete, verified experiment record see `results/RESULTS.md`** (the
+> authoritative ledger of every block with re-derived numbers and honest caveats).
+> This file is the turn-by-turn journal for the Phase-2 cycle and is kept for the
+> as-it-happened narrative; where it and `RESULTS.md` disagree on a number,
+> `RESULTS.md` is correct. In particular the "variance" diagnosis of the G8
+> α̂ failure below is superseded by RESULTS.md §9 (α̂ is a low-variance estimator
+> of the wrong estimand, not a high-variance one).
+
 **Purpose.** Per-turn, chronological record of experiments (setup → result → verdict
 → open threads) so work persists across sessions and is never confined to one
 session's context. Records results **as-is**, including failures and
-point-prediction misses. Polished paper-facing summaries live in
-`results/summary.md`; governance/pre-registration in `evidence/`; state + next
+point-prediction misses. Governance/pre-registration in `evidence/`; state + next
 steps in `HANDOFF.md`. **Update this file every experiment turn.**
 
 Prior phases (G0–G4, gates, LPS inference) are summarized in `results/summary.md`,
