@@ -39,16 +39,16 @@ A Pre-Training Test for the Normalization Layer}
 
 \begin{abstract}
 On power grids, forecast errors for wind, solar, and load are absorbed by
-fossil-fuelled spinning reserves and by curtailment. A forecaster's accuracy at the
-ramps and regime transitions that move renewable output therefore carries a direct
-emissions footprint. Yet modern forecasters handle the series \emph{level} with
+fossil-fuelled spinning reserves and by curtailment. A forecaster's accuracy at
+ramps and regime transitions therefore carries a direct emissions footprint. Yet
+modern forecasters handle the series \emph{level} with
 instance normalization (RevIN and its successors), which estimates that level
 \emph{endogenously}, from the target's own past. On wind, solar, and
 load---whose level is set by weather observable in advance through archived
 numerical forecasts---this discards recoverable signal, and no downstream capacity
-restores it. We give a test, computable \emph{before} training from covariates
-alone, of when the endogenous default is unsafe: the Level Predictability Score
-(\lps). In a pre-registered study whose per-dataset predictions were committed to
+restores it. We give a pre-training test---the Level Predictability Score
+(\lps)---that flags this failure from the covariates alone, before any model is
+trained. In a pre-registered study whose per-dataset predictions were committed to
 version control before any run, the test's sign is correct on all eight datasets.
 Under information parity---every model handed the same covariates---instance
 normalization is worse in mean MSE than plain global scaling on all five backbones,
@@ -122,10 +122,14 @@ Writing any \inm{}-equipped backbone as
 $\hat y = \bar y + s\, f\!\left((x-\bar y\mathbf 1)/s,\, g\right)$, its dependence on
 the window mean $\bar y$ is additive with unit slope: before seeing the data the
 layer commits to a level response of slope one with no level--covariate interaction.
-Whenever the window mean is a stale estimate of the target-time level that is an
-irreducible cost no downstream flexibility removes---and a closed-form analysis (full
-version) shows \inm's advantage falls as exogenous level predictability and the
-horizon grow.
+Whenever the window mean is a stale estimate of the target-time level, that is an
+irreducible cost no downstream flexibility removes. A linear--Gaussian analysis makes
+the trade quantitative: \inm{} pays the frozen statistic's within-horizon drift
+$s_x^2(h)+h\sigma_u^2$, while \cnm{} pays the covariate-unexplained level variance
+$(1-\lambda)V$, where $\lambda\in[0,1]$ is the exogenous predictability of the level.
+So \cnm{} wins iff $\lambda>\lambda^\star$, and the crossover $\lambda^\star$ falls
+with the horizon $h$---multi-step forecasting is where the endogenous default is most
+exposed (full derivation in the extended version).
 
 The exogenous predictability is unobservable before training, so we estimate it
 out of sample. Partitioning the training series into non-overlapping length-$w$
@@ -147,7 +151,10 @@ is one line, stated in the direction the evidence supports:
 Above the threshold the level should be conditioned on covariates by whatever means
 the pipeline supports (\S\ref{sec:results}); the threshold is anchored to the
 stylized crossover ($\approx 0.27$--$0.28$ at $h{=}24$), conservative toward
-instance normalization.
+instance normalization. We validate this rule as a \emph{regime classifier}: our
+datasets sit at the two ends of the \lps{} range, so it separates the regimes but
+does not yet resolve a precise cut, and a dataset of intermediate predictability is
+the key confirmatory target.
 
 \section{Results}\label{sec:results}
 \begin{table}[t]
@@ -227,14 +234,11 @@ MASE), the two exceptions being the linear dynamic regression on GEFCom-Load.
 sign of the RevIN$-$\cnm{} gap for each dataset were committed to version control
 (git commit \texttt{cab17c1}) before any grid run; all eight signs were confirmed,
 unchanged under MSE, MAE, and MASE (Fig.~\ref{fig:lpsgap}), and in all eleven
-exogenous cells the Model Confidence Set retains \cnm{} alone. We report \lps{} as
-a regime classifier and are explicit about its limit: our eight datasets are
-bimodal in \lps{}, so the threshold is stress-tested at effectively one dataset,
-and within the exogenous regime \lps{} does not order the size of the gap. The
-threshold is not fit to these data, however: it is anchored to the stylized
-crossover ($0.27$--$0.28$, \S\ref{sec:score}), and the eight-dataset classification
-is unchanged for any $\tau\in[0.30,0.70]$---so the decision rests on an analytic
-argument, not on the bimodal spacing.
+exogenous cells the Model Confidence Set retains \cnm{} alone. The bimodality has an upside for the rule: the eight-dataset classification is
+unchanged for any $\tau\in[0.30,0.70]$ (it need only fall in the empty gap between
+the clusters), and $\tau$ is anchored to the stylized crossover, so the decision
+rests on an analytic argument, not fitted spacing. Within the exogenous regime,
+however, \lps{} does not order the size of the gap (Fig.~\ref{fig:lpsgap}).
 
 \begin{figure}[t]
 \centering
