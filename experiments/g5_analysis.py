@@ -66,8 +66,15 @@ def fig3(df: pd.DataFrame, lps: pd.DataFrame) -> None:
     ax.axhline(0, color=INK_SECONDARY, lw=0.8)
     ax.axvline(0.3, color=INK_SECONDARY, lw=0.8, ls="--")
     hx = np.array([m[d] for d, _ in per_dsh.index])
-    ax.scatter(hx, per_dsh.values, s=10, alpha=0.35,
-               color=INK_SECONDARY, label="(dataset, h)")
+    # colour cells by regime too: the pooled rank association is a BETWEEN-regime
+    # effect and reverses inside the exogenous regime, so the plot must not read
+    # as one cloud with a trend through it (sec6 "What LPS orders").
+    cell_exog = np.array([d in EXOG for d, _ in per_dsh.index])
+    for mask, key in ((cell_exog, "cn"), (~cell_exog, "in")):
+        ax.scatter(hx[mask], per_dsh.values[mask], s=10, alpha=0.35,
+                   color=METHOD_COLORS[key])
+    rho_x, p_x = stats.spearmanr(hx[cell_exog], per_dsh.values[cell_exog])
+    rho_s, p_s = stats.spearmanr(hx[~cell_exog], per_dsh.values[~cell_exog])
     for d in per_ds.index:
         color = (METHOD_COLORS["cn"] if d in EXOG else METHOD_COLORS["in"])
         ax.scatter(m[d], per_ds[d], s=48, color=color, edgecolor=INK,
@@ -78,12 +85,18 @@ def fig3(df: pd.DataFrame, lps: pd.DataFrame) -> None:
     ax.set_yscale("symlog", linthresh=0.5)
     ax.set_xlabel("LPS (pre-registered, computed before training)")
     ax.set_ylabel(r"MSE gap: RevIN $-$ CondNorm")
-    ax.set_title("Sign predictions pre-registered: 8/8 hits", fontsize=8.5)
+    ax.set_title("Two regimes, separated; not one dose-response curve",
+                 fontsize=8.5)
     ax.text(0.31, 0.96, r"$\tau=0.3$", fontsize=7, color=INK_SECONDARY,
             transform=ax.get_xaxis_transform(), va="top")
+    # Report the pooled rho WITH its within-regime decomposition. The pooled
+    # value measures cluster separation; inside the exogenous regime it flips
+    # sign, so printing it alone (with a p-value that ignores the nesting)
+    # would overstate what the diagnostic orders.
     ax.text(0.02, 0.97,
-            f"Spearman $\\rho$={rho:.2f} (p={p:.3f})\n"
-            f"per-(dataset,h): $\\rho$={rho_h:.2f} (p={p_h:.0e})",
+            f"pooled cells: $\\rho$={rho_h:.2f}\n"
+            f"within exogenous: $\\rho$={rho_x:.2f}\n"
+            f"within standard: $\\rho$={rho_s:.2f}",
             transform=ax.transAxes, fontsize=7, va="top")
     fig.savefig(os.path.join(FIG, "fig3_lps_gap.pdf"))
     fig.savefig(os.path.join(FIG, "fig3_lps_gap.png"))

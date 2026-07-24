@@ -46,52 +46,94 @@ this mark.} Complementing pairwise tests, we compute the Model Confidence Set \c
 
 \begin{table}[t]
 \centering
-\caption{Test MSE (global z-score scale) by dataset and normalization arm, averaged over backbones, horizons, and seeds (Block~A). \textbf{Bold}: best arm per dataset. $^{*}$: significantly worse than the best arm ($p<0.05$; DM test with Harvey correction on per-$(\text{backbone},h)$ seed-mean loss differentials, Fisher-combined across cells).}
+\caption{Main results by dataset. Columns are grouped into \emph{benchmarks} (deterministic, no learned normalization), \emph{endogenous} level handling (the instance-normalization family, plus global $z$-scoring which handles the level with a single train-fitted constant), and \emph{exogenous} level handling. Panel~(a): test MSE on the train-fitted global $z$-score scale, averaged over backbones, horizons, and seeds (Block~A). Panel~(b): the same forecasts in MASE, i.e.\ test MAE divided by the in-sample seasonal-naive MAE of the same series on the same scale \citep{hyndman2006another}, so values are comparable across datasets and $>1$ means worse than a one-step seasonal-naive benchmark fitted in-sample. \textbf{Bold}: row minimum over all nine columns. $^{*}$: significantly worse than the best \emph{normalization} arm ($p<0.05$; DM test with Harvey correction on per-$(\text{backbone},h)$ seed-mean loss differentials, Fisher-combined across cells); the DM machinery is defined within Block~A, so the four benchmark columns carry no marks. Benchmarks are run on the identical chronological splits, window-admissibility rules and $z$-scale as Block~A at the fixed lookback $L=336$ (\Cref{app:ext}); they are deterministic and therefore have no seed variation.}
 \label{tab:main}
 \small
-\begin{tabular}{lccccc}
+\setlength{\tabcolsep}{3.2pt}
+\begin{tabular}{lcccccccccc}
 \toprule
-Dataset & Raw & RevIN & SAN & FAN & CondNorm \\
+& \multicolumn{4}{c}{Benchmarks} & \multicolumn{4}{c}{Endogenous level} & Exogenous \\
+\cmidrule(lr){2-5}\cmidrule(lr){6-9}\cmidrule(lr){10-10}
+Dataset & S.\,naive & Clim. & DynReg & FirstStg & Raw & RevIN & SAN & FAN & CondNorm \\
 \midrule
-\multicolumn{6}{l}{\emph{Exogenously-driven group}} \\
-Jeju Wind     & $0.6887^{*}$ & $0.6969^{*}$ & $0.7030^{*}$ & $0.7724^{*}$ & $\mathbf{0.2933}$ \\
-GEFCom-Wind   & $1.1153^{*}$ & $1.0039^{*}$ & $0.9755^{*}$ & $1.1875^{*}$ & $\mathbf{0.1629}$ \\
-GEFCom-Load   & $0.3592^{*}$ & $0.3432^{*}$ & $0.3330^{*}$ & $0.3678^{*}$ & $\mathbf{0.1066}$ \\
-GEFCom-Solar  & $0.1828^{*}$ & $0.1844^{*}$ & $0.2116^{*}$ & $0.1833^{*}$ & $\mathbf{0.0580}$ \\
+\multicolumn{10}{l}{\emph{(a) Test MSE}} \\[2pt]
+\multicolumn{10}{l}{\emph{Exogenously-driven group}} \\
+Jeju Wind     & $1.6265$ & $1.0320$ & $\mathbf{0.2850}$ & $0.2938$ & $0.6887^{*}$ & $0.6969^{*}$ & $0.7030^{*}$ & $0.7724^{*}$ & $0.2933$ \\
+GEFCom-Wind   & $1.9878$ & $1.2312$ & $0.1710$ & $\mathbf{0.1564}$ & $1.1153^{*}$ & $1.0039^{*}$ & $0.9755^{*}$ & $1.1875^{*}$ & $0.1629$ \\
+GEFCom-Load   & $0.6860$ & $1.1900$ & $0.3714$ & $0.1365$ & $0.3592^{*}$ & $0.3432^{*}$ & $0.3330^{*}$ & $0.3678^{*}$ & $\mathbf{0.1066}$ \\
+GEFCom-Solar  & $0.3329$ & $0.2029$ & $0.1414$ & $\mathbf{0.0565}$ & $0.1828^{*}$ & $0.1844^{*}$ & $0.2116^{*}$ & $0.1833^{*}$ & $0.0580$ \\
 \midrule
-\multicolumn{6}{l}{\emph{Standard LTSF group}} \\
-ETTh1         & $0.3962^{*}$ & $\mathbf{0.3771}$ & $0.3910^{*}$ & $0.4114^{*}$ & $2.2016^{*}$ \\
-ETTh2         & $0.3868^{*}$ & $0.2900^{*}$ & $\mathbf{0.2869}$ & $0.3253^{*}$ & $6.6044^{*}$ \\
-Electricity   & $0.1500^{*}$ & $0.1458^{*}$ & $0.1443^{*}$ & $\mathbf{0.1375}$ & $0.1726^{*}$ \\
-Weather       & $0.1815^{*}$ & $0.1719^{*}$ & $\mathbf{0.1666}$ & $0.1747^{*}$ & $0.7274^{*}$ \\
+\multicolumn{10}{l}{\emph{Standard LTSF group}} \\
+ETTh1         & $0.6695$ & $0.8826$ & $0.4792$ & $1.4033$ & $0.3962^{*}$ & $\mathbf{0.3771}$ & $0.3910^{*}$ & $0.4114^{*}$ & $2.2016^{*}$ \\
+ETTh2         & $0.5769$ & $3.1284$ & $0.8921$ & $3.3670$ & $0.3868^{*}$ & $0.2900^{*}$ & $\mathbf{0.2869}$ & $0.3253^{*}$ & $6.6044^{*}$ \\
+Electricity   & $0.2174$ & $0.3894$ & $0.1986$ & $0.3224$ & $0.1500^{*}$ & $0.1458^{*}$ & $0.1443^{*}$ & $\mathbf{0.1375}$ & $0.1726^{*}$ \\
+Weather       & $0.3383$ & $0.6876$ & $0.1808$ & $0.6483$ & $0.1815^{*}$ & $0.1719^{*}$ & $\mathbf{0.1666}$ & $0.1747^{*}$ & $0.7274^{*}$ \\
+\midrule
+\multicolumn{10}{l}{\emph{(b) MASE}} \\[2pt]
+\multicolumn{10}{l}{\emph{Exogenously-driven group}} \\
+Jeju Wind     & $1.121$ & $1.030$ & $\mathbf{0.462}$ & $0.477$ & $0.776$ & $0.741$ & $0.761$ & $0.803$ & $0.478$ \\
+GEFCom-Wind   & $1.225$ & $0.985$ & $0.350$ & $\mathbf{0.335}$ & $0.921$ & $0.885$ & $0.881$ & $0.950$ & $0.345$ \\
+GEFCom-Load   & $1.613$ & $2.310$ & $1.186$ & $0.687$ & $1.155$ & $1.123$ & $1.113$ & $1.166$ & $\mathbf{0.564}$ \\
+GEFCom-Solar  & $1.288$ & $1.197$ & $1.253$ & $\mathbf{0.554}$ & $1.220$ & $1.239$ & $1.369$ & $1.212$ & $0.587$ \\
+\midrule
+\multicolumn{10}{l}{\emph{Standard LTSF group}} \\
+ETTh1         & $1.219$ & $1.691$ & $1.114$ & $2.064$ & $1.006$ & $\mathbf{0.950}$ & $0.966$ & $1.024$ & $2.549$ \\
+ETTh2         & $1.535$ & $4.254$ & $1.963$ & $4.362$ & $1.288$ & $\mathbf{1.090}$ & $1.092$ & $1.192$ & $5.691$ \\
+Electricity   & $1.047$ & $1.605$ & $1.089$ & $1.423$ & $0.947$ & $0.926$ & $0.930$ & $\mathbf{0.881}$ & $0.995$ \\
+Weather       & $0.754$ & $1.503$ & $0.633$ & $1.237$ & $0.602$ & $\mathbf{0.532}$ & $0.537$ & $0.566$ & $1.300$ \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\Cref{tab:main} summarizes Block~A. The pattern is a clean double dissociation, not a uniform ranking. On the exogenously-driven group, CondNorm is best on every dataset, with every competing arm significantly worse; the margins are large (e.g., GEFCom-Wind: $0.1629$ versus $0.9755$ for the best instance-normalization arm). On the standard group, CondNorm loses---catastrophically so on ETTh2 ($6.6044$), where calendar harmonics carry essentially no level information and the first-stage regression injects pure noise into the restored level---while RevIN, SAN, or FAN wins, exactly as the distribution-shift motivation predicts.
+\Cref{tab:main} is the paper's central result, and it is a double dissociation between two \emph{strategies} for handling the level, not a ranking of methods. Read the three covariate-conditioned columns---the first-stage regression used alone, the classical dynamic regression, and \cnm---against the best instance-normalized arm in each row. On the exogenously-driven group they win $11$ of the $12$ comparisons; on the standard group they win $0$ of $12$. Under MASE the counts are $10$ of $12$ and $0$ of $12$. Both exceptions are the same method for the same reason: the ridge \emph{DynReg} loses on GEFCom-Load, whose temperature--load response is strongly nonlinear---the identical failure that costs a ridge first stage two hits in the $\lps$ sensitivity check of \Cref{tab:tau}---and, under MASE only, on GEFCom-Solar. No covariate-conditioned model wins on any standard dataset under either measure.
 
-\paragraph{Gate~2: sign predictions} All eight pre-registered sign predictions were confirmed (criterion: at least 6/8). The realized dataset-mean gaps, $\mse(\text{RevIN})-\mse(\text{CondNorm})$, are: Jeju Wind $+0.4037$, GEFCom-Wind $+0.8410$, GEFCom-Load $+0.2366$, GEFCom-Solar $+0.1264$ (all predicted positive), and ETTh1 $-1.8244$, ETTh2 $-6.3145$, Electricity $-0.0268$, Weather $-0.5555$ (all predicted negative). We stress that these predictions, the official $\lps$ specification, and $\tau=0.3$ were committed to version control (commit \texttt{cab17c1}) before any grid run was launched. Under a binomial reference in which each pre-registered sign is an uninformative coin flip ($n=8$, $p=0.5$), the realized record of eight hits in eight has exact probability $2^{-8} \approx 0.004$; we note that the pre-registered pass criterion of at least $6/8$ was itself lenient ($P(X \ge 6) = 37/256 \approx 0.145$ under the same reference), so the evidence rests on the strict outcome actually observed, not on the generosity of the gate. This figure assumes the eight sign tests are independent, which they are not: the datasets fall into two internally-correlated regimes (four exogenously-driven energy series, four standard benchmarks), so the effective number of independent tests is smaller than eight and $2^{-8}$ should be read as an optimistic bound on the aggregate significance rather than an exact value. The caveat is on the \emph{inferential} strength of the aggregate hit-rate, not on the pre-registration: every sign was still committed before any grid run (commit \texttt{cab17c1}), and the per-dataset margins of \Cref{tab:main} and the rank agreement of \Cref{fig:lpsgap} do not depend on treating the eight datasets as exchangeable.
+Three further readings matter. First, the effect is not an artifact of a dimensionless scale: panel~(b) puts every number against the same series' own in-sample seasonal-naive error, and the ordering is unchanged. Second, the benchmark columns discipline the interpretation in both directions---on GEFCom-Load and GEFCom-Solar \emph{every} endogenous arm is worse than an in-sample seasonal-naive benchmark (MASE $1.11$--$1.37$), which is the operationally meaningful statement of what the boundary costs, while on the standard group the endogenous arms sit at MASE $0.53$--$1.09$ and the covariate-conditioned ones at $0.99$--$5.69$. Third, the failure of \cnm{} off its region is severe and we do not soften it: on ETTh2 it reaches MSE $6.6044$ against $0.2869$ for the best arm, because calendar harmonics carry essentially no level information and the first-stage regression injects its own error into the restored level. \Cref{sec:discussion} reports what a shrinkage safeguard does and does not repair.
 
-\paragraph{Model Confidence Sets} At $\alpha=0.10$, the surviving set in \emph{all eleven} exogenous (dataset, $h$) cells is $\{\text{CondNorm}\}$ alone. On the standard cells the survivors are $\{\text{RevIN}\}$ in all three ETTh1 cells, $\{\text{RevIN},\text{SAN}\}$ in all three ETTh2 cells, $\{\text{FAN}\}$ in all three Electricity cells, and $\{\text{SAN}\}$ in all three Weather cells. Across all 23 cells, survival counts are: Raw 0, RevIN 6, SAN 6, FAN 3, CondNorm 11.
+\paragraph{Gate~2: sign predictions} All eight pre-registered sign predictions were confirmed (criterion: at least 6/8). The realized dataset-mean gaps, $\mse(\text{RevIN})-\mse(\text{CondNorm})$, are: Jeju Wind $+0.4037$, GEFCom-Wind $+0.8410$, GEFCom-Load $+0.2366$, GEFCom-Solar $+0.1264$ (all predicted positive), and ETTh1 $-1.8244$, ETTh2 $-6.3145$, Electricity $-0.0268$, Weather $-0.5555$ (all predicted negative). These predictions, the official $\lps$ specification, and $\tau=0.3$ were committed to version control (commit \texttt{cab17c1}) before any grid run was launched.
+
+What this record does and does not show is worth stating precisely, because the natural summary statistic is misleading here. A binomial reference treating each sign as a coin flip would give $2^{-8}\approx 0.004$, but the eight datasets are not eight independent draws: they fall into two internally correlated regimes, and a reader who grants only that the two \emph{regimes} were called correctly is looking at $p = 0.25$. We therefore do not rest any claim on the aggregate hit rate. The informative content is per-dataset and is robust in the ways that can be checked without new runs: the same eight signs are obtained under MAE and under MASE (\Cref{tab:main}b), so the record is not an artifact of squared error on a dimensionless scale; the margins are large relative to seed dispersion on seven of the eight datasets, Electricity being the exception by construction; and the per-dataset magnitudes in \Cref{tab:main} do not depend on treating the datasets as exchangeable. What the record establishes is that a quantity computable before training assigned each of our eight series to the correct side of the boundary; what it cannot establish, with eight series in two clusters, is a calibrated probability that it will do so on the next one.
+
+\paragraph{Model Confidence Sets} At $\alpha=0.10$, the surviving set in \emph{all eleven} exogenous (dataset, $h$) cells is $\{\text{CondNorm}\}$ alone. On the standard cells the survivors are $\{\text{RevIN}\}$ in all three ETTh1 cells, $\{\text{RevIN},\text{SAN}\}$ in all three ETTh2 cells, $\{\text{FAN}\}$ in all three Electricity cells, and $\{\text{SAN}\}$ in all three Weather cells. Across all 23 cells, survival counts are: Raw 0, RevIN 6, SAN 6, FAN 3, CondNorm 11. One property of this output should temper how it is read: the procedure returns a \emph{singleton} in 20 of the 23 cells. A confidence set that almost always contains exactly one element is reporting an ordering rather than quantifying uncertainty about it, which is what one expects when the bootstrap resamples a single realized test path and the arms have been averaged over backbones and seeds beforehand. We therefore treat the model confidence sets as a compact summary of the within-cell ranking, consistent with the pairwise tests, and not as an independent uncertainty statement; the limitation is the single evaluation origin discussed in \Cref{sec:discussion}, which no post-processing of these runs can repair.
 
 \paragraph{The near-boundary case} Electricity sits closest to the threshold ($\lps=0.283<\tau=0.3$) and was flagged in the pre-registration as the lowest-confidence prediction. It behaved accordingly: its realized gap is the smallest in magnitude ($-0.0268$), roughly five times closer to zero than any other dataset, so the boundary is where the two regimes genuinely meet rather than an artifact of dataset selection. We are careful, though, not to overstate how densely the boundary is sampled. The $\lps$ values are strongly bimodal---$0.74$--$0.89$ for the four energy series and $-0.72$--$0.28$ for the four standard benchmarks---with no dataset in between; the wide all-correct plateau of \Cref{tab:tau} ($\tau\in[0.30,0.70]$) therefore falls entirely in this empty inter-cluster gap and reflects the separation between the two regimes as much as any fine calibration of $\tau$. Electricity is the only dataset that lands near the threshold at all, so the rule is genuinely stress-tested at its boundary in effectively a single case ($n=1$). Establishing that the crossover is \emph{sharp} there---rather than that two well-separated clusters are merely distinguishable---will require datasets of intermediate predictability, which we flag as a target for confirmatory replication.
 
-\subsection{LPS predicts the gap}
+\subsection{Mechanism: the layer, not the information}\label{sec:parity}
+
+\Cref{tab:main} is deliberately information-asymmetric: only \cnm{} consults the covariates, through its first-stage regression, while the four endogenous arms see the target alone. Taken by itself the table is therefore consistent with the objection that this is ``just feature engineering''---a model that sees tomorrow's weather forecast beats models that do not. The information-parity block (Block~B; 1{,}133 runs) removes the asymmetry by supplying \emph{every} arm with the identical past and future covariates as backbone inputs, across five covariate-capable backbones, on the four exogenously-driven datasets. This is the comparison that carries the paper's mechanism claim, so we report it with uncertainty rather than as point estimates.
+
+The operative quantity is the \emph{isolated cost of the normalization layer under equal information}: the paired difference $\mse(\text{RevIN}+\text{cov}) - \mse(\rawm+\text{cov})$, in which the two arms receive the same inputs, the same backbone, the same capacity and the same budget, and differ only in whether the window statistics are removed and mechanically restored. It is positive on every backbone:
+
+\begin{center}
+\small
+\begin{tabular}{lccc}
+\toprule
+Backbone & $\mse(\text{RevIN}+\text{cov}) - \mse(\rawm+\text{cov})$ & 95\% CI & cells $>0$ \\
+\midrule
+LGBM-Cov      & $+0.0191$ & $[+0.0116,\, +0.0269]$ & 11/11 \\
+Linear mixer  & $+0.0205$ & $[+0.0056,\, +0.0368]$ & 8/11 \\
+MLP mixer     & $+0.0238$ & $[+0.0119,\, +0.0390]$ & 10/11 \\
+SegRNN-Cov    & $+0.0112$ & $[+0.0058,\, +0.0172]$ & 10/11 \\
+PatchTST-Cov  & $+0.0038$ & $[-0.0091,\, +0.0167]$ & 7/11 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent Intervals are cluster bootstraps over the 11 seed-averaged (dataset, horizon) cells, resampling cells rather than origins so that the serial dependence within a test path is not treated as replication. Four of the five differences exclude zero; \textbf{PatchTST-Cov does not}, and we state that as a null rather than absorbing it into a claim about ``every backbone''---its minimal covariate adapter exposes less level information to the backbone than the other four, so it is the arm in which the layer has least to destroy. The magnitudes deserve equal candour: these are differences of $0.004$ to $0.024$ MSE, one to two orders of magnitude below the $+0.841$ headline gap of \Cref{tab:main}. That contrast is the honest shape of the result. The large number measures what covariate access is worth; the small number measures what the normalization layer costs once access is equalized, and only the small number is attributable to the layer.
+
+Two further observations sharpen the mechanism. First, the \rawm$-$\cnm{} gap shrinks as backbone flexibility grows ($+0.127$ for the linear mixer, $+0.052$ for the MLP mixer, $-0.009$ for LightGBM-Cov, i.e.\ \rawm{} slightly ahead), while the RevIN$-$\rawm{} difference above persists at every capacity. A flexible model given raw inputs can learn the covariate-to-level map for itself, which is why \cnm{} loses its advantage there; no model can recover a level its normalizer has already subtracted, which is why the RevIN penalty does not vanish. This is the reparameterization argument of \citet{toner2024linear} applied to a constrained rather than an unconstrained class. We flag the capacity ordering as an exploratory post-hoc observation confined to the mixer ladder: PatchTST-Cov ($+0.142$) sits outside it and SegRNN-Cov is $-0.004$. Second, this is the same dissociation that \Cref{tab:main} shows at the level of strategies, obtained by a different route---there by comparing methods that condition the level on covariates against methods that do not, here by holding the covariates fixed and toggling only the layer.
+
+\subsection{What \texorpdfstring{$\lps$}{LPS} orders, and what it does not}
 
 \begin{figure}[t]
 \centering
 \includegraphics[width=.75\linewidth]{figures/fig3_lps_gap.pdf}
-\caption{Realized RevIN$-$CondNorm test-MSE gap versus pre-registered $\lps$. Dataset level: Spearman $\rho=0.762$ ($p=0.028$, $n=8$); per-(dataset,\,$h$) cells: $\rho=0.783$ ($p=9.9\times10^{-6}$, $n=23$). The vertical line marks $\tau=0.3$.}
+\caption{Realized RevIN$-$CondNorm test-MSE gap versus pre-registered $\lps$, one point per (dataset,\,$h$) cell, coloured by regime. The vertical line marks $\tau=0.3$. The pooled rank association ($\rho=0.783$, $n=23$) is a \emph{between}-regime effect: within the exogenously-driven regime the association reverses ($\rho=-0.750$, $n=11$), so the figure should be read as a separation of two clusters, not as a dose--response curve.}
 \label{fig:lpsgap}
 \end{figure}
 
-Beyond sign accuracy, the pre-registered auxiliary prediction was that the gap \emph{magnitude} increases with $\lps$. \Cref{fig:lpsgap} confirms this: Spearman $\rho=0.762$ ($p=0.028$) at the dataset level and $\rho=0.783$ ($p=9.9\times10^{-6}$) across the 23 (dataset, $h$) cells.\footnote{Both
-correlations inherit the clustered structure of the data: the dataset-level
-test has only $n=8$ points drawn from two regimes, and the 23 cells are nested
-within the same eight datasets, so the effective sample size is smaller than
-the nominal $n$ and the $p$-values are correspondingly optimistic. We read them
-as descriptive rank agreement rather than as independent significance tests.}
-The diagnostic thus carries ordinal information about \emph{how much} is at stake, not merely which side of the boundary a dataset falls on.
+Beyond sign accuracy, the pre-registration recorded an auxiliary prediction (excluded from the gate) that the gap \emph{magnitude} increases with $\lps$. \textbf{We report this prediction as not supported.} Pooled over all 23 (dataset, $h$) cells the rank association is positive and large, $\rho=0.783$; but decomposing it by regime shows that it is entirely a between-cluster effect. Within the exogenously-driven regime the association \emph{reverses}: $\rho=-0.750$ on its 11 cells, and the two datasets with the highest $\lps$ (GEFCom-Load $0.894$ and GEFCom-Solar $0.875$) have the two \emph{smallest} dataset-mean gaps ($+0.237$ and $+0.126$), while the two lowest-$\lps$ exogenous datasets have the largest ($+0.841$ and $+0.404$). Within the standard regime the association is positive ($\rho=+0.777$ on 12 cells). A pooled coefficient computed across two well-separated clusters measures the separation, not an ordering inside either one, and the nominal $p$-values that accompany it are not valid in any case: the 23 cells are nested within eight datasets, and an exact permutation test that respects the cluster structure gives $p=0.023$ rather than the nominal $9.9\times10^{-6}$.
+
+The honest conclusion is narrower than the pre-registered prediction and we adopt it throughout: $\lps$ is demonstrated here as a \emph{regime classifier}---it places a series on the correct side of the boundary---and not as a calibrated measure of how much is at stake once a series is on the exogenous side. Establishing the latter requires series with genuinely graded level predictability rather than two clusters, which our panel does not contain; we return to this in \Cref{sec:discussion}.
 
 \begin{table}[t]
 \centering
@@ -171,7 +213,9 @@ Backbone $\times$ dataset       & 0.44 \\
 \label{fig:factors}
 \end{figure}
 
-\Cref{tab:attribution} decomposes the variance of log test MSE over Block~A. Normalization-related terms account for $48.2\%$ of the variance, backbone-related terms for $0.6\%$. Strikingly, the normalization \emph{main} effect is tiny ($0.73\%$) while the normalization$\times$dataset interaction dominates ($47.12\%$): averaged over datasets, no normalization is better, because the \emph{sign} of the effect flips across datasets. That interaction is not a nuisance term---it \emph{is} the applicability boundary this paper characterizes (\Cref{fig:factors}). By contrast, which backbone sits under the normalization barely matters, consistent with the view that the choice of normalization, not architecture, drives much of the reported variation on these benchmarks.
+\Cref{tab:attribution} decomposes the variance of log test MSE over Block~A. Normalization-related terms account for $48.2\%$ of the variance, backbone-related terms for $0.6\%$. Strikingly, the normalization \emph{main} effect is tiny ($0.73\%$) while the normalization$\times$dataset interaction dominates ($47.12\%$): averaged over datasets, no normalization is better, because the \emph{sign} of the effect flips across datasets. That interaction is not a nuisance term---it \emph{is} the applicability boundary this paper characterizes (\Cref{fig:factors}). By contrast, which backbone sits under the normalization barely matters.
+
+One decomposition of this decomposition is essential to reading it correctly, and we report it rather than leaving it to be found: the $47.12\%$ is carried by the single exogenous arm. Restricting the same computation to the four \emph{endogenous} arms \{\rawm, RevIN, SAN, FAN\}, the normalization$\times$dataset interaction falls to $0.43\%$ and all normalization-related terms total $0.73\%$, against $0.43\%$ for backbone-related terms. A reader could take this as deflating the headline; we take it as sharpening it. Within the endogenous family the choice of normalization is close to immaterial and no more consequential than the choice of backbone---which is consistent with the leaderboard literature, where these arms trade places across benchmarks without a stable winner. The variance that the normalization factor explains appears only when the family is widened to include an arm whose level statistics come from outside the target series. The boundary this paper characterizes therefore runs between endogenous and exogenous level handling, not between RevIN and its endogenous successors, and the attribution is best read as evidence for \emph{where} the boundary lies rather than as a claim that normalization is the dominant design axis in general.
 
 \subsection{Horizon interaction}
 
@@ -186,7 +230,7 @@ Backbone $\times$ dataset       & 0.44 \\
 
 \subsection{Robustness blocks}
 
-\paragraph{Information parity (Block B)} A natural objection is that CondNorm wins merely because it \emph{sees} covariates the other arms do not---``it is just feature engineering.'' Block~B removes this asymmetry: every arm receives the identical past and future covariates as backbone inputs, across five covariate-capable backbones. CondNorm attains the lowest mean MSE for three of the five backbones (the linear mixer, the MLP mixer, and PatchTST-Cov) and is within $0.01$ of the best arm (Raw$+$covariates) for LightGBM-Cov and SegRNN-Cov; by the Harvey-corrected DM test it is significantly better than RevIN in 11/11 exogenous cells for PatchTST-Cov, 10/11 for the linear and MLP mixers, 3/11 for LightGBM-Cov, and 2/11 for SegRNN-Cov. Two further observations sharpen the mechanism. First, RevIN$+$covariates is \emph{worse in mean MSE} than Raw$+$covariates for every backbone: when covariates carry the level, instance normalization actively destroys information the input path is trying to use. Second, the Raw$-$CondNorm gap shrinks as backbone flexibility grows ($+0.127$ for the linear mixer, $+0.052$ for the MLP mixer, $-0.009$ for LightGBM-Cov), while the RevIN$-$CondNorm gap persists: a flexible backbone can learn the covariate-to-level map from raw inputs, but no backbone can recover a level its normalizer has removed---the function-class constraint of \Cref{sec:theory} (cf.\ the reparameterization argument of \citealp{toner2024linear}). Full tables in \Cref{tab:covfair} (\Cref{app:ext}).
+\paragraph{Information parity (Block B)} Reported as the mechanism result in \Cref{sec:parity}; for completeness, within that block \cnm{} attains the lowest mean MSE for three of the five backbones (the linear mixer, the MLP mixer, and PatchTST-Cov) and is within $0.01$ of the best arm (\rawm$+$covariates) for LightGBM-Cov and SegRNN-Cov, so it is an adequate instrument but not the best method even here. By the Harvey-corrected DM test it is significantly better than RevIN in 11/11 exogenous cells for PatchTST-Cov, 10/11 for the linear and MLP mixers, 3/11 for LightGBM-Cov, and 2/11 for SegRNN-Cov. Full tables in \Cref{tab:covfair} (\Cref{app:ext}).
 
 \paragraph{Published covariate architectures (Block C) and endogenous SOTA (Block D)} The pattern is not an artifact of our minimal covariate adapters. On the published covariate paths of TimeXer and iTransformer \citep{wang2024timexer,liu2024itransformer}---with built-in normalization removed and our five arms injected externally---the mean RevIN$-$CondNorm gap is $+0.4122$ for TimeXer-MS (55 pairs) and $+0.4282$ for iTransformer-MS, and CondNorm is best on all four exogenous datasets for both architectures (\Cref{tab:sota}, \Cref{app:ext}). Block~D, running the same architectures in their endogenous multivariate mode, reproduces the Block~A pattern qualitatively: CondNorm wins the exogenous group and loses the standard group.
 
