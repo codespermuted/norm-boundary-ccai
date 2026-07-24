@@ -7,24 +7,33 @@ appendix (block self-containment, \Cref{app:design}).
 
 \subsection{A nonlinear check of Proposition~1}\label{app:g7-mlp}
 
-Proposition~1 is a statement about linear function classes. To probe
-whether its geometry survives nonlinearity, we train an identical
+The structural half of \Cref{prop:deficiency}---that the composed forecast
+\Cref{eq:equivariance} is additively separable in the window mean with unit
+slope---holds for an arbitrary backbone and needs no check. What is specific
+to linear classes is the \emph{quantification}, \Cref{eq:prop1,eq:prop1b}. To
+probe whether that geometry survives nonlinearity, we train an identical
 two-hidden-layer MLP ($128\times128$, ReLU) under the interaction DGP of
 \Cref{sec:theory} in three arms that differ only in the normalization
 constraint (\rawm{}, RevIN-style mean removal and restoration, \cnm{}-style
 covariate restoration), at $\lambda \in \{0.4, 0.8\}$ with ten seeds, and
 measure excess risk over the analytic Bayes predictor.
 \Cref{fig:mlpdemo} shows the result: the RevIN-constrained arm cannot go
-below a provisional class-specific floor
-$\kappa^2\,\var(\bar y \mid g)\,\var(g)$ (its mean sits above the floor by
-at least $16$ standard errors of the mean at both $\lambda$), while the
-unconstrained and covariate-restored arms sit roughly a factor of twenty
-below it. The floor
-used here is the conditional-variance analogue of the linear-class gap of
-Proposition~1 (a nonlinear class can represent covariate nonlinearities,
-so its irreducible excess is smaller); its constant is deliberately kept
-configurable pending a formal derivation, and the demonstration is
-reported as measurement, not proof.
+below the class floor $\kappa^2\,\var(\bar y \mid g)\,\var(g)$ (its mean
+sits above the floor by at least $16$ standard errors of the mean at both
+$\lambda$), while the unconstrained and covariate-restored arms sit roughly
+a factor of twenty below it. That floor is \Cref{eq:prop1c} evaluated at
+this configuration: the demo fixes $a = 1$, at which the pinned-slope term
+vanishes identically and the whole irreducible excess is the interaction
+term $\kappa^2 \var(g)\var(\bar y)(1-\varrho^2) = \kappa^2\var(g)\var(\bar
+y \mid g)$. Earlier versions of this appendix carried the constant as
+provisional and configurable pending a derivation; Step~7 of
+\Cref{app:proofs} supplies it, so the demonstration now serves as a
+nonlinear \emph{confirmation} of \Cref{eq:prop1c} rather than a measurement
+against a guessed scale. It is also the cleanest illustration of the
+proposition's division of labour: because $a=1$ here, nothing in this
+figure is attributable to the pinned slope, and the entire gap between the
+RevIN arm and the unconstrained arm is the interaction cost that only the
+constrained class still pays.
 
 \begin{figure}[htbp]
 \centering

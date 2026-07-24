@@ -21,35 +21,8 @@ with $\tau = 0.3$ fixed by pre-registration. The positive branch deliberately na
 
 The value $\tau = 0.3$ was fixed in advance from the stylized model of \Cref{sec:theory}: under the parameter mapping of the synthetic study (\Cref{sec:synthetic}), the restoration-rule model M1 places its crossover \Cref{eq:lamstar} at $\lamstar \approx 0.27$--$0.28$ at $h=24$, and because M1 is an \emph{upper bound} on the crossover realized by trained predictors---whose empirical crossings in the synthetic grid occur at $0.01$--$0.03$ (\Cref{sec:synthetic})---adopting $\tau = 0.3$ is conservative toward instance normalization \citep{kim2022revin}. Two qualifications keep this from being read as more than it is. First, $\lps$ is not a consistent estimator of M1's $\lambda$: an out-of-sample $R^2$ nets off first-stage estimation error, so in the notation of \Cref{sec:theory} it behaves like $\lambda - s$ with $s = \sest/V$, and requiring $\lps \geq 0.3$ therefore requires $\lambda \geq 0.3 + s$. This makes the rule \emph{more} conservative toward instance normalization than the nominal threshold suggests, but it also means the anchor is a motivation for the order of magnitude of $\tau$ and not an identity between two coordinates. Second, the threshold is calibrated only in the sense of having been fixed before the data were seen; as \Cref{sec:empirical} reports, our eight datasets are bimodal in $\lps$ with nothing between $0.283$ and $0.744$, so the panel cannot distinguish a sharp crossover at $0.3$ from any cut placed inside that empty interval. Sensitivity of the rule to $\tau$ is quantified in \Cref{tab:tau} and should be read as a robustness check, not as evidence of fine calibration.
 
-% ---- G7(a): the three thresholds box -------------------------------------
-\begin{center}
-\fbox{\begin{minipage}{0.92\linewidth}
-\textbf{Three thresholds, one anchor.} Three distinct crossover numbers
-appear in this paper, and only one of them anchors $\tau$:
-\begin{enumerate}
-  \item $\lamstar_{\mathrm{M1}} = 0.923$ (at $h=24$; $0.664$ at $h=96$,
-  $\lamstar<0$ at $h=336$) --- the \Cref{fig:dominance} \emph{baseline},
-  computed with $\sx=0$ and $\sigma_\varepsilon=0$. Switching off
-  covariate-driven level motion removes the channel that penalizes
-  instance normalization within the horizon, so this is the most
-  \inm-favorable stylization; it illustrates the geometry of the dominance
-  map and is \emph{not} the anchor for $\tau$.
-  \item $\lamstar_{\mathrm{M1}} \approx 0.27$--$0.28$ (at $h=24$) --- the
-  same stylized model under the parameter mapping of the synthetic study
-  (\Cref{sec:synthetic}), with covariate dynamics active. This is the
-  restoration-rule \emph{upper bound} on the true crossover, and it is the
-  number that anchors the pre-registered $\tau = 0.3$.
-  \item $\lamstar_{\mathrm{OLS}} \approx 0.007$--$0.022$ --- the exact
-  constrained-least-squares crossings (Proposition~2$'$), matched by
-  trained RLinear models (empirical crossings $0.009$--$0.029$) to within
-  $0.015$. This is where trained linear predictors actually cross.
-\end{enumerate}
-Ordering matters: $\tau$ sits at the stylized upper bound (ii), far above
-the operative crossover (iii), which is what makes the decision rule
-conservative toward instance normalization.
-\end{minipage}}
-\end{center}
-% --------------------------------------------------------------------------
+The three distinct crossover numbers that appear in this paper, and which of them anchors $\tau$, are set out in \Cref{app:thresholds}.
+
 
 \subsection{Pre-registration as a falsifiability device}
 
@@ -65,4 +38,4 @@ and we report it alongside $\lps$ and the persistence-only $R^2$ in \Cref{tab:ta
 
 \subsection{Why a pre-training diagnostic}
 
-Choosing a normalization by grid search is expensive: our own comparison required 4{,}202 training runs across normalizations, backbones, horizons, and seeds. The $\lps$ computation, by contrast, involves only a handful of window-level first-stage fits---seconds to minutes on a CPU---and requires no forecasting model at all. Beyond cost, a pre-training diagnostic changes the epistemic status of the comparison: rather than selecting a normalization post hoc from test results, the practitioner commits to a choice from data properties alone, directly answering recent calls for diagnostics-driven analysis of when normalization helps or hurts \citep{noise2025signal}.
+Choosing a normalization by grid search is expensive: our own comparison required 4{,}202 training runs across normalizations, backbones, horizons, and seeds. The $\lps$ computation, by contrast, involves only a handful of window-level first-stage fits---seconds to minutes on a CPU---and requires no forecasting model at all. Beyond cost, a pre-training diagnostic changes the epistemic status of the comparison: rather than selecting a normalization post hoc from test results, the practitioner commits to a choice from data properties alone. This is the move that feature-based forecasting-method selection made for whole methods \citep{talagala2023metalearning, monteromanso2020fforma}, applied here to a single pipeline component, and it answers directly the call of \citet{noise2025signal} for a principled diagnostics-driven strategy to replace the hand-set heuristic whose failure they report.

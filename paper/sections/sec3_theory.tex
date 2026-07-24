@@ -107,19 +107,40 @@ Instance normalization freezes the window statistics and carries them across all
 
 \subsection{Representational deficiency of affine restoration}
 
-The results above treat the strategies as restoration rules. A complementary question is representational: what solutions does attaching instance normalization to a model \emph{remove} from its function class? Following the constrained-regression view of \citet{toner2024linear}, a linear forecaster composed with RevIN-style normalize--restore is an affinely constrained linear predictor; in particular it lies in the span $\{1, \bar y, g\}$ and cannot express interactions between the window mean and covariates.
+The results above treat the strategies as restoration rules. A complementary question is representational: what solutions does attaching instance normalization to a model \emph{remove} from its function class? The starting point is structural and requires no distributional assumption. Reading off the normalize--restore pipeline as implemented \citep{kim2022revin}, the composed forecast is
+\begin{equation}\label{eq:equivariance}
+  \hat y \;=\; \bar y \;+\; s \cdot f\!\left(\frac{x - \bar y \mathbf{1}}{s},\, g\right),
+\end{equation}
+where $\bar y$ and $s$ are the lookback-window mean and standard deviation and $f$ is \emph{any} backbone. Its dependence on the window mean is therefore additive with unit slope: the arguments of $f$ are centred, so no term inside $f$ can see $\bar y$ at all. Two consequences follow immediately and for arbitrary $f$. Instance normalization cannot represent a forecast that responds to the window level with any slope other than one---it is committed in advance to the assumption that the level persists exactly across the horizon---and it cannot represent any interaction between the window level and the covariates. Global $z$-scoring with the same inputs is subject to neither restriction, because it passes $\bar y$ to the backbone unchanged. Following the constrained-regression view of \citet{toner2024linear}, the affine case makes both costs exact.
 
 \setcounter{proposition}{0}
 \begin{proposition}[Representational deficiency]\label{prop:deficiency}
-Let $(\bar y, g)$ be centered and jointly Gaussian, and let the target follow
-$y = a\bar y + b g + \kappa\, \bar y\, g + \eta$ with independent noise $\eta$, so the Bayes predictor requires the interaction $\bar y \, g$. The best predictor in the interaction-free linear class $\{c_0 + c_1 \bar y + c_2 g\}$ --- which contains every RevIN-type affine restoration composed with a linear map --- incurs the irreducible excess risk
-\begin{equation}\label{eq:prop1}
-  \Delta\mse \;=\; \kappa^2\left[\var(\bar y)\,\var(g) + \covop(\bar y, g)^2\right],
-  \qquad \covop(\bar y, g_T) = \lambda V \text{ under M1}.
-\end{equation}
+Let $(\bar y, g)$ be centered and jointly Gaussian with correlation $\varrho$, let the target follow
+$y = a\bar y + b g + \kappa\, \bar y\, g + \eta$ with independent noise $\eta$, and condition throughout on the instance scale $s$ of \Cref{eq:equivariance}. Write $\Delta\mse$ for excess risk over the Bayes predictor. Then, comparing the level handled endogenously (\inm) against a global constant scaling (\rawm) that passes $\bar y$ through unchanged:
+\begin{enumerate}
+  \item[(i)] \emph{(Affine backbone.)} Let $\mathcal{F} = \{c_0 + c_1 \bar y + c_2 g\}$ be the class available to \rawm{} and $\mathcal{R} = \{c_0 + \bar y + c_2 g\} \subsetneq \mathcal{F}$ the subclass reachable by \Cref{eq:equivariance}. Then
+  \begin{equation}\label{eq:prop1}
+    \Delta\mse_{\mathcal{F}} \;=\; \kappa^2\left[\var(\bar y)\,\var(g) + \covop(\bar y, g)^2\right],
+    \qquad \covop(\bar y, g_T) = \lambda V \text{ under M1},
+  \end{equation}
+  and \inm{} pays, \emph{in addition},
+  \begin{equation}\label{eq:prop1b}
+    \Delta\mse_{\mathcal{R}} - \Delta\mse_{\mathcal{F}} \;=\; (a-1)^2\,\var(\bar y)\,\bigl(1-\varrho^2\bigr).
+  \end{equation}
+  \item[(ii)] \emph{(Unconstrained backbone.)} Let the backbone range over all measurable functions. Then \rawm{} attains the Bayes risk, $\Delta\mse_{\rawm} = 0$, whereas \Cref{eq:equivariance} confines \inm{} to $\{\bar y + \varphi(g)\}$ and its excess risk converges to the strictly positive floor
+  \begin{equation}\label{eq:prop1c}
+    \Delta\mse_{\inm} \;=\; \Bigl[(a-1)^2 \;+\; \kappa^2\var(g)\Bigr]\,\var(\bar y)\,\bigl(1-\varrho^2\bigr).
+  \end{equation}
+\end{enumerate}
 \end{proposition}
 
-The proof is a projection argument: for centered jointly Gaussian variables the interaction term $\bar y\, g$ is orthogonal to the linear directions $\bar y$ and $g$ (Gaussian third moments vanish), so its projection onto the class is the constant $\mathbb{E}[\bar y\, g] = \covop(\bar y, g)$, and Isserlis' theorem evaluates the variance of the residual, yielding the stated excess risk (\Cref{app:proofs}). Proposition~1 is the minimal instance of a broader point: whenever the optimal use of covariates depends on where the series currently sits, subtracting the window statistic before the backbone destroys exactly the information that dependence needs. This mechanism resurfaces empirically in \Cref{sec:empirical}, where adding covariates fails to rescue the \inm{} arms.
+Part~(i) is a projection argument: for centered jointly Gaussian variables the interaction $\bar y\, g$ is orthogonal to the linear directions $\bar y$ and $g$ (Gaussian third moments vanish), so its projection onto the class is the constant $\mathbb{E}[\bar y\, g] = \covop(\bar y, g)$, and Isserlis' theorem evaluates the variance of the residual (\Cref{app:proofs}). Within the affine class the interaction cost \Cref{eq:prop1} is paid by \rawm{} as well, so it explains no part of the gap between the two \emph{there}; what separates them is \Cref{eq:prop1b}, the price of pinning the window-mean coefficient to one, discounted by $(1-\varrho^2)$---the extent to which the covariate can stand in for the window mean and absorb the mismatch.
+
+Part~(ii) is what makes the boundary a boundary rather than a small-sample artifact, and it reverses the intuition that flexibility fixes things. As the backbone class grows, \rawm's disadvantage is absorbed---an unconstrained model given $\bar y$ and $g$ can represent the interaction and reaches the Bayes risk---while \inm{} converges to a floor it can never cross, because no member of $\{\bar y + \varphi(g)\}$ is a function of $\bar y$ beyond the unit term. Consequently the \emph{gap} $\Delta\mse_{\inm} - \Delta\mse_{\rawm}$ does not shrink with capacity: it grows, from $(a-1)^2\var(\bar y)(1-\varrho^2)$ in the affine case to \Cref{eq:prop1c}, the difference being the interaction term $\kappa^2\var(g)\var(\bar y)(1-\varrho^2)$ which migrates from a shared cost to an \inm-only one. This is the theoretical counterpart of the two empirical patterns \Cref{sec:empirical} reports side by side: the \rawm-versus-\cnm{} gap narrows along the capacity ladder, while the \inm-versus-\rawm{} difference does not vanish at any capacity we ran.
+
+Both parts are corollaries of \Cref{eq:equivariance}, which needs no distributional assumption at all: subtracting the window statistic before the backbone commits the model to a fixed, unit-slope, non-interacting use of the level, and downstream flexibility does not restore what that commitment removes---it merely stops helping the unconstrained alternative catch up.
+
+Three hypotheses carry real weight and we flag them rather than burying them in the proof. \Cref{eq:prop1} needs joint Gaussianity: it is Isserlis' fourth-moment identity, and under a heavier-tailed elliptical law with the same first two moments the true interaction cost is larger. \Cref{eq:prop1b,eq:prop1c} do \emph{not} need Gaussianity---only vanishing third cross-moments---but they do need $g$ to be centered; with $\mathbb{E}[g] \neq 0$ the factor $(a-1)^2$ becomes $(a-1+\kappa\,\mathbb{E}[g])^2$, which matters in practice because covariates are standardized on the training segment and so are only approximately centered out of sample. And conditioning on $s$ is what makes $\mathcal{R}$ a subclass of $\mathcal{F}$: with $s$ varying across instances, \Cref{eq:equivariance} reaches directions ($s$ and $s\,g$) that $\mathcal{F}$ does not, and the two classes are non-nested.
 
 \subsection{From restoration rules to trained predictors (Proposition~2$'$)}
 
