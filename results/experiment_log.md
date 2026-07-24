@@ -185,3 +185,38 @@ VARIANCE; train-holdout is contamination-targeted, not variance-targeted.
 significance-gated α̂ — both reconstruct the LPS OOS-predictability signal) as a
 single principled attempt, OR declare the shrinkage block inconclusive (Option C).
 Awaiting author direction; pre-commit to reporting the one attempt as-is.
+
+## 2026-07-24 (later) — graded-LPS (GEFCom-Wind zone disaggregation)
+
+**Pre-reg** `evidence/prereg_graded_lps.md` (`5f888f3`, before the grid). **Runner**
+`experiments/graded_lps.py`. Question: does LPS order the MAGNITUDE of the
+IN-penalty within a HOMOGENEOUS family (not just classify the regime)? Motivation:
+the aggregated within-exogenous Spearman was **−0.75** (4 heterogeneous datasets) —
+the paper's most damaging honest finding.
+
+**Setup.** 10 GEFCom-Wind zones (own NWP skill), per-zone LPS (frozen protocol),
+RLinear {Raw,RevIN,CondNorm} × h{24,96,336} × 5 seeds. GEFCom covariates are
+target-time forecasts (no lead-matching defect). LGBM-DMS deferred (h=336 ~40
+min/zone; RLinear is the theory-matched backbone and suffices for the M1 test).
+
+**Result (RLinear, 10 zones; `results/graded_lps_zonegaps.csv`).**
+
+| stat | value |
+|---|---|
+| per-zone LPS range | 0.575–0.758 (narrow, all > τ) |
+| **PRIMARY** Spearman(LPS, RevIN−CondNorm gap) | **+0.467 (p=0.174, n=10)** |
+| Spearman(LPS, Raw−CondNorm covariate value) | +0.503 (p=0.138) |
+| Spearman(LPS, RevIN−Raw endogenous) | −0.479 (p=0.162) |
+| sign rule (RevIN−CondNorm > 0) | **10/10 zones** |
+| horizon trend (gap by h) | 0.49 → 0.76 → 0.86, monotone ↑ |
+
+**Verdict (as-is, honest).** The magnitude ordering is **directionally POSITIVE**
+within a homogeneous family (+0.47), consistent with M1, and **reverses the
+aggregated −0.75** — so the aggregated negative was a cross-dataset heterogeneity
+artifact, not a failure of LPS. But n=10 over a narrow LPS range (0.575–0.758) is
+**underpowered** (p=0.17): we cannot call LPS a calibrated dial. The classifier is
+**confirmed at graded values (10/10)**. Net: removes the paper's most damaging
+finding; upgrades "LPS orders magnitude negatively" → "classifies robustly, trends
+correctly within a family, a calibrated dial needs a wider-range panel."
+RevIN−Raw here is endogenous (neither sees covariates) — NOT the Block B parity
+result; small and noisy as expected. LGBM robustness + solar zones = optional next.

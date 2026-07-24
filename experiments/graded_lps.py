@@ -109,7 +109,7 @@ def cmd_lps():
           f"(aggregated gefcom_wind = 0.744)")
 
 
-def cmd_grid():
+def cmd_grid(rlinear_only: bool = False):
     import torch
     dev = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     new = not os.path.exists(GRID_CSV)
@@ -142,7 +142,7 @@ def cmd_grid():
                                 "lps": lp})
                     f.flush()
             # LightGBM-DMS: winz (RevIN analogue) / raw / condnorm, deterministic
-            for arm in ("winz", "raw", "condnorm"):
+            for arm in (() if rlinear_only else ("winz", "raw", "condnorm")):
                 key = (str(fr["zid"]), "lgbm_dms", arm, str(h), "0")
                 if key in done:
                     continue
@@ -159,8 +159,10 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--lps", action="store_true", help="per-zone LPS only (pre-reg)")
     ap.add_argument("--grid", action="store_true", help="forecasting grid")
+    ap.add_argument("--rlinear-only", action="store_true",
+                    help="RLinear arms only (fast; LightGBM is the bottleneck)")
     a = ap.parse_args()
     if a.lps:
         cmd_lps()
     if a.grid:
-        cmd_grid()
+        cmd_grid(rlinear_only=a.rlinear_only)
