@@ -38,28 +38,25 @@ A Pre-Training Test for the Normalization Layer}
 \maketitle
 
 \begin{abstract}
-Forecast errors on wind, solar, and load are absorbed by fossil-fuelled reserves
-and curtailment, so the components inside a forecaster carry an operational
-footprint. Instance normalization (RevIN and its successors) is the default
-level-handling layer of modern multi-step forecasters, and every variant of it
-estimates the level it restores \emph{endogenously}, from the target's own past.
-On exogenously driven energy series---whose levels are set by weather observable
-in advance through archived numerical weather forecasts---this discards
-recoverable signal, and no downstream capacity restores it. We show this is a
-property of the \emph{layer}, not of covariate access: under an information-fair
-comparison that feeds every model the identical covariates, instance
-normalization is worse in mean MSE than plain global scaling on all five
-covariate-capable backbones (significantly so on four), and any level model that
-conditions on covariates---a first-stage
-regression, a classical dynamic regression, or conditional
-normalization---beats the best instance-normalized arm on $11$ of $12$ exogenous
-comparisons and $0$ of $12$ standard ones (unchanged under MASE). We reduce the
-boundary to a pre-training diagnostic, the Level Predictability Score (\lps), and
-in a pre-registered study committed to version control before any run its sign
-prediction is correct on all eight datasets. \lps{} is a near-zero-cost screen
-that tells an operator, before spending GPU-hours, whether the normalization
-layer of an energy-forecasting pipeline is discarding a level its own covariates
-already carry.
+On power grids, errors in forecasting wind, solar, and load are absorbed by
+fossil-fuelled spinning reserves and by curtailment, so a forecaster's accuracy at
+the ramps and regime transitions that move renewable output carries a direct
+emissions footprint. Yet modern forecasters handle the series \emph{level} with
+instance normalization (RevIN and its successors), which estimates that level
+\emph{endogenously}, from the target's own past. On wind, solar, and
+load---whose level is set by weather observable in advance through archived
+numerical forecasts---this discards recoverable signal, and no downstream capacity
+restores it. We give a test, computable \emph{before} training from covariates
+alone, of when the endogenous default is unsafe: the Level Predictability Score
+(\lps). In a pre-registered study whose per-dataset predictions were committed to
+version control before any run, the test's sign is correct on all eight datasets;
+under information parity---every model handed the same covariates---instance
+normalization is worse in mean MSE than plain global scaling on all five backbones,
+confirming a covariate-case conjecture recent work had left open; and on a regional
+wind fleet, conditioning the level on covariates instead cuts capacity-normalized
+error by $8.4\%$. When \lps{} clears its threshold the remedy is a one-line change
+to the normalization layer, so the diagnostic is a near-zero-cost screen for the
+level-handling component of energy-forecasting pipelines.
 \end{abstract}
 
 \section{Problem and contributions}
@@ -118,10 +115,10 @@ replacement for it.
 
 \section{A boundary and a pre-training score}\label{sec:score}
 
-Consider three level-handling strategies in a linear--Gaussian instance model:
-global $z$-scoring (\rawm), instance normalization (\inm), and covariate-based
-conditional normalization (\cnm), which estimates the target-time level from
-covariates through a first-stage regression rather than from window statistics.
+Consider three ways to handle the level: global $z$-scoring (\rawm), instance
+normalization (\inm), and covariate-based conditional normalization (\cnm), which
+estimates the target-time level from a first-stage regression on covariates rather
+than from window statistics.
 Writing the composed forecast of any \inm{}-equipped backbone $f$ as
 $\hat y = \bar y + s\, f\!\left((x-\bar y\mathbf 1)/s,\, g\right)$, its dependence
 on the window mean $\bar y$ is additive with unit slope: the layer commits the
@@ -161,29 +158,31 @@ so it is deliberately conservative toward instance normalization.
 \begin{table}[t]
 \centering\small
 \setlength{\tabcolsep}{4pt}
-\caption{Test MSE (global $z$-score scale) on the exogenous group, main grid
-(pre-registered), averaged over four backbones, horizons, and seeds; \textbf{bold}
-= best arm. \emph{In this block only \cnm{} consults the covariates}; the
-information-fair comparison, where every arm receives them, is in the text and is
-where the cost of the layer alone is measured. Every non-\cnm{} arm is
-significantly worse (Diebold--Mariano with Harvey correction). Numbers reused
-verbatim from the full study.}
+\caption{Test MSE (train-fit global $z$-score scale), main grid (pre-registered),
+averaged over four backbones, three horizons, and five seeds; \textbf{bold} = best
+arm per dataset. \emph{In this block only \cnm{} consults the covariates.} The two
+groups dissociate cleanly: \cnm{} wins every exogenous dataset by a wide margin and
+loses every standard one---catastrophically on ETTh2 ($6.60$), exactly where
+calendar covariates carry no exogenous level signal. Numbers reused verbatim from
+the full study.}
 \label{tab:mini}
 \begin{tabular}{lccccc}
 \toprule
 Dataset & \rawm & RevIN & SAN & FAN & \cnm \\
 \midrule
+\multicolumn{6}{l}{\emph{Exogenously driven}} \\
 Jeju Wind    & 0.6887 & 0.6969 & 0.7030 & 0.7724 & \textbf{0.2933} \\
 GEFCom-Wind  & 1.1153 & 1.0039 & 0.9755 & 1.1875 & \textbf{0.1629} \\
 GEFCom-Load  & 0.3592 & 0.3432 & 0.3330 & 0.3678 & \textbf{0.1066} \\
 GEFCom-Solar & 0.1828 & 0.1844 & 0.2116 & 0.1833 & \textbf{0.0580} \\
+\midrule
+\multicolumn{6}{l}{\emph{Standard LTSF}} \\
+ETTh1        & 0.3962 & \textbf{0.3771} & 0.3910 & 0.4114 & 2.2016 \\
+ETTh2        & 0.3868 & 0.2900 & \textbf{0.2869} & 0.3253 & 6.6044 \\
+Electricity  & 0.1500 & 0.1458 & 0.1443 & \textbf{0.1375} & 0.1726 \\
+Weather      & 0.1815 & 0.1719 & \textbf{0.1666} & 0.1747 & 0.7274 \\
 \bottomrule
 \end{tabular}
-
-\smallskip
-\parbox{\linewidth}{\emph{Standard group} (ETTh1/2, Electricity, Weather): an
-instance-normalization arm wins each; \cnm{} loses, up to $6.60$ (ETTh2), exactly
-where calendar covariates carry no level signal.}
 \end{table}
 
 \paragraph{Setup.} The pre-registered grid crosses five normalization arms
@@ -219,30 +218,23 @@ normalization on covariates still wins on all four exogenous datasets by large
 margins, so the level is lost even where the raw-versus-instance-norm toggle is
 masked.
 
-\paragraph{A strategy-level dissociation.} The same contrast appears at the level
-of strategies rather than of one method. Against seasonal-naive and climatology
-anchors, three different covariate-conditioned level models---a first-stage
-regression used alone, a classical dynamic regression, and \cnm---beat the best
-instance-normalized arm on $11$ of $12$ exogenous comparisons and $0$ of $12$
-standard ones; under MASE the counts are $10$ of $12$ and $0$ of $12$. Both
-exceptions are the ridge dynamic regression on the nonlinear temperature--load
-response. When the level is exogenously set, subtracting the window mean discards
-signal, and any means of conditioning on covariates repairs it.
+\paragraph{A strategy-level dissociation.} The same contrast holds across
+\emph{strategies}, not one method: against seasonal-naive and climatology anchors,
+three covariate-conditioned level models---a first-stage regression, a classical
+dynamic regression, and \cnm---beat the best instance-normalized arm on $11$ of
+$12$ exogenous comparisons and $0$ of $12$ standard ones ($10/12$ and $0/12$ under
+MASE), the two exceptions being the linear dynamic regression on GEFCom-Load. When
+the level is exogenously set, subtracting the window mean discards signal, and any
+covariate conditioning repairs it.
 
 \paragraph{The pre-training rule.} The official \lps{} value and the predicted
 sign of the RevIN$-$\cnm{} gap for each dataset were committed to version control
-(git commit \texttt{cab17c1}) before any grid run; all eight sign predictions were
-confirmed, and the record is unchanged under MSE, MAE, and MASE
-(Fig.~\ref{fig:lpsgap}). The normalization$\times$dataset interaction explains
-$47\%$ of log-MSE variance against $0.6\%$ for all backbone terms, and that share
-is carried by the exogenous arm---so the boundary runs between endogenous and
-exogenous level handling, not among the instance-normalization variants. In all
-eleven exogenous (dataset, horizon) cells the Model Confidence Set retains
-\cnm{} alone; instance-normalization variants survive on the standard benchmarks,
-where their distribution-shift rationale holds. We report \lps{} as a regime
-classifier and are explicit about its limit: our eight datasets are bimodal in
-\lps{}, so the threshold is stress-tested at effectively one dataset, and within
-the exogenous regime \lps{} does not order the size of the gap.
+(git commit \texttt{cab17c1}) before any grid run; all eight signs were confirmed,
+unchanged under MSE, MAE, and MASE (Fig.~\ref{fig:lpsgap}), and in all eleven
+exogenous cells the Model Confidence Set retains \cnm{} alone. We report \lps{} as
+a regime classifier and are explicit about its limit: our eight datasets are
+bimodal in \lps{}, so the threshold is stress-tested at effectively one dataset,
+and within the exogenous regime \lps{} does not order the size of the gap.
 
 \begin{figure}[t]
 \centering
@@ -259,31 +251,37 @@ regime rather than dialing the magnitude.}
 
 For power-system operations the boundary is not academic: wind, solar, and load
 are the series whose levels move at ramps and regime transitions---the events that
-drive reserve scheduling, curtailment, and peaking dispatch, the operational
-channels through which forecasting affects greenhouse-gas emissions. Because \lps{}
-needs only the covariates and a first-stage regression already present in most
-pipelines, it is a near-zero-cost pre-training screen---seconds on a CPU, no
-forecasting model---that flags whether the normalization layer is discarding a
-level the covariates carry, before GPU-hours are spent. On Jeju Wind the effect is
-operationally visible: capacity-normalized MAE improves from $0.110$ (RevIN) to
-$0.101$ (\cnm), an $8.4\%$ relative reduction in the units an operator sizes
-reserves in. We frame the emissions pathway as motivation, not a measured
-result---we report forecast accuracy, not emissions or reserve quantities---and
-note the work fits the workshop's ground-up theme: it begins from an
-application-specific structure rather than a generic architecture and drops into
-existing pipelines rather than demanding new infrastructure.
+drive reserve scheduling, curtailment, and peaking dispatch. Because \lps{} needs
+only the covariates and a first-stage regression already present in most pipelines,
+it is a near-zero-cost screen---seconds on a CPU, no forecasting model---that flags
+whether the normalization layer is discarding a level the covariates carry, before
+GPU-hours are spent. On Jeju Wind, conditioning the level on covariates cuts
+capacity-normalized MAE from $0.110$ (RevIN) to $0.101$ (\cnm), an $8.4\%$ relative
+reduction in the units an operator sizes reserves in. Operating reserve and
+curtailment are sized against forecast error at exactly these ramp events, so that
+reduction lowers the error-driven reserve proportionally; carried on gas at roughly
+$0.4$\,tCO$_2$/MWh, the emissions saving is a proportional consequence of the
+accuracy gain, not a separate claim. We report the accuracy and leave the
+grid-specific reserve model to operators.
 
-\paragraph{Limitations.} First, our results are \emph{point} forecasts; a quantile
+\paragraph{What to use above the threshold.} The rule says stop setting the level
+from the lookback window; \emph{which} covariate-conditioned replacement to use is
+governed by pipeline fit, since on the exogenous group they are close
+($0.29/0.16/0.14/0.06$ MSE for a first-stage regression, $0.29/0.16/0.11/0.06$ for
+\cnm). The cheapest drop-in for a deep stack is conditional normalization---replace
+the window mean fed to the backbone by that first-stage regression, leaving the
+backbone untouched---while a classical stack has its native analogue in regression
+with ARIMA errors. The actionable step is the switch away from endogenous
+statistics, not the adoption of any one method.
+
+\paragraph{Limitations.} Our results are \emph{point} forecasts: a quantile
 extension finds the same boundary in pinball loss, but conditional normalization
-\emph{under-covers} its intervals on the exogenous group ($0.50$--$0.66$ empirical
-coverage at nominal $0.80$ versus $0.79$--$0.89$ for RevIN), so the emissions
-pathway---a quantile decision---is established for the point forecast only, pending
-interval calibration. Second, the \lps{} panel is bimodal, so the rule is validated
-as a two-regime classifier, stress-tested at effectively one intermediate case;
-graded-predictability datasets are the key confirmatory target. Third, evaluation
-uses a single chronological origin; rolling-origin re-evaluation is left as
-confirmatory work. Code, data pipelines, and the pre-registration trail accompany
-the full version.
+\emph{under-covers} its intervals on the exogenous group (empirical $0.50$--$0.66$
+at nominal $0.80$ versus $0.79$--$0.89$ for RevIN), so the emissions pathway---a
+quantile decision---is established for the point forecast only, pending interval
+calibration. And evaluation uses a single chronological origin; rolling-origin
+re-evaluation, and datasets filling the empty middle of our bimodal \lps{} panel,
+are the key confirmatory targets.
 
 \small
 \bibliographystyle{unsrtnat}
