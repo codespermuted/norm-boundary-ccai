@@ -37,7 +37,8 @@ Reading guide for the other files:
 | Block B: RevIN+cov worse than Raw+cov | **Solid on 4/5 backbones**, null on PatchTST-Cov | §6 |
 | Variance attribution: norm×dataset = 47% | **Solid, but carried by the exogenous arm** (0.4% among endogenous only) | §7 |
 | SOTA replications (Block C/D) | **Solid** — pattern holds on TimeXer/iTransformer | §8 |
-| LPS orders the *magnitude* within the exo regime | **FALSE** — within-regime ρ = −0.75 | §4 |
+| LPS as a *regime classifier* | **Solid** — 8/8 aggregated + 10/10 graded wind zones | §4, §4a |
+| LPS as a calibrated *dial* (orders magnitude) | **Not established** — aggregated ρ = −0.75 was cross-dataset heterogeneity; within a homogeneous family ρ = +0.47 (n=10, p=0.17, underpowered) | §4a |
 | Aggregate 2⁻⁸ significance of 8/8 | **Overstated** — effective n ≈ 2, honest p ≈ 0.25 | §4 |
 | Shrinkage removes need for the diagnostic | **Did not adjudicate; but sizing α needs LPS** | §9 |
 | Probabilistic (Block F): CondNorm intervals | **Under-covers** — 0.50–0.66 vs 0.80 nominal | §10 |
@@ -166,18 +167,68 @@ this pass under three metrics — **8/8 under MSE, MAE, and MASE**:
 1. **The aggregate 2⁻⁸ = 0.004 is misleading.** The 8 datasets are 2 correlated
    regimes; granting only that the two *regimes* were called correctly gives p =
    0.25. Effective n ≈ 2. The informative content is per-dataset, not the hit count.
-2. **LPS does NOT order the magnitude within the exogenous regime.** Pooled Spearman
-   ρ = +0.783 (23 cells) is *cluster separation*; **within the 11 exogenous cells
-   ρ = −0.750 (p = 0.008)** — the two highest-LPS datasets (load 0.894, solar 0.875)
-   have the two *smallest* gaps. The pre-registered auxiliary "magnitude increases
-   with LPS" is **not supported** and is withdrawn. The nested-cell p = 9.9e-6 is
-   invalid; the cluster-permutation p is 0.023.
+2. **Aggregated data did not establish LPS as a magnitude dial.** Pooled Spearman
+   ρ = +0.783 (23 cells) is *cluster separation*; **within the 11 aggregated
+   exogenous cells ρ = −0.750 (p = 0.008)** — the two highest-LPS datasets (load
+   0.894, solar 0.875) had the two *smallest* gaps. The pre-registered auxiliary
+   "magnitude increases with LPS" is **not supported by the aggregated panel** and
+   is withdrawn there. The nested-cell p = 9.9e-6 is invalid; cluster-permutation
+   p = 0.023. **§4a (graded-LPS) shows the aggregated −0.75 was a cross-dataset
+   heterogeneity artifact: within a homogeneous wind family the trend is positive
+   (+0.47), consistent with the theory but underpowered.**
 
-**Verdict.** The sign rule (classifier) is solid and metric-robust. The magnitude
-claim (dial) is false. LPS is a regime classifier, not a calibrated dial. The
-threshold plateau τ∈[0.30,0.70] sits in the empty gap between the two clusters
-(0.283 → 0.744), so it shows insensitivity to misplacement on this panel, not fine
-calibration; the boundary is stress-tested at effectively n=1 (electricity).
+**Verdict.** The sign rule (classifier) is solid and metric-robust. The dial claim
+is *not established*: negative across heterogeneous datasets, positive but
+underpowered within a homogeneous family (§4a). LPS is a demonstrated regime
+classifier, not (yet) a calibrated dial. The threshold plateau τ∈[0.30,0.70] sits
+in the empty gap between the two clusters (0.283 → 0.744), so it shows insensitivity
+to misplacement on this panel, not fine calibration; the aggregated boundary is
+stress-tested at effectively n=1 (electricity), extended to 10 graded values in §4a.
+
+---
+
+## 4a. graded-LPS — does LPS order magnitude within a homogeneous family? (2026-07-27)
+
+**Pre-reg** `evidence/prereg_graded_lps.md` (commit `5f888f3`, before the grid).
+**Runner** `experiments/graded_lps.py`. **Data** `results/graded_lps.csv`,
+`results/graded_lps_lps.csv`, `results/graded_lps_zonegaps.csv`.
+
+**Question.** The aggregated within-exogenous ρ = −0.75 (§4) was the project's most
+damaging honest finding, but it rests on 4 *heterogeneous* datasets (wind/load/solar
+differ in covariate structure). Does LPS order the IN-penalty magnitude within a
+*homogeneous* family?
+
+**Setup.** GEFCom-Wind is a mean over 10 wind zones with genuinely different NWP
+skill; disaggregate into 10 subseries (same physical process, same 2-covariate
+structure), each with its own pre-training LPS. Arms RLinear {Raw, RevIN, CondNorm}
+× h{24,96,336} × 5 seeds. Modeling identical to the main grid (frozen LPS protocol,
+train-only first stage). GEFCom covariates are target-time forecasts → no
+lead-matching defect. LightGBM-DMS deferred (h=336 ≈ 40 min/zone; RLinear is the
+theory-matched linear backbone and suffices for the M1 test).
+
+**Result (RLinear, 10 zones; `results/graded_lps_zonegaps.csv`).**
+
+| quantity | value |
+|---|---|
+| per-zone LPS range | 0.575–0.758 (narrow, all > τ) |
+| **PRIMARY** Spearman(LPS, RevIN−CondNorm gap) | **+0.467** (p = 0.174, n = 10) |
+| Spearman(LPS, Raw−CondNorm, covariate value) | +0.503 (p = 0.138) |
+| Spearman(LPS, RevIN−Raw, endogenous) | −0.479 (p = 0.162) |
+| sign rule (RevIN−CondNorm > 0) | **10/10 zones** |
+| horizon trend (gap by h) | 0.49 → 0.76 → 0.86, monotone ↑ |
+
+**Verdict (as-is, honest).** The magnitude ordering is **directionally positive**
+within a homogeneous family (+0.47), consistent with M1, and it **reverses the
+aggregated −0.75** — so the aggregated negative was cross-dataset heterogeneity, not
+a failure of the coordinate. But n = 10 over a narrow LPS range (0.575–0.758) is
+**underpowered** (p = 0.17): this does not establish a calibrated dial. The
+classifier is **confirmed at graded values (10/10)** and the horizon prediction
+holds. Net for the paper: removes the most damaging finding ("LPS orders magnitude
+*negatively*") and replaces it with "classifies robustly; trends correctly within a
+family; a calibrated dial needs a wider-range panel." **Caveat:** RevIN−Raw here is
+*endogenous* (neither arm sees covariates) — this is NOT the Block B information-
+parity result (§6); it is small and noisy as expected. LightGBM robustness and solar
+zones remain optional next steps (solar reintroduces heterogeneity).
 
 ---
 
@@ -364,10 +415,12 @@ decision) and must be stated wherever that story appears (incl. the workshop pap
    corrected, all four exogenous signs reproduce). Proper fix: 4–6 expanding origins.
 3. **Metric monoculture (LIMITATION).** Main results are MSE on the train-fit global-
    z scale. MASE added this pass (§4–5). No sMAPE/RMSSE; probabilistic in §10 only.
-4. **LPS is bimodal (LIMITATION).** 0.74–0.89 vs −0.72–0.28, nothing between. The
-   boundary is stress-tested at n=1 (electricity). Graded-LPS series needed to turn
-   the classifier into a dial — the natural next experiment (disaggregate GEFCom's
-   10 wind zones / 3 solar plants, already on disk).
+4. **LPS is bimodal across the aggregated panel (LIMITATION, partly addressed).**
+   0.74–0.89 vs −0.72–0.28, nothing between; the aggregated boundary is stress-tested
+   at n=1 (electricity). §4a (graded-LPS) added 10 graded values (0.575–0.758) within
+   a homogeneous wind family: the classifier holds 10/10 and the magnitude trend is
+   positive (+0.47) but underpowered over that narrow range. Still open: intermediate
+   values in the empty gap (0.28–0.575) and a wider spread for a calibrated dial.
 5. **No classical baseline actually run.** Only a ridge `dynreg` stand-in, which
    *beats* CondNorm on Jeju and GEFCom-Wind. A properly specified regression-with-
    ARIMA-errors is scoped (`evidence/prereg_shrinkage_arimax.md` §B) but not run.
@@ -387,13 +440,16 @@ decision) and must be stated wherever that story appears (incl. the workshop pap
 - `uv run pytest` — theory identities pinned (`tests/test_theory.py`, 14/14).
 - `experiments/g7_prop1_verify.py` — Prop 1 closed forms vs MC, incl. the documented
   hypothesis-failure cells (heavy-tail, non-centred), asserted.
+- `experiments/graded_lps.py` — graded-LPS runner (`--lps`, `--grid`,
+  `--rlinear-only`); reuses the frozen torch_run/lgbm_run + LPS protocol per zone.
 - Frozen artifacts: `results/g4_grid.csv` (tag `pre-val-diagnosis`), pre-registration
-  commit `cab17c1`, `evidence/mlflow_snapshot_20260722.db.gz`.
+  commits `cab17c1` (main grid) and `5f888f3` (graded-LPS),
+  `evidence/mlflow_snapshot_20260722.db.gz`.
 - **Open governance item:** several MLflow git-commit tags in the evidence snapshot
   resolve to no object after a history rewrite; the "independently verifiable" claim
   needs either published grafts or an honest "objects are gone" note before release.
 
 ---
 
-*Consolidated 2026-07-24. Numbers re-derived from frozen CSVs during this pass;
+*Consolidated 2026-07-24; graded-LPS (§4a) added 2026-07-27. Numbers re-derived from frozen CSVs during this pass;
 where this file and an older document disagree, this file is authoritative.*
