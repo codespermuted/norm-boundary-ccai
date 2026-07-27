@@ -1,11 +1,18 @@
 % =====================================================================
 % Tackling Climate Change with ML (CCAI) @ NeurIPS 2026 — Papers track.
-% Official workshop style (tackling_climate_workshop_style.sty, NeurIPS-based,
-% used VERBATIM/unmodified). Submission mode: load the style with NO options
-% -> it auto-anonymizes to "Anonymous Author(s)" and adds review line numbers.
-% Do NOT add [final] or [preprint] at submission time.
-% Body target: <= 4 pages EXCLUDING references. No new experiments; all
-% numbers reused verbatim from the full study.
+% Official workshop style: tackling_climate_workshop_style.sty from
+% TCCML_NeurIPS_2026_Style_File.zip (verified byte-identical, 2026-07-27).
+% Submission mode: load the style with NO options -> auto-anonymizes and
+% adds review line numbers. Do NOT add [final]/[preprint] at submission.
+% Body <= 4 pages EXCLUDING references; appendix after references is
+% permitted (read at reviewer discretion).
+% All numbers re-verified against the frozen CSVs on 2026-07-27
+% (results/RESULTS.md is the authoritative ledger). No raw commit hashes
+% in the body (double-blind); pre-registration is exposed via the
+% anonymized repository (Appendix A).
+% TODO(user, before submission): mint the anonymized repository link
+% (e.g. anonymous.4open.science) and replace the placeholder URL in
+% Appendix A.
 % =====================================================================
 \documentclass{article}
 
@@ -39,134 +46,126 @@ A Pre-Training Test for the Normalization Layer}
 
 \begin{abstract}
 On power grids, forecast errors for wind, solar, and load are absorbed by
-fossil-fuelled spinning reserves and by curtailment. A forecaster's accuracy at
-ramps and regime transitions therefore carries a direct emissions footprint. Yet
-modern forecasters handle the series \emph{level} with
-instance normalization (RevIN and its successors), which estimates that level
-\emph{endogenously}, from the target's own past. On wind, solar, and
+fossil-fuelled reserves and curtailment; accuracy at ramps carries a direct
+emissions footprint. Yet modern forecasters hand
+the series \emph{level} to instance normalization (RevIN and successors), which
+estimates it \emph{endogenously} from the target's own past. On wind, solar, and
 load---whose level is set by weather observable in advance through archived
-numerical forecasts---this discards recoverable signal, and no downstream capacity
-restores it. We give a pre-training test---the Level Predictability Score
-(\lps)---that flags this failure from the covariates alone, before any model is
-trained. In a pre-registered study whose per-dataset predictions were committed to
-version control before any run, the test's sign is correct on all eight datasets.
-Under information parity---every model handed the same covariates---instance
-normalization is worse in mean MSE than plain global scaling on all five backbones,
-confirming a covariate-case conjecture recent work had left open; and on a regional
-wind fleet, conditioning the level on covariates instead cuts capacity-normalized
-error by $8.4\%$. When \lps{} clears its threshold the remedy is a one-line change
-to the normalization layer, so the diagnostic is a near-zero-cost screen for the
-level-handling component of energy-forecasting pipelines.
+numerical forecasts---this discards recoverable signal, and no \emph{generic}
+downstream capacity restores it. A pre-training test---the Level Predictability
+Score (\lps)---flags this failure from covariates alone, before any model is
+trained. In a pre-registered study (per-dataset predictions committed to version
+control before any run) the test's sign is correct on all eight datasets, and on
+all ten zones of a pre-registered wind-fleet disaggregation. Under information
+parity---every model handed the same covariates---instance normalization is worse
+in mean MSE than plain global scaling on all five backbones tested, confirming a
+covariate-case conjecture recent work left open; conditioning the level on
+covariates instead cuts day-ahead capacity-normalized error on a regional wind
+fleet by $5\%$. Above
+the threshold the remedy is a one-line change to the normalization layer, making
+\lps{} a near-zero-cost screen for energy-forecasting pipelines.
 \end{abstract}
 
 \section{Problem and contributions}
 
 Renewable generation and electricity demand are forecasting problems in which the
 \emph{level} of the series is set by observable, physically grounded drivers.
-Wind power is installed capacity times a weather-regime factor; photovoltaic
-output follows a clear-sky geometry modulated by cloud cover; load responds to
-temperature through a degree-day relationship. In each case the level to be
-predicted is largely exogenous and observable in advance through archived
-numerical weather prediction (NWP) available at the forecast origin
+Wind power follows the weather regime, photovoltaic output follows
+cloud-modulated clear-sky geometry, and load follows temperature through a
+degree-day relationship. In each case the level to be
+predicted is largely exogenous and, in operations, observable in advance through
+numerical weather prediction (NWP); the GEFCom2014 competition shipped
+target-period ECMWF forecasts for its wind and solar tracks
 \citep{hong2016gefcom}. Conditioning forecasts on these drivers is standard
 practice, from the GEFCom competitions to operational wind and load models
 \citep{hong2016gefcom,pinson2013wind}.
 
 Modern deep forecasters, however, lead with instance normalization (RevIN;
 \citealp{kim2022revin}), which removes each input window's mean and variance
-before the backbone and restores them at the output. Its successors refine
-\emph{which endogenous statistics} to use---slice-level statistics
-\citep{liu2023san}, frequency components \citep{ye2024fan}, learned
-distribution coefficients \citep{fan2023dishts}---but all of them estimate the
-statistics they restore from the target's own recent past. On an exogenously
-driven series the subtracted window mean is a stale summary precisely when a
-weather ramp or heat wave is about to move the level, and the staleness compounds
-with the forecast horizon. For climate applications this is the common case, not
-a corner case: ramps and regime transitions are exactly the events that drive
-reserve scheduling, curtailment, and renewable integration.
+before the backbone and restores them at the output; successors refine
+\emph{which endogenous statistics} to use---slices \citep{liu2023san}, frequency
+components \citep{ye2024fan}, learned coefficients \citep{fan2023dishts}---but
+all estimate what they restore from the target's own recent past. On an exogenously
+driven series the subtracted window mean is stale precisely when a weather ramp
+or heat wave is about to move the level, and the staleness compounds with
+horizon. For climate applications this is the common case: ramps and regime transitions
+drive reserve scheduling and curtailment.
 
 This default is now baked into covariate forecasters without being tested:
 architectures built to ingest exogenous variables apply instance normalization to
 the target channel and assume it helps, running no ablation against turning it off
-\citep{wang2024timexer,crosslinear2025}. Recent work questions the assumption in
-principle---instance normalization is a strong inductive bias that, by removing
-scale and offset, ``discards potentially predictive context''---but only in the
-univariate, covariate-free case, and it explicitly leaves ours open: ``a more
-general setting would include \ldots exogenous covariates \ldots although we
-anticipate similar conclusions, we do not consider it here'' \citep{role2026revin}.
-We test that conjecture directly, under information parity, and find it holds on
-exogenously driven energy series.
+\citep{wang2024timexer,crosslinear2025} (for TimeXer at code level: on by
+default in the official implementation, unmentioned in the paper). Recent work questions the assumption---instance normalization
+``discards potentially predictive context''---but only in the univariate,
+covariate-free case, explicitly leaving ours open: ``a more general setting
+would include \ldots exogenous covariates \ldots although we anticipate similar
+conclusions, we do not consider it here'' \citep{role2026revin}.
+Two adjacent lines stop short of this setting: pre-training normalization
+selection from endogenous change-point statistics \citep{noise2025signal}, and
+module-level benchmarking that conditions instance-normalization use on intrinsic
+dataset properties \citep{timerecipe2025}---neither admits covariate-conditioned
+level handling into the choice set; conditional normalization itself has prior
+art \citep{gamakumara2023conditional}, but without the selection question.
 
 We ask when this default helps and when it hurts, and reduce the answer to a
-quantity computable \emph{before} any model is trained. Our contributions are
+quantity computable before training. Our contributions are
 (i)~an information-fair demonstration---the first controlled test of the covariate
 case \citet{role2026revin} left as a conjecture---that the cost is a property of the
 normalization \emph{layer}, not of covariate access (\S\ref{sec:results}); (ii)~a
 pre-training diagnostic, the Level Predictability Score, with an explicit
-decision rule (\S\ref{sec:score}); and (iii)~a pre-registered study, with
-per-dataset predictions committed to version control before any run, in which the
-rule is correct on all eight datasets and the pattern replicates across
-$4{,}202$ runs including state-of-the-art covariate architectures
-(\S\ref{sec:results}). We do \emph{not} propose a new normalizer: the
-covariate-conditional normalization we use to expose the boundary is itself
-beaten by cheaper covariate-conditioned baselines, which under our thesis is
-consistent evidence, not a weakness---the problem is the layer, not any one
-replacement for it.
+decision rule (\S\ref{sec:score}); and (iii)~a pre-registered study---per-dataset
+predictions committed to version control before any run---in which the rule is
+correct on all eight datasets and all ten zones of a graded follow-up, the
+pattern replicating across $4{,}202$ runs including state-of-the-art covariate
+architectures (\S\ref{sec:results}). We do \emph{not} propose a new
+normalizer: the conditional normalization we use to expose the boundary is itself
+beaten by cheaper covariate-conditioned baselines---under our thesis consistent
+evidence, not a weakness; the problem is the layer, not any one replacement.
 
 \section{A boundary and a pre-training score}\label{sec:score}
 
-Consider three ways to handle the level: global $z$-scoring (\rawm), instance
-normalization (\inm), and covariate-based conditional normalization (\cnm), which
-estimates the target-time level from a first-stage regression on covariates.
+Three ways to handle the level: global $z$-scoring (\rawm), instance
+normalization (\inm), and covariate-conditional normalization (\cnm), which takes
+the target-time level from a first-stage regression on covariates.
 Writing any \inm{}-equipped backbone as
 $\hat y = \bar y + s\, f\!\left((x-\bar y\mathbf 1)/s,\, g\right)$, its dependence on
-the window mean $\bar y$ is additive with unit slope: before seeing the data the
-layer commits to a level response of slope one with no level--covariate interaction.
-Whenever the window mean is a stale estimate of the target-time level, that is an
-irreducible cost no downstream flexibility removes. A linear--Gaussian analysis makes
-the trade quantitative: \inm{} pays the frozen statistic's within-horizon drift
-$s_x^2(h)+h\sigma_u^2$, while \cnm{} pays the covariate-unexplained level variance
-$(1-\lambda)V$, where $\lambda\in[0,1]$ is the exogenous predictability of the level.
-So \cnm{} wins iff $\lambda>\lambda^\star$, and the crossover $\lambda^\star$ falls
-with the horizon $h$---multi-step forecasting is where the endogenous default is most
-exposed (full derivation in the extended version).
+the window mean $\bar y$ is additive with unit slope: the layer commits, before
+seeing data, to a slope-one level response with no level--covariate
+interaction---an irreducible cost whenever the window mean is a stale estimate of
+the target-time level. A linear--Gaussian analysis makes the trade quantitative:
+\inm{} pays the frozen statistic's within-horizon drift $s_x^2(h)+h\sigma_u^2$,
+\cnm{} pays the covariate-unexplained level variance $(1-\lambda)V$, with
+$\lambda\in[0,1]$ the exogenous predictability of the level; \cnm{} wins iff
+$\lambda>\lambda^\star$, and $\lambda^\star$ falls with the horizon---multi-step
+forecasting is where the endogenous default is most exposed (derivation in the
+extended version).
 
-The exogenous predictability is unobservable before training, so we estimate it
-out of sample. Partitioning the training series into non-overlapping length-$w$
-windows with means $(\bar y_i, \bar x_i)$ and regressing the former on the latter
-under expanding chronological cross-validation gives the \textbf{Level
-Predictability Score},
+$\lambda$ is unobservable before training, so we estimate it out of sample:
+partition the training series into non-overlapping length-$w$ windows with means
+$(\bar y_i, \bar x_i)$ and regress the former on the latter under expanding
+chronological cross-validation, giving the \textbf{Level Predictability Score},
 \begin{equation}\label{eq:lps}
 \lps \;=\; 1 \;-\;
 \frac{\sum_{k}\sum_{i\in\mathcal{T}_k}\bigl(\bar y_i-\hat g_k(\bar x_i)\bigr)^2}
      {\sum_{k}\sum_{i\in\mathcal{T}_k}\bigl(\bar y_i-\bar y^{\,\mathrm{tr}}_k\bigr)^2},
 \end{equation}
 the out-of-sample $R^2$ of window-mean levels on covariates ($\hat g_k$: LightGBM,
-$w{=}96$, fit only on windows preceding block $\mathcal{T}_k$). The decision rule
-is one line, stated in the direction the evidence supports:
-\[
-\lps \ge \tau \;\Rightarrow\; \text{do not set the level endogenously}; \qquad
-\text{otherwise instance normalization}; \qquad \tau = 0.3 .
-\]
-Above the threshold the level should be conditioned on covariates by whatever means
-the pipeline supports (\S\ref{sec:results}); the threshold is anchored to the
-stylized crossover ($\approx 0.27$--$0.28$ at $h{=}24$), conservative toward
-instance normalization. We validate this rule as a \emph{regime classifier}: our
-datasets sit at the two ends of the \lps{} range, so it separates the regimes but
-does not yet resolve a precise cut, and a dataset of intermediate predictability is
-the key confirmatory target.
+$w{=}96$, fit only on windows preceding block $\mathcal{T}_k$). The decision rule is one line:
+$\lps \ge \tau \Rightarrow$ \emph{do not set the level endogenously}; otherwise
+instance normalization ($\tau = 0.3$).
+The threshold is anchored to the stylized crossover ($\approx0.28$ at $h{=}24$;
+$0.27$--$0.28$ across horizons), conservative toward instance normalization;
+above it, condition the level on covariates by whatever means the pipeline
+supports (\S\ref{sec:results}).
 
 \section{Results}\label{sec:results}
 \begin{table}[t]
-\centering\small
+\centering\footnotesize
 \setlength{\tabcolsep}{4pt}
-\caption{Test MSE (train-fit global $z$-score scale), main grid (pre-registered),
-averaged over four backbones, three horizons, and five seeds; \textbf{bold} = best
-arm per dataset. \emph{In this block only \cnm{} consults the covariates.} The two
-groups dissociate cleanly: \cnm{} wins every exogenous dataset by a wide margin and
-loses every standard one---catastrophically on ETTh2 ($6.60$), exactly where
-calendar covariates carry no exogenous level signal. Numbers reused verbatim from
-the full study.}
+\caption{Test MSE (train-fit global $z$ scale), main grid (pre-registered),
+averaged over backbones, horizons, seeds (Jeju Wind $h\in\{24,48\}$, others
+$\{24,96,336\}$; SAN/FAN exclude LightGBM); \textbf{bold} = best per dataset.
+\emph{Only \cnm{} consults covariates in this block.}}
 \label{tab:mini}
 \begin{tabular}{lccccc}
 \toprule
@@ -190,104 +189,178 @@ Weather      & 0.1815 & 0.1719 & \textbf{0.1666} & 0.1747 & 0.7274 \\
 \paragraph{Setup.} The pre-registered grid crosses five normalization arms
 \{\rawm, RevIN, SAN, FAN, \cnm\} \citep{kim2022revin,liu2023san,ye2024fan} with
 four backbones \{RLinear, PatchTST, SegRNN, LightGBM\}
-\citep{li2023rlinear,nie2023patchtst,lin2023segrnn,ke2017lightgbm}, three horizons,
-and five seeds, on eight datasets in two groups: four exogenously driven energy
-series (Jeju Wind, curated for this study with lead-matched archived KMA forecasts;
-GEFCom-Wind/Load/Solar, \citealp{hong2016gefcom}) and four standard LTSF
-benchmarks. The three GEFCom sets share a vintage but cover distinct physical
-processes; Jeju Wind is independently curated. All NWP covariates are archived
-operational forecasts, never reanalysis. Splits are chronological and out-of-time;
-the lookback is tuned on the RevIN arm and frozen across arms, so arms differ only
-in normalization.
+\citep{li2023rlinear,nie2023patchtst,lin2023segrnn,ke2017lightgbm}, the horizons
+of Table~\ref{tab:mini}, and five seeds, on eight datasets in two groups: four
+exogenously driven energy series---Jeju Wind (self-curated from archived KMA
+operational forecasts; the development dataset) and GEFCom-Wind/Load/Solar
+\citep{hong2016gefcom} (third-party and confirmation-style, as are the four
+standard LTSF benchmarks). NWP covariates
+for the wind and solar sets are archived operational forecasts, never reanalysis;
+GEFCom-Load uses the competition's realized station temperature, and Jeju Wind's
+lead-matching is exact at $h{=}24$ while its $h{=}48$ cells inherit a day-ahead
+band nominally valid to $h\le 24$---both disclosed in Limitations. Splits are
+chronological and out-of-time; lookback is tuned on the RevIN arm and frozen
+across arms---arms differ only in normalization (Appendix~\ref{app:setup}).
 
-The dissociation is symmetric. \cnm{} is catastrophic on ETTh2 ($6.60$) for the
-mirror reason: there the only covariates are calendar features with no exogenous
-level signal, so the first stage fits noise and the restore step injects it---the
-failure the diagnostic pre-empts, since ETTh2's $\lps$ ($-0.205$) sits well below
-$\tau$, in the \emph{use instance normalization} regime. This is why the rule is
-one-sided.
+The dissociation is symmetric: \cnm{} is catastrophic on ETTh2 ($6.60$) because
+its only covariates are calendar features with no exogenous level signal---the
+first stage fits noise and the restore step injects it. The diagnostic pre-empts
+exactly this failure (ETTh2's $\lps=-0.205$ sits well below $\tau$), which is why
+the rule is one-sided.
 
-\paragraph{It is the layer, not the information.} A natural objection is that \cnm{}
+\paragraph{It is the layer, not the information.} A natural objection: \cnm{}
 wins only because it \emph{sees} the covariates. An information-fair block hands
-\emph{every} arm the identical past and future covariates, across five backbones.
-There the isolated cost of the layer, $\mse(\text{RevIN}{+}\text{cov}) -
-\mse(\rawm{+}\text{cov})$, is positive on all five and significant (95\% CI
-excluding zero) on four, null on PatchTST-Cov: instance normalization is worse than
-plain scaling even given the same covariates, because the restore step overwrites a
-level they carry. The effect is small ($+0.004$ to $+0.024$ MSE)---the honest size
-of the layer's cost once access is equalized, one to two orders below the head-line
-gap of Table~\ref{tab:mini}, which measures access.
-
-On the published covariate architectures (TimeXer, iTransformer) the toggle is
-instead \emph{mixed}---their dedicated covariate pathways partly mask the layer,
-which is why a controlled generic-backbone ablation is the right instrument for
-isolating it.
+every arm identical past and future covariates across five covariate-capable
+backbones (Appendix~\ref{app:setup}). There the isolated cost of
+the layer, $\mse(\text{RevIN}{+}\text{cov}) - \mse(\rawm{+}\text{cov})$, is
+positive in the mean on all five and significant (95\% CI excluding zero) on four,
+null on PatchTST-Cov: instance normalization is worse than plain scaling even
+given the same covariates, because the restore step overwrites a level they carry.
+The effect is small ($+0.004$ to $+0.024$ MSE)---the honest layer-only cost, one
+to two orders below Table~\ref{tab:mini}'s headline gap, which measures access. The dissociation replicates on
+TimeXer and iTransformer \citep{wang2024timexer,liu2024itransformer} (\cnm{} best
+on all four exogenous datasets; mean RevIN$-$\cnm{} gap $+0.41$), while the
+isolated RevIN-vs-\rawm{} toggle there is \emph{mixed}---dedicated covariate
+pathways partly mask the layer, which is why the controlled generic-backbone
+ablation is the right isolating instrument.
 
 \paragraph{A strategy-level dissociation.} The same contrast holds across
 \emph{strategies}, not one method: against seasonal-naive and climatology anchors,
-three covariate-conditioned level models---a first-stage regression, a classical
-dynamic regression, and \cnm---beat the best instance-normalized arm on $11$ of
-$12$ exogenous comparisons and $0$ of $12$ standard ones ($10/12$ and $0/12$ under
-MASE), the two exceptions being the linear dynamic regression on GEFCom-Load.
+three covariate-conditioned level models---a first-stage regression, a ridge
+dynamic regression, and \cnm---beat the best instance-normalized arm on $11/12$
+exogenous comparisons and $0/12$ standard ones ($10/12$ and $0/12$ under MASE);
+every exception is the ridge dynamic regression (GEFCom-Load under MSE, plus
+GEFCom-Solar under MASE).
 
-\paragraph{The pre-training rule.} The official \lps{} value and the predicted
-sign of the RevIN$-$\cnm{} gap for each dataset were committed to version control
-(git commit \texttt{cab17c1}) before any grid run; all eight signs were confirmed,
-unchanged under MSE, MAE, and MASE (Fig.~\ref{fig:lpsgap}), and in all eleven
-exogenous cells the Model Confidence Set retains \cnm{} alone. The bimodality has an upside for the rule: the eight-dataset classification is
-unchanged for any $\tau\in[0.30,0.70]$ (it need only fall in the empty gap between
-the clusters), and $\tau$ is anchored to the stylized crossover, so the decision
-rests on an analytic argument, not fitted spacing. Within the exogenous regime,
-however, \lps{} does not order the size of the gap (Fig.~\ref{fig:lpsgap}).
+\paragraph{The pre-training rule.} The official \lps{} and predicted gap sign
+for each dataset were committed to version control before any grid run
+(four minutes before the first run; Appendix~\ref{app:setup}); all
+eight signs confirmed, unchanged under MSE, MAE, and MASE
+(Fig.~\ref{fig:lpsgap}), and all eleven exogenous (dataset,\,$h$) Model
+Confidence Sets retain \cnm{} alone (singleton in 20 of 23 cells on a single
+path---a ranking consistent with the pairwise tests, not an uncertainty set). The classification is unchanged for any
+$\tau\in[0.30,0.70]$; $\tau$ is anchored to the stylized crossover, not fitted
+spacing.
+
+\paragraph{A graded test within one family.} The eight datasets cluster into two
+correlated regimes---$8/8$ is per-dataset evidence, not eight independent
+successes---so we pre-registered a harder, graded test: GEFCom-Wind disaggregates
+into ten zones of genuinely different NWP skill ($\lps$ $0.575$--$0.758$,
+identical two-covariate structure), with per-zone $\lps$ and predictions
+committed before any zone run. The sign rule holds in \emph{all
+ten zones}, and the RevIN$-$\cnm{} gap widens with horizon ($0.53 \to 0.79 \to
+0.90$ mean MSE at $h{=}24/96/336$), as the theory predicts. The gap's magnitude
+trends \emph{positive} in \lps{} within this homogeneous family (Spearman
+$+0.47$; narrow spread, $n{=}10$, $p{=}0.17$) while not tracking \lps{} across
+the four heterogeneous datasets (Fig.~\ref{fig:lpsgap}): a validated regime
+classifier, not yet a calibrated dial. (A pre-registered secondary, RevIN$-$\rawm{}$>0$ per zone
+without covariates, is not confirmed---$4/10$; the small layer cost sits below
+zone-level noise.)
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.52\linewidth]{figures/fig3_lps_gap.pdf}
-\caption{Realized RevIN$-$\cnm{} test-MSE gap versus the pre-registered \lps,
-coloured by regime; the $y$-axis is symmetric-log to accommodate sign changes, and
-the vertical line marks $\tau=0.3$. All eight datasets fall on the predicted side.
-The two clusters are cleanly separated, but within the exogenous regime the gap does
-not increase with \lps---so \lps{} classifies the regime rather than dialing the
-magnitude.}
+\begin{minipage}[c]{0.38\linewidth}
+\includegraphics[width=\linewidth]{figures/fig3_lps_gap.pdf}
+\end{minipage}\hfill
+\begin{minipage}[c]{0.58\linewidth}
+\caption{Realized RevIN$-$\cnm{} test-MSE gap versus the pre-registered \lps{}
+(symmetric-log $y$-axis; vertical line at $\tau=0.3$). All eight datasets fall on
+the predicted side; within the exogenous cluster the gap does not track \lps{}
+across these heterogeneous datasets---the graded ten-zone study is the
+within-family test.}
 \label{fig:lpsgap}
+\end{minipage}
 \end{figure}
 
 \section{Implications for energy operations, and limitations}
 
-The boundary is operational: wind, solar, and load move at the ramps and regime
-transitions that drive reserve scheduling and curtailment. Because \lps{} needs only
-covariates and a first-stage regression already in most pipelines, it is a
-near-zero-cost screen---seconds on a CPU, no forecasting model---run before
-GPU-hours are spent. On Jeju Wind, conditioning the level on covariates cuts
-capacity-normalized MAE from $0.110$ (RevIN) to $0.101$ (\cnm)---$8.4\%$ in the units
-an operator sizes reserves in. The chain from forecast accuracy to reserves to
-emissions is established: improved forecasting cuts operating-reserve requirements
-and system emissions \citep{sun2022mlreserve}, and displaced fossil generation
-carries of order $0.5$\,tCO$_2$/MWh \citep{kaffine2013emissions}. As an
-\emph{illustrative} scale check---a $300$\,MW fleet with reserve taken proportional
-to error---the $8.4\%$ reduction is of order a few thousand tCO$_2$/yr, modest per
-installation but scalable across fleets. This is not a dispatch analysis: it ignores
-grid topology, unit commitment, and market structure, which the cited studies model
-and we do not. We report the forecast accuracy and defer the grid-specific figure to
-those tools.
+The boundary is operational, and \lps{} needs only covariates and a first-stage
+regression already in most pipelines---a near-zero-cost screen, seconds on a
+CPU, before GPU-hours are spent. On Jeju Wind at the day-ahead horizon, conditioning the level
+on covariates cuts capacity-normalized MAE from $0.105$ (RevIN, information-parity
+linear mixer) to $0.100$ (\cnm, same mixer)---$5.0\%$ in the units an operator
+sizes reserves in. The chain from forecast error to reserves to emissions is
+established: sharper characterization of forecast uncertainty cuts reserve
+requirements and system emissions in production simulation
+\citep{sun2022mlreserve}; displaced fossil
+generation carries $\approx0.5$\,tCO$_2$/MWh ($0.49$--$0.83$ across U.S.\ regions
+and hours) \citep{kaffine2013emissions,silerevans2012marginal}.
+As an \emph{illustrative} scale check---a $300$\,MW fleet, reserve proportional
+to error---the $5\%$ reduction is of order a few thousand tCO$_2$/yr at full
+displacement (less under part-load holding penalties): modest per installation,
+scalable across fleets. This is not a dispatch
+analysis---grid topology, unit commitment, and market structure are ignored (and
+see Limitations on intervals); grid-specific figures belong to the cited tools.
+Above the threshold, the replacements are close ($0.29/0.16/0.14/0.06$ MSE for a
+first-stage regression vs $0.29/0.16/0.11/0.06$ for \cnm)---choose by pipeline
+fit; the cheapest deep-stack drop-in feeds the backbone the first-stage level in
+place of the window mean (classical analogue: regression with ARIMA errors, not
+benchmarked here).
 
-\paragraph{What to use above the threshold.} Stop setting the level from the
-lookback window; the covariate-conditioned replacements are close on the exogenous
-group ($0.29/0.16/0.14/0.06$ MSE for a first-stage regression, $0.29/0.16/0.11/0.06$
-for \cnm), so choose by pipeline fit. The cheapest deep-stack drop-in is conditional
-normalization---feed the backbone the first-stage level in place of the window mean,
-leaving it untouched---and a classical stack has its analogue in regression with
-ARIMA errors. The step is the switch away from endogenous statistics, not any one
-method.
-
-\paragraph{Limitations.} Our results are \emph{point} forecasts: the same boundary
-appears in pinball loss, but conditional normalization \emph{under-covers} its
-intervals ($0.50$--$0.66$ at nominal $0.80$)---a calibration artifact of the
-first-stage residuals, orthogonal to level handling and fixable by post-hoc
-recalibration. Evaluation uses a single origin; rolling-origin re-evaluation and
-intermediate-\lps{} datasets are the confirmatory targets.
+\paragraph{Limitations.} Two provenance caveats bound the exogenous numbers:
+GEFCom-Load's covariate is \emph{realized} (not forecast)
+temperature---attainable, not operational, skill---and Jeju Wind's $h{=}48$
+cells consume a band valid to $h\le24$, so pooled Jeju figures are optimistic;
+the day-ahead figure above avoids both. The boundary
+transfers to pinball loss (\cnm{} best on all four exogenous sets) but \cnm{}
+\emph{under-covers} its intervals ($0.50$--$0.66$ at nominal $0.80$; first-stage
+uncertainty unpropagated): post-hoc recalibration is the natural remedy (not yet
+run); reserve sizing is a quantile decision, so the emissions check reads from
+the point-forecast gain only. Evaluation uses one chronological origin (a
+validation-segment second origin reproduces the four exogenous signs); rolling
+origins and datasets in the empty \lps{} gap ($0.28$--$0.58$) come next.
 
 \small
 \bibliographystyle{unsrtnat}
 \bibliography{references}
+
+\normalsize
+\appendix
+\section{Setup details, accounting, and availability}\label{app:setup}
+
+\paragraph{Data and splits.} Hourly resolution throughout. Exogenous group: Jeju
+Wind (self-curated from archived KMA operational forecasts, lead-matched at
+$h{=}24$; development dataset) and GEFCom2014 Wind/Load/Solar
+\citep{hong2016gefcom} (competition-provided target-time forecast covariates for
+wind and solar; realized station temperature for load). Standard group: ETTh1,
+ETTh2, Electricity, Weather under literature splits (ETT 12/4/4 months; 7:1:2
+elsewhere); zone series use chronological 60/20/20. Global $z$-scoring is fit on
+the train segment only; splits are strictly out-of-time.
+
+\paragraph{Run accounting.} Main grid $1{,}794$ runs: 5 arms $\times$ 4 backbones
+$\times$ $h\in\{24,96,336\}$ (Jeju Wind $\{24,48\}$, set by forecast-band
+coverage---hence \emph{eleven} exogenous (dataset,\,$h$) cells) $\times$ 5 seeds;
+LightGBM$\times$\{SAN, FAN\} is structurally inapplicable (torch statistics
+predictors). Information-parity block $1{,}133$ runs over five covariate-capable
+backbones: LightGBM-Cov, linear mixer, MLP mixer, SegRNN-Cov, PatchTST-Cov, every
+arm given identical past and future covariates. SOTA replication $1{,}275$ runs
+(TimeXer, iTransformer; built-in normalization removed, arms injected). Total
+$4{,}202$. The graded zone study adds $450$ pre-registered RLinear runs (10 zones
+$\times$ 3 arms $\times$ 3 horizons $\times$ 5 seeds); a deferred LightGBM arm is
+incomplete and excluded from the primary endpoint, disclosed at pre-registration
+analysis time.
+
+\paragraph{Inference.} Information-parity confidence intervals are cluster
+bootstraps over the eleven seed-averaged (dataset,\,$h$) cells. The Model
+Confidence Set is computed at $\alpha=0.10$ per (dataset,\,$h$) on
+backbone-averaged squared-error series; survivor sets are stable across bootstrap
+seeds. All standard-group loss series are segment-aware (no windows across curated
+gaps).
+
+\paragraph{LPS protocol.} Non-overlapping windows of length $w=96$; first stage
+LightGBM under expanding chronological cross-validation, fit only on windows
+preceding each evaluation block (Eq.~\ref{eq:lps}); $\tau=0.3$ was fixed at
+pre-registration together with the per-dataset sign predictions. The main-grid
+pre-registration commit precedes the first grid run by four minutes; the zone
+study's per-zone \lps{} values and predictions were likewise committed before any
+zone run. Both are timestamped in the repository below.
+
+\paragraph{Availability.} An anonymized repository accompanies this submission:
+pre-registration commits (main grid and zone study), frozen result CSVs, curation
+and analysis code, and the LPS implementation:
+% TODO(user): mint the real anonymized link before submission.
+\url{https://anonymous.4open.science/r/norm-boundary}. Raw KMA and GEFCom source
+data are not redistributed (licensing); collectors and preparation instructions
+are included.
+
 \end{document}

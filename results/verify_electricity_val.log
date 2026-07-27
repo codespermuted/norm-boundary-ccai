@@ -1,0 +1,16 @@
+rlinear h24 s0: asrun=0.12335 gz_on=0.12174 gz_off=0.12174
+rlinear h24 s1: asrun=0.12579 gz_on=0.12551 gz_off=0.12551
+rlinear h24 s2: asrun=0.12667 gz_on=0.12776 gz_off=0.12776
+rlinear h24 s3: asrun=0.12293 gz_on=0.12488 gz_off=0.12409
+rlinear h24 s4: asrun=0.12505 gz_on=0.12369 gz_off=0.12369
+rlinear h96 s0: asrun=0.16447 gz_on=0.16447 gz_off=0.16447
+rlinear h96 s1: asrun=0.16436 gz_on=0.16436 gz_off=0.16436
+rlinear h96 s2: asrun=0.16539 gz_on=0.16273 gz_off=0.16539
+rlinear h96 s3: asrun=0.16347 gz_on=0.16347 gz_off=0.16347
+rlinear h96 s4: asrun=0.16384 gz_on=0.16384 gz_off=0.16384
+rlinear h336 s0: asrun=0.20588 gz_on=0.20491 gz_off=0.20491
+rlinear h336 s1: asrun=0.20711 gz_on=0.20794 gz_off=0.20794
+rlinear h336 s2: asrun=0.21058 gz_on=0.21082 gz_off=0.20821
+rlinear h336 s3: asrun=0.20483 gz_on=0.20426 gz_off=0.20426
+rlinear h336 s4: asrun=0.20462 gz_on=0.20658 gz_off=0.20658
+patchtst h24 s0: asrun=0.14129 gz_on=0.14129

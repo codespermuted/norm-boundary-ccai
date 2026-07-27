@@ -215,7 +215,7 @@ theory-matched linear backbone and suffices for the M1 test).
 | Spearman(LPS, Raw−CondNorm, covariate value) | +0.503 (p = 0.138) |
 | Spearman(LPS, RevIN−Raw, endogenous) | −0.479 (p = 0.162) |
 | sign rule (RevIN−CondNorm > 0) | **10/10 zones** |
-| horizon trend (gap by h) | 0.49 → 0.76 → 0.86, monotone ↑ |
+| horizon trend (gap by h) | 0.53 → 0.79 → 0.90, monotone ↑ (corrected 2026-07-27: an earlier draft printed 0.49/0.76/0.86, which reproduces from no aggregation of the frozen CSV; canonical = RLinear-only zone-mean via `graded_lps_analyze.py`, which also had a pooling bug — partial LGBM rows leaked into the primary, +0.503 vs the correct +0.467 — fixed the same day) |
 
 **Verdict (as-is, honest).** The magnitude ordering is **directionally positive**
 within a homogeneous family (+0.47), consistent with M1, and it **reverses the

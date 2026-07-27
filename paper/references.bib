@@ -3,6 +3,14 @@
 % during arXiv hardening (gamakumara2023conditional, chen2024solid; both
 % verified against the arXiv record). Entries marked "% verify" have one or
 % more fields that could not be fully confirmed against the source.
+%
+% 2026-07-27: all 20 entries cited by the CCAI workshop paper re-verified
+% against authoritative sources (arXiv/DOI/publisher/DBLP) by a web-check
+% pass. Corrections applied: sun2022mlreserve 14(5):056301 -> 14(3):036303
+% (+Au middle initial), kaffine pages 155-176, segrnn published venue (IEEE
+% IoT-J 2026), patchtst title case, role2026revin author form, dishts/
+% lightgbm/gefcom/pinson/crosslinear missing number/pages/DOI. New entries:
+% timerecipe2025 (ICLR 2026), silerevans2012marginal.
 
 % ---------------------------------------------------------------------------
 % Normalization methods
@@ -20,8 +28,10 @@
   title     = {Dish-{TS}: A General Paradigm for Alleviating Distribution Shift in Time Series Forecasting},
   booktitle = {Proceedings of the AAAI Conference on Artificial Intelligence},
   volume    = {37},
+  number    = {6},
   pages     = {7522--7529},
-  year      = {2023}
+  year      = {2023},
+  doi       = {10.1609/aaai.v37i6.25914}
 }
 
 @inproceedings{liu2023san,
@@ -64,7 +74,7 @@
 }
 
 @article{role2026revin,
-  author  = {Berthelier, Gaspard and Nabil, Tahar and Le Naour, Etienne and Niamke, Richard and Perlaza, Samir M. and Neglia, Giovanni},
+  author  = {Berthelier, Gaspard and Nabil, Tahar and Le Naour, Etienne and Niamke, Richard and Perlaza, Samir and Neglia, Giovanni},
   title   = {On the Role of Reversible Instance Normalization},
   journal = {arXiv preprint arXiv:2603.11869},
   year    = {2026}
@@ -110,6 +120,10 @@
   year      = {2023}
 }
 
+% Deliberate editorial choice (2026-07-27): a 2026 journal version exists
+% ("...An Investigation on Affine Mapping", Academia AI and Applications
+% 2(2), doi:10.20935/AcadAI8236) but the community citation and the version
+% our RLinear implementation follows is the 2023 arXiv preprint; we cite it.
 @article{li2023rlinear,
   author  = {Li, Zhe and Qi, Shiyi and Li, Yiduo and Xu, Zenglin},
   title   = {Revisiting Long-Term Time Series Forecasting: An Investigation on Linear Mapping},
@@ -128,16 +142,21 @@
 
 @inproceedings{nie2023patchtst,
   author    = {Nie, Yuqi and Nguyen, Nam H. and Sinthong, Phanwadee and Kalagnanam, Jayant},
-  title     = {A Time Series is Worth 64 Words: Long-Term Forecasting with Transformers},
+  title     = {A Time Series is Worth 64 Words: Long-term Forecasting with Transformers},
   booktitle = {International Conference on Learning Representations (ICLR)},
   year      = {2023}
 }
 
 @article{lin2023segrnn,
   author  = {Lin, Shengsheng and Lin, Weiwei and Wu, Wentai and Zhao, Feiyu and Mo, Ruichao and Zhang, Haotong},
-  title   = {{SegRNN}: Segment Recurrent Neural Network for Long-Term Time Series Forecasting},
-  journal = {arXiv preprint arXiv:2308.11200},
-  year    = {2023}
+  title   = {{SegRNN}: Segment Recurrent Neural Network for Long-Term Time-Series Forecasting},
+  journal = {IEEE Internet of Things Journal},
+  volume  = {13},
+  number  = {5},
+  pages   = {9861--9871},
+  year    = {2026},
+  doi     = {10.1109/JIOT.2025.3647705},
+  note    = {arXiv:2308.11200}
 }
 
 @inproceedings{liu2024itransformer,
@@ -167,6 +186,7 @@
   title     = {{LightGBM}: A Highly Efficient Gradient Boosting Decision Tree},
   booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
   volume    = {30},
+  pages     = {3146--3154},
   year      = {2017}
 }
 
@@ -210,7 +230,8 @@
   volume  = {32},
   number  = {3},
   pages   = {896--913},
-  year    = {2016}
+  year    = {2016},
+  doi     = {10.1016/j.ijforecast.2016.02.001}
 }
 
 % ---------------------------------------------------------------------------
@@ -298,7 +319,8 @@
   volume  = {28},
   number  = {4},
   pages   = {564--585},
-  year    = {2013}
+  year    = {2013},
+  doi     = {10.1214/13-STS445}
 }
 
 % ---------------------------------------------------------------------------
@@ -333,6 +355,16 @@
   booktitle = {Advances in Neural Information Processing Systems 37 (NeurIPS 2024) Datasets and Benchmarks Track},
   year      = {2024},
   doi       = {10.52202/079017-1523}
+}
+
+% ICLR 2026 acceptance confirmed via OpenReview forum CsoR8ztROC + authors'
+% repository (AdityaLab/TimeRecipe); proceedings not yet paginated.
+@inproceedings{timerecipe2025,
+  author    = {Zhao, Zhiyuan and Ni, Juntong and Xu, Shangqing and Liu, Haoxin and Jin, Wei and Prakash, B. Aditya},
+  title     = {{TimeRecipe}: A Time-Series Forecasting Recipe via Benchmarking Module Level Effectiveness},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2026},
+  note      = {arXiv:2506.06482}
 }
 
 @article{liang2025tsgym,
@@ -450,6 +482,7 @@
   title     = {{CrossLinear}: Plug-and-Play Cross-Correlation Embedding for Time Series Forecasting with Exogenous Variables},
   booktitle = {Proceedings of the 31st ACM SIGKDD Conference on Knowledge Discovery and Data Mining (KDD)},
   year      = {2025},
+  pages     = {4120--4131},
   doi       = {10.1145/3711896.3736899}
 }
 
@@ -458,14 +491,28 @@
 % ---------------------------------------------------------------------------
 
 @article{sun2022mlreserve,
-  author  = {Sun, Yuchi and Nelson, James H. and Stevens, John C. and Au, Adrian and Venugopal, Vignesh and Gulian, Charles and Kasina, Saamrat and O'Neill, Patrick and Yuan, Mengyao and Olson, Arne},
+  author  = {Sun, Yuchi and Nelson, James H. and Stevens, John C. and Au, Adrian H. and Venugopal, Vignesh and Gulian, Charles and Kasina, Saamrat and O'Neill, Patrick and Yuan, Mengyao and Olson, Arne},
   title   = {Machine Learning Derived Dynamic Operating Reserve Requirements in High-Renewable Power Systems},
   journal = {Journal of Renewable and Sustainable Energy},
   volume  = {14},
-  number  = {5},
-  pages   = {056301},
+  number  = {3},
+  pages   = {036303},
   year    = {2022},
   doi     = {10.1063/5.0087144}
+}
+
+% Verified 2026-07-27: Kaffine et al. report ~0.48 tCO2 displaced per MWh of
+% ERCOT wind (2007-2009); Siler-Evans et al. Table 1 gives US regional
+% marginal CO2 factors 486-834 kg/MWh (2006-2011) with ~30% diurnal swings.
+@article{silerevans2012marginal,
+  author  = {Siler-Evans, Kyle and Azevedo, In{\^e}s Lima and Morgan, M. Granger},
+  title   = {Marginal Emissions Factors for the {U.S.} Electricity System},
+  journal = {Environmental Science \& Technology},
+  volume  = {46},
+  number  = {9},
+  pages   = {4742--4748},
+  year    = {2012},
+  doi     = {10.1021/es300145v}
 }
 
 @article{kaffine2013emissions,
@@ -474,7 +521,7 @@
   journal = {The Energy Journal},
   volume  = {34},
   number  = {1},
-  pages   = {155--175},
+  pages   = {155--176},
   year    = {2013},
   doi     = {10.5547/01956574.34.1.7}
 }
