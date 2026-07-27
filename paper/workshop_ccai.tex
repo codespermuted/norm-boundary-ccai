@@ -116,8 +116,9 @@ normalization \emph{layer}, not of covariate access (\S\ref{sec:results}); (ii)~
 pre-training diagnostic, the Level Predictability Score, validated as a
 \emph{two-regime classifier} (\S\ref{sec:score}); and (iii)~a pre-registered
 study---per-dataset predictions committed to version control before any
-run---in which the predicted sign is correct on all eight datasets and all ten
-zones of a graded follow-up, replicating across $4{,}202$ runs including
+run---in which the predicted sign is correct on all eight datasets and
+consistent across the ten zones of a graded follow-up, replicating across
+$4{,}202$ runs including
 state-of-the-art covariate architectures (\S\ref{sec:results}). We do \emph{not}
 propose a new normalizer. The conditional normalization we use to expose the
 boundary is itself beaten by cheaper covariate-conditioned baselines; under our
@@ -155,7 +156,7 @@ $w{=}96$, fit only on windows preceding block $\mathcal{T}_k$). The decision rul
 $\lps \ge \tau \Rightarrow$ \emph{do not set the level endogenously}; otherwise
 instance normalization ($\tau = 0.3$).
 The threshold is anchored to the stylized crossover ($\approx0.28$ at $h{=}24$;
-$0.27$--$0.28$ across horizons), conservative toward instance normalization;
+$0.26$--$0.28$ across horizons), conservative toward instance normalization;
 above it, condition the level on covariates by whatever means the pipeline
 supports (\S\ref{sec:results}). We validate the rule as a \emph{two-regime
 classifier}: our datasets populate both sides of the boundary but leave the
@@ -333,7 +334,8 @@ arm given identical past and future covariates. SOTA replication $1{,}275$ runs
 $4{,}202$. The graded zone study adds $450$ pre-registered RLinear runs (10 zones
 $\times$ 3 arms $\times$ 3 horizons $\times$ 5 seeds); a deferred LightGBM arm is
 incomplete and excluded from the primary endpoint, disclosed at pre-registration
-analysis time.
+analysis time. The 2{,}640-run synthetic grid behind
+Appendix~\ref{app:theory} is a separate tally, outside the $4{,}202$.
 
 \paragraph{Compute.} Logged wall-clock for the runs in the frozen main-grid file
 (main grid plus SOTA replications) totals ${\approx}180$ hours on a single
@@ -409,19 +411,41 @@ crossover of \S\ref{sec:score},
 and $\partial_h\bigl[\mse_{\inm} - \mse_{\cnm}\bigr] = \sigma_u^2 + \partial_h
 s_x^2 > 0$, so the gap grows and $\lambda^\star$ falls with the horizon.
 
-\paragraph{Numerical anchor.} Under the parameterization of the 2{,}640-run
-synthetic validation grid ($V{=}1$, $w{=}96$, $\sigma_z{=}1$,
-$\sigma_u{=}0.06$; AR(1) covariates with $a{=}0.9$, under which $s_x^2(h)$ and
-the drift term scale with $\lambda$, so $\lambda^\star$ is a one-dimensional
-fixed point solved numerically), $\lambda^\star = 0.278$--$0.283$ at $h{=}24$
-(lookbacks 96/336), declining to $0.259$--$0.271$ at $h{=}336$ --- the
-${\approx}0.28$ anchor quoted in \S\ref{sec:score}. The closed forms are pinned
-against Monte Carlo at ${<}1\%$ relative error in the released test suite, and
-the synthetic grid reproduces the ordering and the horizon effect. One honest
-caveat: this restoration-rule crossover is an \emph{upper bound}. Trained
-linear predictors cross far lower ($\lambda^\star_{\mathrm{OLS}} \approx
-0.007$--$0.029$ empirically), because backbones implicitly track residual
-level; anchoring $\tau = 0.3$ at the M1 bound is therefore conservative toward
-instance normalization, which is the direction the one-sided rule requires.
+\paragraph{Numerical anchor.} The anchor is measured on the validation DGP of
+the 2{,}640-run synthetic grid, not assumed. The DGP sets
+$m_t = \sqrt{\lambda}\,x^\ell_t + \sqrt{1-\lambda}\,u^\ell_t$, where $x^\ell$
+is the level of an AR(1) covariate ($a{=}0.9$), $u^\ell$ is a standardized
+random walk, and both are rescaled so that their $w{=}96$ window means have
+unit variance --- hence $V{=}1$, and $\lambda$ coincides with the level $R^2$
+by construction (validated to within $0.08$ in the released tests). The
+covariate-driven ramp therefore scales with $\lambda$ and the random-walk
+drift with $1-\lambda$, each living in its own component of the level split;
+this is why $\lambda^\star$ does not collapse at long horizons --- the drift a
+high-$\lambda$ series suffers is small by construction. No separate
+covariate-orthogonal shift is injected ($\sigma_\Delta^2 = 0$, a CN-favorable
+choice, since \inm{} is immune to such shifts), and $\sigma_{\mathrm{est}}^2$
+is realized by an actual fitted first stage rather than set. On this DGP the
+measured restoration errors --- $\mathbb E[(m_T-\bar y_w)^2]$ for \inm{}
+versus $\mathbb E[(m_T-\hat m_T)^2]$ for \cnm{} --- cross at
+$\lambda^\star = 0.278$--$0.283$ for $h{=}24$ (lookbacks 96/336), declining to
+$0.259$--$0.271$ at $h{=}336$: the ${\approx}0.28$ anchor of
+\S\ref{sec:score}. The closed forms above are pinned against Monte Carlo at
+${<}1\%$ relative error in the released test suite.
+
+\paragraph{Two conservatism notes.} First, the restoration-rule crossover is
+an \emph{upper bound}: trained linear predictors on the same synthetic grid
+cross far lower ($\lambda^\star_{\mathrm{OLS}} \approx 0.007$--$0.029$ under
+this parameterization), because backbones implicitly track residual level.
+Second, neither number transports to the \lps{} axis: \lps{} is a proxy on a
+different scale from $\lambda$ --- it absorbs first-stage estimation error and
+window-mean smoothing, so it is not a consistent estimator of $\lambda$, and
+crossovers computed on the $\lambda$ scale cannot be read off
+Fig.~\ref{fig:lpsgap}. $\tau$ was fixed on the \lps{} scale at
+pre-registration, with the M1 bound anchoring its order of magnitude. The two
+known gaps err in the same direction: the M1 bound overstates the crossover,
+and first-stage estimation error biases \lps{} downward relative to
+$\lambda$ --- both toward instance normalization, which is the direction the
+one-sided rule requires, since a dataset misclassified below $\tau$ forgoes a
+gain rather than risking the ETTh2-style failure.
 
 \end{document}
