@@ -49,7 +49,7 @@ def main():
 
     plt.rcParams.update({"font.size": 8, "axes.labelsize": 8.5,
                          "xtick.labelsize": 7.5, "ytick.labelsize": 7.5})
-    fig, (ax, bx) = plt.subplots(1, 2, figsize=(6.4, 1.72))
+    fig, (ax, bx) = plt.subplots(1, 2, figsize=(6.4, 1.48))
 
     ax.axvspan(0.283, 0.575, color="0.92", zorder=0)
     ax.text(0.429, 0.5, "unobserved", ha="center", va="center", fontsize=7,
@@ -57,8 +57,8 @@ def main():
     ax.axvline(TAU, ls="--", lw=0.9, color="0.3")
     ax.axhline(0, lw=0.7, color="0.6")
     ax.set_xlim(-0.9, 1.13)
-    off = {"etth1": (4, 4), "etth2": (4, 4), "electricity": (-8, -11),
-           "weather": (4, 4), "jeju_wind": (-9, -13), "gefcom_wind": (4, 2),
+    off = {"etth1": (4, 4), "etth2": (4, 4), "electricity": (4, 2),
+           "weather": (-16, -12), "jeju_wind": (0, -13), "gefcom_wind": (4, 2),
            "gefcom_load": (4, 2), "gefcom_solar": (4, -10)}
     for name, r in ds.iterrows():
         exo = name in EXO
@@ -75,7 +75,7 @@ def main():
     ax.set_xlabel("LPS (pre-registered, computed before training)")
     ax.set_ylabel(r"MSE gap: RevIN $-$ CondNorm")
     ax.set_title("Eight datasets: sign predicted 8/8", fontsize=8.5)
-    ax.text(TAU - 0.03, 0.03, r"$\tau=0.3$", ha="right", fontsize=7,
+    ax.text(TAU - 0.04, 0.90, r"$\tau=0.3$", ha="right", fontsize=7,
             transform=ax.get_xaxis_transform())
 
     bx.scatter(z["lps"], z["revin_cn"], s=26, color="#1f77b4", zorder=3)
