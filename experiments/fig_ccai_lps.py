@@ -18,7 +18,7 @@ ROOT = os.path.join(os.path.dirname(__file__), "..")
 FIGS = os.path.join(ROOT, "paper", "figures")
 TAU = 0.3
 
-LABEL = {"jeju_wind": "Jeju Wind", "gefcom_wind": "GEF-Wind",
+LABEL = {"jeju_wind": "Jeju", "gefcom_wind": "GEF-Wind",
          "gefcom_load": "GEF-Load", "gefcom_solar": "GEF-Solar",
          "etth1": "ETTh1", "etth2": "ETTh2",
          "electricity": "Electricity", "weather": "Weather"}
@@ -49,7 +49,7 @@ def main():
 
     plt.rcParams.update({"font.size": 8, "axes.labelsize": 8.5,
                          "xtick.labelsize": 7.5, "ytick.labelsize": 7.5})
-    fig, (ax, bx) = plt.subplots(1, 2, figsize=(6.4, 1.9))
+    fig, (ax, bx) = plt.subplots(1, 2, figsize=(6.4, 1.72))
 
     ax.axvspan(0.283, 0.575, color="0.92", zorder=0)
     ax.text(0.429, 0.5, "unobserved", ha="center", va="center", fontsize=7,
@@ -58,7 +58,7 @@ def main():
     ax.axhline(0, lw=0.7, color="0.6")
     ax.set_xlim(-0.9, 1.13)
     off = {"etth1": (4, 4), "etth2": (4, 4), "electricity": (-8, -11),
-           "weather": (4, 4), "jeju_wind": (-51, -3), "gefcom_wind": (4, 2),
+           "weather": (4, 4), "jeju_wind": (-9, -13), "gefcom_wind": (4, 2),
            "gefcom_load": (4, 2), "gefcom_solar": (4, -10)}
     for name, r in ds.iterrows():
         exo = name in EXO
@@ -68,7 +68,10 @@ def main():
         ax.annotate(LABEL.get(name, name), (r["lps"], r["gap"]),
                     textcoords="offset points", xytext=off.get(name, (4, 4)),
                     fontsize=7)
-    ax.set_yscale("symlog", linthresh=0.05)
+    ax.set_yscale("symlog", linthresh=0.1)
+    ax.set_yticks([-10, -1, -0.1, 0, 0.1, 1])
+    ax.set_yticklabels(["-10", "-1", "-0.1", "0", "0.1", "1"])
+    ax.yaxis.set_minor_locator(matplotlib.ticker.NullLocator())
     ax.set_xlabel("LPS (pre-registered, computed before training)")
     ax.set_ylabel(r"MSE gap: RevIN $-$ CondNorm")
     ax.set_title("Eight datasets: sign predicted 8/8", fontsize=8.5)

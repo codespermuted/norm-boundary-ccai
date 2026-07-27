@@ -55,11 +55,11 @@ numerical forecasts---this discards recoverable signal, and no \emph{generic}
 downstream capacity restores it. A pre-training test, the Level Predictability
 Score (\lps), flags this failure from covariates alone.
 In a pre-registered study, with per-dataset predictions committed to
-version control before any run, the sign is correct on all eight datasets and
-all ten zones of a wind-fleet disaggregation. Under information
+version control before any run, the sign is correct on all eight datasets, and
+consistent across the ten zones of a wind-fleet disaggregation. Under information
 parity, where every model is handed the same covariates, instance normalization
 costs accuracy over plain global scaling on four of five backbones (95\% CIs
-excluding zero; the fifth is null), confirming a covariate-case conjecture
+excluding zero; the fifth is null), supporting a covariate-case conjecture
 recent work left open. Conditioning the level on covariates instead cuts
 day-ahead capacity-normalized error on a regional wind fleet by $5\%$. Above
 the threshold the remedy is a one-line change to the normalization layer, making
@@ -70,9 +70,8 @@ the threshold the remedy is a one-line change to the normalization layer, making
 
 Renewable generation and electricity demand are forecasting problems in which the
 \emph{level} of the series is set by observable, physically grounded drivers.
-Wind power follows the weather regime, photovoltaic output follows
-cloud-modulated clear-sky geometry, and load follows temperature through a
-degree-day relationship. In each case the level to be
+Wind power follows the weather regime, photovoltaic output follows cloud
+cover, and load follows temperature. In each case the level to be
 predicted is largely exogenous and, in operations, observable in advance through
 numerical weather prediction (NWP). Conditioning forecasts on these drivers is
 standard practice, from the GEFCom competitions---which shipped target-period
@@ -99,8 +98,8 @@ covariates. Recent work questions the endogenous default in principle---instance
 normalization ``discards potentially predictive context''---but only in the
 univariate case, and it explicitly leaves ours open: ``a more general setting
 would include \ldots exogenous covariates \ldots although we anticipate similar
-conclusions, we do not consider it here'' \citep{role2026revin}. Two adjacent
-lines also stop short. Pre-training normalization selectors exist, but they read
+conclusions, we do not consider it here'' \citep{role2026revin}. Pre-training normalization
+selectors exist, but they read
 endogenous change-point statistics \citep{noise2025signal}; module-level
 benchmarking conditions instance-normalization use on intrinsic dataset
 properties \citep{timerecipe2025}. Neither admits covariate-conditioned level
@@ -108,7 +107,9 @@ handling into the choice set, and prior conditional normalization
 \citep{gamakumara2023conditional} does not ask the selection question.
 
 We ask when this default helps and when it hurts, and reduce the answer to a
-quantity computable before training. Our contributions are
+quantity computable before training. The claim is not that covariates help
+(standard practice), but that the shipped default quietly works against them,
+and that the failure is predictable before training. Our contributions are
 (i)~an information-fair demonstration---the first controlled test of the covariate
 case \citet{role2026revin} left as a conjecture---that the cost is a property of the
 normalization \emph{layer}, not of covariate access (\S\ref{sec:results}); (ii)~a
@@ -125,7 +126,7 @@ one replacement.
 
 \section{A boundary and a pre-training score}\label{sec:score}
 
-Three ways to handle the level: global $z$-scoring (\rawm), instance
+We compare three ways of handling the level: global $z$-scoring (\rawm), instance
 normalization (\inm), and covariate-conditional normalization (\cnm), which takes
 the target-time level from a first-stage regression on covariates.
 Writing any \inm{}-equipped backbone as
@@ -138,8 +139,7 @@ the target-time level. A linear--Gaussian analysis makes the trade quantitative:
 \cnm{} pays the covariate-unexplained level variance $(1-\lambda)V$, with
 $\lambda\in[0,1]$ the exogenous predictability of the level; \cnm{} wins iff
 $\lambda>\lambda^\star$, and $\lambda^\star$ falls with the horizon---multi-step
-forecasting is where the endogenous default is most exposed (derivation in the
-extended version).
+forecasting is where the endogenous default is most exposed (derivation and the numerical anchor: Appendix~\ref{app:theory}).
 
 $\lambda$ is unobservable before training, so we estimate it out of sample:
 partition the training series into non-overlapping length-$w$ windows with means
@@ -160,7 +160,7 @@ above it, condition the level on covariates by whatever means the pipeline
 supports (\S\ref{sec:results}). We validate the rule as a \emph{two-regime
 classifier}: our datasets populate both sides of the boundary but leave the
 $0.28$--$0.58$ interior unobserved, so the evidence supports the regime call,
-not a finely calibrated cut.
+not a calibrated cut.
 
 \section{Results}\label{sec:results}
 \begin{table}[t]
@@ -240,46 +240,49 @@ GEFCom-Solar under MASE).
 \paragraph{The pre-training rule.} The official \lps{} and predicted gap sign
 for each dataset were committed to version control four minutes before the first
 grid run (Appendix~\ref{app:setup}). All eight signs were confirmed, unchanged
-under MSE, MAE, and MASE (Fig.~\ref{fig:lpsgap}). The eight datasets cluster into two correlated regimes,
-so we read $8/8$ as per-dataset evidence, not eight independent successes. All eleven exogenous (dataset,\,$h$) Model Confidence Sets retain
+under MSE, MAE, and MASE (Fig.~\ref{fig:lpsgap}); the datasets cluster into two
+correlated regimes, so we read $8/8$ as per-dataset evidence, not eight
+independent successes. All eleven exogenous (dataset,\,$h$) Model Confidence Sets retain
 \cnm{} alone (caveats: Appendix~\ref{app:setup}). The classification is
 unchanged over $\tau\in[0.30,0.70]$---insensitivity that reflects the empty
 interior (\S\ref{sec:score}), not fine calibration.
 
 \paragraph{A graded test within one family.} We therefore pre-registered a
-harder test. GEFCom-Wind disaggregates into ten zones of genuinely different NWP
+harder test: GEFCom-Wind disaggregates into ten zones of genuinely different NWP
 skill (\lps{} $0.575$--$0.758$, identical covariate structure), with per-zone
-\lps{} and predictions again committed before any zone run. The sign rule
+\lps{} and predictions committed before any zone run. The sign rule
 holds in all ten zones (a consistency check: every zone sits above $\tau$), and
 the RevIN$-$\cnm{} gap widens with horizon
-($0.53 \to 0.79 \to 0.90$ mean MSE at $h{=}24/96/336$), as the theory predicts.
+($0.53 \to 0.79 \to 0.90$ at $h{=}24/96/336$), as the theory predicts.
 The pre-registered magnitude prediction is \emph{not} confirmed: Spearman
 $+0.47$ at $n{=}10$ ($p{=}0.17$) is underpowered and inconclusive, so \lps{}
 stands as a validated regime classifier, not a calibrated dial
-(Fig.~\ref{fig:lpsgap}; Appendix~\ref{app:setup} reports a second unconfirmed
-secondary).
+(Fig.~\ref{fig:lpsgap}; a second unconfirmed secondary:
+Appendix~\ref{app:setup}). Reporting the failed endpoint is the point of
+pre-registration: it closes a dial over-reading a post-hoc analysis could have
+kept.
 
 \begin{figure}[t]
 \centering
 \includegraphics[width=0.96\linewidth]{figures/fig_ccai_lps.pdf}
-\caption{Pre-registered \lps{} versus realized RevIN$-$\cnm{} gap. Left: eight
-datasets (symmetric-log $y$; dashed line $\tau{=}0.3$; shaded = unobserved
-interior); all on the predicted side. Right: ten GEFCom-Wind zones; positive in
-all, ordering inconclusive ($n{=}10$, $p{=}0.17$).}
+\caption{Pre-registered \lps{} vs realized RevIN$-$\cnm{} gap. Left: eight
+datasets (symlog $y$; dashed $\tau{=}0.3$; shaded = unobserved interior), all on
+the predicted side. Right: ten zones, positive in all; ordering inconclusive
+($n{=}10$, $p{=}0.17$).}
 \label{fig:lpsgap}
 \end{figure}
 
 \section{Implications for energy operations, and limitations}
 
 \lps{} needs only covariates and a first-stage regression already in most
-pipelines: a near-zero-cost screen, seconds on a CPU, run before GPU-hours are
-spent. On Jeju Wind at the day-ahead horizon,
+pipelines: about half a CPU-second per series, against the ${\approx}180$
+GPU-hours our own grid logged (Appendix~\ref{app:setup}). On Jeju Wind at the day-ahead horizon,
 conditioning the level on covariates cuts capacity-normalized MAE from $0.105$
 to $0.100$ (RevIN vs \cnm{} on the information-parity linear mixer).
 Capacity-normalized error is the unit reserve procurement scales with: this
-$5.0\%$ is roughly $1.6$\,MW of standing reserve on a $300$\,MW fleet. The chain from forecast error to reserves to emissions is established:
-sharper characterization of forecast uncertainty cuts reserves and system
-emissions in production simulation \citep{sun2022mlreserve}, and
+$5.0\%$ is roughly $1.6$\,MW of standing reserve on a $300$\,MW fleet. The chain to emissions is established: sharper
+characterization of forecast uncertainty cuts reserves and emissions in
+production simulation \citep{sun2022mlreserve}, and
 displaced fossil generation carries $\approx0.5$\,tCO$_2$/MWh ($0.49$--$0.83$
 across U.S.\ regions and hours) \citep{kaffine2013emissions,silerevans2012marginal}.
 At full displacement the $5\%$ cut is of order a few thousand tCO$_2$/yr, less
@@ -287,21 +290,20 @@ under part-load holding penalties. The scale check is illustrative: one fleet,
 one horizon, no grid topology, unit commitment, or market structure, and it
 reads from the point forecast, so it becomes operational only once intervals are
 calibrated (Limitations). Above the
-threshold, the covariate-conditioned replacements perform within hundredths of
-one another on the exogenous group (Appendix~\ref{app:setup}), so choose by
-pipeline fit: the cheapest deep-stack drop-in feeds the backbone the first-stage
+threshold, the replacements perform within hundredths of one another
+(Appendix~\ref{app:setup}), so choose by pipeline fit: the cheapest deep-stack drop-in feeds the backbone the first-stage
 level in place of the window mean; regression with ARIMA errors is the classical
 analogue (not benchmarked here).
 
 \paragraph{Limitations.} Two provenance caveats bound the exogenous numbers:
-GEFCom-Load's temperature is \emph{realized}, not forecast (attainable rather
-than operational skill), and Jeju Wind's $h{=}48$ cells consume a band valid to
+GEFCom-Load's temperature is \emph{realized}, not forecast (attainable, not
+operational, skill), and Jeju Wind's $h{=}48$ cells consume a band valid to
 $h\le24$ (pooled figures optimistic); the day-ahead figure above avoids both. The boundary
 transfers to pinball loss (\cnm{} best on all four exogenous sets), but \cnm{}
-\emph{under-covers} its intervals: $0.50$--$0.66$ at nominal $0.80$, first-stage
-uncertainty unpropagated; post-hoc recalibration is the remedy, not yet run. Evaluation uses one chronological origin (a validation-segment
-check reproduces the four exogenous signs); rolling origins and gap-interior
-datasets come next.
+\emph{under-covers} its intervals ($0.50$--$0.66$ at nominal $0.80$):
+first-stage uncertainty is unpropagated; recalibration not yet run.
+Evaluation uses one origin; rolling origins and gap-interior datasets come
+next (Appendix~\ref{app:setup}).
 
 \small
 \bibliographystyle{unsrtnat}
@@ -333,6 +335,15 @@ $\times$ 3 arms $\times$ 3 horizons $\times$ 5 seeds); a deferred LightGBM arm i
 incomplete and excluded from the primary endpoint, disclosed at pre-registration
 analysis time.
 
+\paragraph{Compute.} Logged wall-clock for the runs in the frozen main-grid file
+(main grid plus SOTA replications) totals ${\approx}180$ hours on a single
+consumer GPU; the information-parity block's wall-clock was not logged. The
+\lps{} screen itself costs ${\approx}0.5$\,s per univariate series on one CPU
+core (measured on GEFCom-Wind; the full eight-dataset panel, including every
+channel of the multivariate benchmarks, completes in minutes). This is the
+contrast behind \S4's ``near-zero-cost screen'': the diagnostic costs roughly
+six orders of magnitude less than the study that validated it.
+
 \paragraph{Inference.} Information-parity confidence intervals are cluster
 bootstraps over the eleven seed-averaged (dataset,\,$h$) cells. The Model
 Confidence Set is computed at $\alpha=0.10$ per (dataset,\,$h$) on
@@ -345,7 +356,9 @@ $p{=}0.16$) --- the layer's small cost, of parity-block magnitude, sits below
 zone-level noise. Replacement costs on the exogenous group (test MSE,
 jeju/wind/load/solar): first-stage regression $0.29/0.16/0.14/0.06$, \cnm{}
 $0.29/0.16/0.11/0.06$. All standard-group loss series are segment-aware (no
-windows across curated gaps).
+windows across curated gaps). Single-origin caveat: promoting the validation
+segment to a second chronological origin reproduces all four exogenous signs,
+so the headline dissociation is not an artifact of the one test path.
 
 \paragraph{LPS protocol.} Non-overlapping windows of length $w=96$; first stage
 LightGBM under expanding chronological cross-validation, fit only on windows
@@ -362,5 +375,53 @@ and analysis code, and the LPS implementation:
 \url{https://anonymous.4open.science/r/norm-boundary}. Raw KMA and GEFCom source
 data are not redistributed (licensing); collectors and preparation instructions
 are included.
+
+\section{The stylized crossover behind $\tau$}\label{app:theory}
+
+\paragraph{Model (M1, linear--Gaussian).} One forecast instance: the target-time
+level is $\ell_T = \Delta + g_T + v_T$, with covariate-explained component
+$g_T \sim \mathcal N(0, \lambda V)$, unexplained component
+$v_T \sim \mathcal N(0, (1-\lambda)V)$, and a covariate-orthogonal
+train$\to$test shift $\Delta \sim \mathcal N(0, \sigma_\Delta^2)$ common to
+window and target. The lookback window sees stale components
+$g_w = g_T - \delta_x$ and $v_w = v_T - \delta_u$, where
+$\delta_x \sim \mathcal N(0, s_x^2(h))$ is the within-horizon covariate-driven
+level change (the ramp) and $\delta_u \sim \mathcal N(0, h\sigma_u^2)$ is
+random-walk drift; the window mean adds shape noise
+$\bar\varepsilon \sim \mathcal N(0, \sigma_z^2/w)$. \cnm's first stage observes
+$\hat m = g_T + e$ with $e \sim \mathcal N(0, \sigma_{\mathrm{est}}^2)$. All
+components are independent.
+
+\paragraph{Risks and crossover.} Direct variance accounting of the
+level-restoration error (a shape residual $\sigma_\varepsilon^2$ is common to
+all arms and drops out of comparisons) gives
+\[
+\mse_{\inm} = s_x^2(h) + h\sigma_u^2 + \sigma_z^2/w, \qquad
+\mse_{\cnm} = (1-\lambda)V + \sigma_\Delta^2 + \sigma_{\mathrm{est}}^2 :
+\]
+\inm{} pays the staleness of its frozen statistic, \cnm{} pays the unexplained
+level variance. Setting the two equal and solving for $\lambda$ gives the
+crossover of \S\ref{sec:score},
+\[
+\lambda^\star \;=\; 1 \;-\;
+\frac{s_x^2(h) + h\sigma_u^2 + \sigma_z^2/w - \sigma_\Delta^2 - \sigma_{\mathrm{est}}^2}{V},
+\]
+and $\partial_h\bigl[\mse_{\inm} - \mse_{\cnm}\bigr] = \sigma_u^2 + \partial_h
+s_x^2 > 0$, so the gap grows and $\lambda^\star$ falls with the horizon.
+
+\paragraph{Numerical anchor.} Under the parameterization of the 2{,}640-run
+synthetic validation grid ($V{=}1$, $w{=}96$, $\sigma_z{=}1$,
+$\sigma_u{=}0.06$; AR(1) covariates with $a{=}0.9$, under which $s_x^2(h)$ and
+the drift term scale with $\lambda$, so $\lambda^\star$ is a one-dimensional
+fixed point solved numerically), $\lambda^\star = 0.278$--$0.283$ at $h{=}24$
+(lookbacks 96/336), declining to $0.259$--$0.271$ at $h{=}336$ --- the
+${\approx}0.28$ anchor quoted in \S\ref{sec:score}. The closed forms are pinned
+against Monte Carlo at ${<}1\%$ relative error in the released test suite, and
+the synthetic grid reproduces the ordering and the horizon effect. One honest
+caveat: this restoration-rule crossover is an \emph{upper bound}. Trained
+linear predictors cross far lower ($\lambda^\star_{\mathrm{OLS}} \approx
+0.007$--$0.029$ empirically), because backbones implicitly track residual
+level; anchoring $\tau = 0.3$ at the M1 bound is therefore conservative toward
+instance normalization, which is the direction the one-sided rule requires.
 
 \end{document}
