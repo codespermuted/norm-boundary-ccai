@@ -451,5 +451,36 @@ decision) and must be stated wherever that story appears (incl. the workshop pap
 
 ---
 
-*Consolidated 2026-07-24; graded-LPS (§4a) added 2026-07-27. Numbers re-derived from frozen CSVs during this pass;
+## 13. Quantile recalibration (G8, 2026-07-28)
+
+Closes Block F's open item (CN interval under-coverage, first-stage uncertainty
+unpropagated). Runner `experiments/g8_recal.py` (Block F training mirrored
+byte-for-byte; adds val/test prediction export + conformal), ledger
+`results/g8_recal.csv`, table `paper/tables/tabG8_recal.md`, unit tests
+`tests/test_g8_recal.py`.
+
+- **Method**: per-quantile additive split conformal — δ_k = q_k-quantile of
+  validation residuals, added to each predicted quantile, re-sorted
+  (rearrangement). Fitted on the val segment (dual use with early stopping,
+  disclosed; test untouched), applied identically to every arm.
+- **Reproduction control**: the `none` variant reproduces Block F per-dataset
+  CN cov80 exactly (0.502/0.576/0.653/0.663 — jeju/wind/load/solar order by
+  value: wind 0.502, jeju 0.576, solar 0.653, load 0.663).
+- **Primary (rlinear_q, exogenous, 275 runs)**: CN cov80 per dataset
+  0.50–0.66 → **0.79–0.83** (mean 0.598 → 0.811; nominal 0.80); val cov80
+  0.800 by construction. CN mean pinball **improves** 0.1058 → 0.1034. With
+  every arm recalibrated, CN keeps best pinball **11/11** (dataset,h) cells.
+  RevIN (already calibrated 0.822) essentially unchanged (0.811). Per-step
+  offsets add nothing over pooled (mean cov80 0.810 vs 0.811).
+- **lgbm_q cross-check (h≤48, 5 cells × 3 arms, disclosed scope cap — Block F
+  logs put h=96/336 quantile DMS at 1.3–4.5 h/run)**: same pattern. CN cov80
+  0.59–0.71 → **0.80–0.83** (jeju24 .639→.824, jeju48 .633→.826,
+  wind24 .586→.803, load24 .673→.795, solar24 .705→.810); CN pinball improves
+  in all five cells and stays best-of-arm in all five (e.g. load24
+  0.0633 vs winz 0.0942 / raw 0.0976).
+
+---
+
+*Consolidated 2026-07-24; graded-LPS (§4a) added 2026-07-27; G8 recalibration
+(§13) added 2026-07-28. Numbers re-derived from frozen CSVs during this pass;
 where this file and an older document disagree, this file is authoritative.*

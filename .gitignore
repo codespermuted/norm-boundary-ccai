@@ -43,3 +43,4 @@ results/lps_inference.md
 
 # local throwaway analysis (within-repo, replaces /tmp scratchpad)
 /scratch/
+results/*_supervised.log

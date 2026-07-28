@@ -309,10 +309,11 @@ drop-in feeds the backbone the first-stage level in place of the window mean
 \paragraph{Limitations.} Provenance: GEFCom-Load's
 temperature is \emph{realized}, not forecast, and Jeju Wind's
 $h{=}48$ cells consume a band valid to $h\le24$ (pooled figures optimistic);
-the day-ahead figure avoids both. The boundary transfers to pinball loss
-(Appendix~\ref{app:setup}) but \cnm{} \emph{under-covers} its intervals
-($0.50$--$0.66$ at nominal $0.80$; first-stage uncertainty unpropagated,
-recalibration pending).
+the day-ahead figure avoids both. The boundary transfers to pinball loss, but \cnm{} \emph{under-covers} its
+intervals ($0.50$--$0.66$ at nominal $0.80$; first-stage uncertainty
+unpropagated). A validation-fitted conformal wrapper restores $0.79$--$0.83$
+coverage, \cnm{} keeping the best pinball in all eleven exogenous cells
+(Appendix~\ref{app:setup}).
 Evaluation uses one origin (Appendix~\ref{app:setup}); rolling origins and
 gap-interior datasets come next.
 
@@ -372,8 +373,23 @@ $0.29/0.16/0.11/0.06$. All standard-group loss series are segment-aware (no
 windows across curated gaps). Single-origin caveat: promoting the validation
 segment to a second chronological origin reproduces all four exogenous signs,
 so the headline dissociation is not an artifact of the one test path.
-Probabilistic transfer: \cnm{} has the best pinball loss on all four exogenous
-datasets, the basis of the Limitations claim that the boundary transfers.
+Probabilistic transfer and recalibration: \cnm{} has the best pinball loss on
+all four exogenous datasets, the basis of the Limitations claim that the
+boundary transfers. The recalibration cited there is per-quantile additive
+split conformal: for each level $q_k$, the $q_k$-quantile of validation
+residuals is added to the predicted quantile, followed by re-sorting. Offsets
+are fitted on the validation segment (which also early-stops the backbone;
+the test segment is untouched) and applied identically to every arm. On the
+linear quantile backbone this restores \cnm's $80\%$ coverage from
+$0.50$--$0.66$ (per dataset) to $0.79$--$0.83$, with validation coverage
+$0.800$ by construction; it also \emph{improves} \cnm's mean pinball
+($0.106 \to 0.103$), and \cnm{} remains the best-pinball arm in all eleven
+exogenous (dataset,\,$h$) cells after every arm is recalibrated. RevIN,
+already calibrated ($0.82$), is essentially unchanged, and lead-specific
+offsets add nothing over pooled ones ($0.810$ vs $0.811$ mean coverage). The
+LightGBM-Q cross-check agrees ($h\le48$; longer-horizon quantile DMS is
+computationally prohibitive): \cnm{} coverage $0.59$--$0.71 \to
+0.80$--$0.83$, best pinball in all five cells.
 
 \paragraph{LPS protocol.} Non-overlapping windows of length $w=96$; first stage
 LightGBM under expanding chronological cross-validation, fit only on windows
