@@ -73,7 +73,9 @@ def main():
     ax.set_yticklabels(["-10", "-1", "-0.1", "0", "0.1", "1"])
     ax.yaxis.set_minor_locator(matplotlib.ticker.NullLocator())
     ax.set_xlabel("LPS (pre-registered, computed before training)")
-    ax.set_ylabel(r"MSE gap: RevIN $-$ CondNorm")
+    # short label: the full "MSE gap: RevIN - CondNorm" overflows the
+    # 1.48in panel height and gets clipped in the saved PDF
+    ax.set_ylabel(r"RevIN $-$ CN (MSE)")
     ax.set_title("Eight datasets: sign predicted 8/8", fontsize=8.5)
     ax.text(TAU - 0.04, 0.90, r"$\tau=0.3$", ha="right", fontsize=7,
             transform=ax.get_xaxis_transform())
@@ -86,7 +88,7 @@ def main():
                     xytext=zoff.get(int(r["zone"]), (3, 3)), fontsize=7)
     bx.axhline(0, lw=0.7, color="0.6")
     bx.set_xlabel("per-zone LPS (pre-registered)")
-    bx.set_ylabel(r"MSE gap: RevIN $-$ CondNorm")
+    bx.set_ylabel(r"RevIN $-$ CN (MSE)")
     bx.set_ylim(-0.05, 1.1)
     bx.set_title("Ten wind zones: positive in 10/10", fontsize=8.5)
 
