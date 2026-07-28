@@ -56,17 +56,22 @@ def main():
             color="0.45", transform=ax.get_xaxis_transform(), rotation=90)
     ax.axvline(TAU, ls="--", lw=0.9, color="0.3")
     ax.axhline(0, lw=0.7, color="0.6")
-    ax.set_xlim(-0.9, 1.13)
-    off = {"etth1": (4, 4), "etth2": (4, 4), "electricity": (4, 2),
-           "weather": (-16, -12), "jeju_wind": (0, -13), "gefcom_wind": (4, 2),
-           "gefcom_load": (4, 2), "gefcom_solar": (4, -10)}
+    ax.set_xlim(-0.9, 1.35)
+    # (dx pt, dy pt, ha): exogenous labels sit right/below their dots (the
+    # cluster is in the top-right), standard-group labels sit left — chosen
+    # so no label crosses the frame, the tau line, another label, or a dot
+    off = {"etth1": (5, 3, "left"), "etth2": (-5, 0, "right"),
+           "electricity": (-5, -3, "right"), "weather": (-5, -3, "right"),
+           "jeju_wind": (-5, -2, "right"), "gefcom_wind": (5, -2, "left"),
+           "gefcom_load": (5, -2, "left"), "gefcom_solar": (0, -11, "center")}
     for name, r in ds.iterrows():
         exo = name in EXO
         ax.scatter(r["lps"], r["gap"], s=26, zorder=3,
                    color="#1f77b4" if exo else "#d62728",
                    marker="o" if exo else "s")
+        dx, dy, ha = off.get(name, (4, 4, "left"))
         ax.annotate(LABEL.get(name, name), (r["lps"], r["gap"]),
-                    textcoords="offset points", xytext=off.get(name, (4, 4)),
+                    textcoords="offset points", xytext=(dx, dy), ha=ha,
                     fontsize=7)
     ax.set_yscale("symlog", linthresh=0.1)
     ax.set_yticks([-10, -1, -0.1, 0, 0.1, 1])
@@ -81,15 +86,22 @@ def main():
             transform=ax.get_xaxis_transform())
 
     bx.scatter(z["lps"], z["revin_cn"], s=26, color="#1f77b4", zorder=3)
-    zoff = {8: (3, -11), 9: (3, 4)}
+    # near-coincident pairs (z8/z9 at lps~0.63, z1/z3 at ~0.70) and the
+    # right-edge cluster (z5/z7/z4) get labels on opposite sides
+    zoff = {2: (4, 2, "left"), 9: (-4, 0, "right"), 8: (-4, -9, "right"),
+            10: (4, -3, "left"), 1: (4, 1, "left"), 3: (5, -4, "left"),
+            6: (4, -3, "left"), 5: (-4, -2, "right"), 7: (-4, -1, "right"),
+            4: (4, -3, "left")}
     for _, r in z.iterrows():
+        dx, dy, ha = zoff.get(int(r["zone"]), (3, 3, "left"))
         bx.annotate(f"z{int(r['zone'])}", (r["lps"], r["revin_cn"]),
-                    textcoords="offset points",
-                    xytext=zoff.get(int(r["zone"]), (3, 3)), fontsize=7)
+                    textcoords="offset points", xytext=(dx, dy), ha=ha,
+                    fontsize=7)
     bx.axhline(0, lw=0.7, color="0.6")
     bx.set_xlabel("per-zone LPS (pre-registered)")
     bx.set_ylabel(r"RevIN $-$ CN (MSE)")
     bx.set_ylim(-0.05, 1.1)
+    bx.set_xlim(0.563, 0.785)
     bx.set_title("Ten wind zones: positive in 10/10", fontsize=8.5)
 
     fig.tight_layout(pad=0.4)
