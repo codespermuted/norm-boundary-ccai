@@ -51,9 +51,9 @@ def main():
                          "xtick.labelsize": 7.5, "ytick.labelsize": 7.5})
     fig, (ax, bx) = plt.subplots(1, 2, figsize=(6.4, 1.48))
 
+    # the 0.28-0.58 interior band is explained in the caption ("shaded =
+    # unobserved interior"); no in-plot rotated text — it read as a glitch
     ax.axvspan(0.283, 0.575, color="0.92", zorder=0)
-    ax.text(0.429, 0.5, "unobserved", ha="center", va="center", fontsize=7,
-            color="0.45", transform=ax.get_xaxis_transform(), rotation=90)
     ax.axvline(TAU, ls="--", lw=0.9, color="0.3")
     ax.axhline(0, lw=0.7, color="0.6")
     ax.set_xlim(-0.9, 1.35)
