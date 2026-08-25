@@ -1,24 +1,23 @@
-# norm-boundary reproducibility targets (plan §10 G5 AC: `make figures`)
+# Reproduction targets. `verify-numbers` needs only results/ and no GPU.
 
-.PHONY: figures tables all test paper
+.PHONY: verify-numbers score tables figures test
 
-paper:
-	cd paper && tectonic main.tex
+# Re-derive every number the paper prints, from the frozen CSVs.
+verify-numbers:
+	uv run python -m experiments.verify_paper_numbers
 
-all: figures tables
-
-figures:
-	uv run python -m src.theory.fig1
-	uv run python -m src.synth.analyze
-	uv run python -m experiments.g5_analysis
+# Recompute the Level Predictability Score from the curated data.
+score:
+	uv run python -m experiments.compute_lps_official
+	uv run python -m experiments.graded_lps --lps
 
 tables:
 	uv run python -m experiments.g4_table1
-	uv run python -m experiments.g5_ext_tables
+	uv run python -m experiments.g11_table
+
+figures:
+	uv run python -m experiments.fig_ccai_mech2
+	uv run python -m experiments.fig_ccai_lps
 
 test:
 	uv run pytest -q
-
-# OOM/충돌 내성 실행 (죽으면 백오프 후 자동 재시도, 최대 3회)
-test-supervised:
-	scripts/supervised_run.sh results/pytest_supervised.log 3 -- uv run pytest -q

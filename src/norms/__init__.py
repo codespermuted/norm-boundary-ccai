@@ -1,11 +1,13 @@
 from src.norms.base import NoNorm
 from src.norms.fan import FAN
 from src.norms.revin import RevIN
+from src.norms.revin_mean import RevINMean
 from src.norms.san import SAN
 
 NORM_REGISTRY = {
     "raw": NoNorm,
     "revin": RevIN,
+    "revin_mean": RevINMean,
     "san": SAN,
     "fan": FAN,
 }

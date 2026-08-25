@@ -38,6 +38,10 @@ SEEDS = range(5)
 EPOCHS, PATIENCE, LR, BATCH = 15, 3, 5e-3, 256
 FIELDS = ["dataset", "arm", "backbone", "h", "seed", "L", "mse"]
 LB_CSV = os.path.join(ROOT, "results", "g4_covfair_lookback.csv")
+# G11: floor on the per-window covariate sd, in globally z-scored units.
+# Night windows on GEFCom-Solar have near-zero covariate variance, so the
+# unfloored "window" footing divides by ~0 and is unreadable there.
+COV_SD_FLOOR = 0.1
 
 
 class MixBackbone(torch.nn.Module):
@@ -75,7 +79,38 @@ NN_LR = {"linmix": 5e-3, "mlpmix": 1e-3, "patchtstcov": 1e-4,
          "segrnncov": 1e-3}
 
 
-def nn_run(frame, h, arm, backbone, seed, level, L, device="cpu"):
+def nn_run(frame, h, arm, backbone, seed, level, L, device="cpu",
+           cov_instance_norm=False, cov_footing=None, feed_stats=False):
+    """Covariate footing (G11). The series is globally z-scored on train
+    statistics before any arm sees it; let s be the per-window standard
+    deviation of the target lookback in those units -- the divisor RevIN uses.
+
+        "global"       cov_z                          level kept, global units
+        "window"       (cov - mean_w)/sd_w            level DESTROYED, own units
+        "window_floor" as "window", sd_w floored      ditto, readable on solar
+        "scale"        cov_z / s                      level kept, target's units
+
+    "global" is the frozen parity block; "window" is G10 and changes the units
+    *and* the information at once, which is why it cannot adjudicate the
+    units-mismatch confound; "scale" is the units-only control that can.
+
+    cov_instance_norm=True is the legacy spelling of cov_footing="window" and
+    is kept so the G10 rows reproduce. Default None -> "global", which keeps
+    the frozen parity path byte-identical.
+
+    feed_stats=True additionally hands the backbone the two statistics the
+    instance-normalization layer removes -- the lookback window mean and scale --
+    as extra constant input channels (G13). RevIN's structural cost is that
+    yhat = ybar + s * f((x - ybar)/s, g) never exposes ybar or s to f, so if
+    simply feeding them back closes the gap to covariate-conditioned level
+    handling, the boundary is an implementation oversight rather than a property
+    of the layer. That is the test.
+    """
+    if cov_footing is None:
+        cov_footing = "window" if cov_instance_norm else "global"
+    if cov_footing not in ("global", "window", "window_floor", "scale",
+                           "center_global", "center_scale"):
+        raise ValueError(f"unknown cov_footing {cov_footing!r}")
     torch.manual_seed(seed)
     y = frame["values"][:, 0]
     cov = frame["exog"]
@@ -97,8 +132,9 @@ def nn_run(frame, h, arm, backbone, seed, level, L, device="cpu"):
     sp = split_starts(frame, L, h)
 
     norm = (build_norm(arm, num_features=1, lookback=L, horizon=h)
-            if arm in ("revin", "san", "fan") else None)
-    model = build_cov_backbone(backbone, L, h, cov.shape[1]).to(device)
+            if arm in ("revin", "revin_mean", "san", "fan") else None)
+    model = build_cov_backbone(backbone, L, h,
+                               cov.shape[1] + (2 if feed_stats else 0)).to(device)
     if norm is not None:
         norm = norm.to(device)
     ar_L = torch.arange(L, device=device)
@@ -113,6 +149,41 @@ def nn_run(frame, h, arm, backbone, seed, level, L, device="cpu"):
 
     def forward(x, cb):
         cp, cf = cb
+        if cov_footing in ("window", "window_floor"):
+            # per-window, per-channel statistics taken from the lookback block
+            m = cp.mean(dim=1, keepdim=True)
+            sd = torch.sqrt(cp.var(dim=1, keepdim=True, unbiased=False) + 1e-5)
+            if cov_footing == "window_floor":
+                # night windows on the solar set have ~zero covariate variance;
+                # without a floor the division is numerically meaningless
+                sd = torch.clamp(sd, min=COV_SD_FLOOR)
+            cp, cf = (cp - m) / sd, (cf - m) / sd
+        elif cov_footing == "scale":
+            # units-only match: the covariate mean is NOT removed, so the
+            # covariate level survives; only the per-instance scaling is put
+            # on the same footing as the RevIN-normalized target.
+            s = torch.sqrt(x.var(dim=1, keepdim=True, unbiased=False) + 1e-5)
+            cp, cf = cp / s.unsqueeze(-1), cf / s.unsqueeze(-1)
+        elif cov_footing in ("center_global", "center_scale"):
+            # LEVEL-ISOLATING footings (G14). Remove the covariate level by
+            # subtracting the per-window covariate mean, and leave the divisor
+            # alone. "window" changes the centring AND the divisor at once, so
+            # the contrast window-vs-scale cannot attribute anything to the
+            # level; these two can, because each pairs with a footing that
+            # differs from it in the centring only:
+            #     RAW  : global -> center_global   (divisor: global, both)
+            #     RevIN: scale  -> center_scale    (divisor: /s, both)
+            m = cp.mean(dim=1, keepdim=True)
+            cp, cf = cp - m, cf - m
+            if cov_footing == "center_scale":
+                s = torch.sqrt(x.var(dim=1, keepdim=True, unbiased=False) + 1e-5)
+                cp, cf = cp / s.unsqueeze(-1), cf / s.unsqueeze(-1)
+        if feed_stats:
+            m = x.mean(dim=1, keepdim=True)
+            sd = torch.sqrt(x.var(dim=1, keepdim=True, unbiased=False) + 1e-5)
+            st2 = torch.stack([m, sd], dim=-1)          # (B, 1, 2)
+            cp = torch.cat([cp, st2.expand(-1, cp.shape[1], -1)], dim=-1)
+            cf = torch.cat([cf, st2.expand(-1, cf.shape[1], -1)], dim=-1)
         if norm is None:
             return model(x, cp, cf)
         xn = norm(x.unsqueeze(-1), "norm").squeeze(-1)

@@ -1,0 +1,11 @@
+dataset,n_rows,forecast_origin_row,forecast_origin_ts,origin_frac,variants_coincide,n_channels,covariates,lps_full,lps_deployment,delta,n_windows_full,n_windows_deployment,side_full,side_deployment,side_agrees
+gwind_z02,16787,13429,2013-07-13 21:00:00,0.8,False,1,exog+cal,0.5753,0.6495,0.0742,174,139,+,+,True
+gwind_z08,16800,13440,2013-07-14 01:00:00,0.8,False,1,exog+cal,0.6304,0.6104,-0.02,175,140,+,+,True
+gwind_z09,16800,13440,2013-07-14 01:00:00,0.8,False,1,exog+cal,0.6312,0.4706,-0.1606,175,140,+,+,True
+gwind_z10,16800,13440,2013-07-14 01:00:00,0.8,False,1,exog+cal,0.6433,0.6874,0.0441,175,140,+,+,True
+gwind_z03,16712,13369,2013-07-11 03:00:00,0.8,False,1,exog+cal,0.699,0.6571,-0.0419,174,139,+,+,True
+gwind_z01,16789,13431,2013-07-13 23:00:00,0.8,False,1,exog+cal,0.7012,0.6683,-0.0329,174,139,+,+,True
+gwind_z06,16800,13440,2013-07-14 01:00:00,0.8,False,1,exog+cal,0.7276,0.7182,-0.0094,175,140,+,+,True
+gwind_z05,16800,13440,2013-07-14 01:00:00,0.8,False,1,exog+cal,0.7472,0.7305,-0.0168,175,140,+,+,True
+gwind_z07,16800,13440,2013-07-14 01:00:00,0.8,False,1,exog+cal,0.7508,0.7158,-0.035,175,140,+,+,True
+gwind_z04,16800,13440,2013-07-14 01:00:00,0.8,False,1,exog+cal,0.7585,0.7498,-0.0087,175,140,+,+,True

@@ -47,9 +47,9 @@ def main():
 
     z = pd.read_csv(os.path.join(ROOT, "results", "graded_lps_zonegaps.csv"))
 
-    plt.rcParams.update({"font.size": 8, "axes.labelsize": 8.5,
-                         "xtick.labelsize": 7.5, "ytick.labelsize": 7.5})
-    fig, (ax, bx) = plt.subplots(1, 2, figsize=(6.4, 1.48))
+    plt.rcParams.update({"font.size": 8.5, "axes.labelsize": 9,
+                         "xtick.labelsize": 8, "ytick.labelsize": 8})
+    fig, (ax, bx) = plt.subplots(1, 2, figsize=(6.4, 1.85))
 
     # the 0.28-0.58 interior band is explained in the caption ("shaded =
     # unobserved interior"); no in-plot rotated text — it read as a glitch

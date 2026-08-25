@@ -58,7 +58,11 @@ from src.models.lgbm_dms import window_znorm
 from src.norms import build_norm
 
 ROOT = os.path.join(os.path.dirname(__file__), "..")
-CSV_PATH = os.path.join(ROOT, "results", "g8_recal.csv")
+# G15 re-runs this block only to add the interval-width columns; it writes to
+# its own file so the frozen g8_recal.csv artifact is never appended to with a
+# different header.
+CSV_PATH = os.path.join(ROOT, "results",
+                        os.environ.get("G8_OUT", "g8_recal.csv"))
 ERR_DIR = os.path.join(ROOT, "results", "g8_errors")
 
 EXO_DATASETS = ("jeju_wind", "gefcom_wind", "gefcom_load", "gefcom_solar")
@@ -67,6 +71,7 @@ LGBM_ARMS = ("raw", "winz", "condnorm")
 SEEDS = range(5)
 VARIANTS = ("none", "pooled", "perstep")
 FIELDS = ["dataset", "arm", "backbone", "h", "seed", "variant",
+          "width80", "upper_margin",
           "pinball", "crps", "cov80", "cov_lo", "cov_hi", "val_cov80"]
 
 
@@ -105,10 +110,16 @@ def q_metrics(pred_s: np.ndarray, true_s: np.ndarray, qs: np.ndarray) -> dict:
     pb = np.maximum(qs * diff, (qs - 1.0) * diff)
     q_lo, q_hi = pred_s[..., 0], pred_s[..., -1]             # q10, q90
     pb_mean = float(pb.mean())
+    q_med = pred_s[..., pred_s.shape[-1] // 2]
     return {"pinball": pb_mean, "crps": 2 * pb_mean,
             "cov80": float(((true_s >= q_lo) & (true_s <= q_hi)).mean()),
             "cov_lo": float((true_s <= q_lo).mean()),
             "cov_hi": float((true_s <= q_hi).mean()),
+            # G15: the width a reserve decision actually consumes. cov80 is
+            # location; two arms can both cover 0.80 while one interval is
+            # materially wider. Reported in global-z units.
+            "width80": float((q_hi - q_lo).mean()),
+            "upper_margin": float((q_hi - q_med).mean()),
             "losses": pb.mean(axis=(1, 2, 3))}
 
 
@@ -415,7 +426,8 @@ def main():
             w.writerow({"dataset": name, "arm": arm, "backbone": backbone,
                         "h": h, "seed": seed, "variant": variant,
                         **{k: round(r[k], 6) for k in
-                           ("pinball", "crps", "cov80", "cov_lo", "cov_hi",
+                           ("width80", "upper_margin",
+                            "pinball", "crps", "cov80", "cov_lo", "cov_hi",
                             "val_cov80")}})
         out_f.flush()
         tag = f"g8_{name}_{arm}_{backbone}_{h}_{seed}"

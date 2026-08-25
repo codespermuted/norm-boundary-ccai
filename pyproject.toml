@@ -1,7 +1,7 @@
 [project]
 name = "norm-boundary"
 version = "0.1.0"
-description = "When Instance Normalization Hurts: exogenously-driven level predictability and conditional normalization for multi-step forecasting"
+description = "When Instance Normalization Hides the Level: an audit of exogenous covariate forecasting"
 requires-python = ">=3.11"
 dependencies = [
     "torch>=2.7",

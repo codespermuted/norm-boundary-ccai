@@ -1,6 +1,6 @@
 """G2 sweep: lambda(11) x h{24,96,336} x L{96,336} x seed(10) x norm(4), RLinear.
 
-Theory-experiment fidelity contract (the environment contract):
+Theory-experiment fidelity contract:
   - backbone is the single linear map of the theory, identical across arms;
     the ONLY difference between arms is the normalization
   - arms: raw        global z-score only

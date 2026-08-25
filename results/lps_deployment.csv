@@ -1,0 +1,9 @@
+dataset,n_rows,forecast_origin_row,forecast_origin_ts,origin_frac,variants_coincide,n_channels,covariates,lps_full,lps_deployment,delta,n_windows_full,n_windows_deployment,side_full,side_deployment,side_agrees,prereg_side,deployment_matches_prereg
+etth1,17420,11520,2017-10-24 00:00:00,0.6613,False,7,cal,-0.7165,-0.1863,0.5302,181,120,-,-,True,-,True
+etth2,17420,11520,2017-10-24 00:00:00,0.6613,False,7,cal,-0.2054,0.1882,0.3936,181,120,-,-,True,-,True
+electricity,26304,21043,2018-11-24 21:00:00,0.8,False,321,cal,0.283,0.2997,0.0168,274,219,-,-,True,-,True
+weather,52696,42156,2020-10-19 19:30:00,0.8,False,21,cal,0.1098,-1.3465,-1.4563,548,439,-,-,True,-,True
+jeju_wind,17376,17376,2023-07-04 01:00:00,1.0,True,1,exog+cal,0.7452,0.7452,0.0,181,181,+,+,True,+,True
+gefcom_wind,11456,11456,2013-07-10 22:00:00,1.0,True,1,exog+cal,0.7439,0.7439,0.0,119,119,+,+,True,+,True
+gefcom_load,60600,48480,2010-07-14 01:00:00,0.8,False,1,exog+cal,0.8938,0.8829,-0.0109,631,505,+,+,True,+,True
+gefcom_solar,18984,15187,2013-12-24 20:00:00,0.8,False,1,exog+cal,0.8754,0.8493,-0.0261,197,158,+,+,True,+,True
